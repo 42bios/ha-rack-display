@@ -1,0 +1,47 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Rack Display",
+        "description": "Richtet Rack Display ein. Das Rack baust du danach im Rack-Editor auf: Einstellungen → Integrationen → Rack Display → Konfigurieren."
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Rack Display ist bereits eingerichtet."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Rack Display",
+        "description": "**[Rack-Editor öffnen]({editor})**\n\nIm Editor legst du das Rack an, ziehst Geräte in die Höheneinheiten, verknüpfst Home-Assistant-Geräte und lädst Fotos hoch.\n\nDie Anzeige selbst findest du unter [{display}]({display}) – oder als Karte „Rack Display“ in jedem Dashboard."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "state": {
+        "name": "Zustand",
+        "state": {
+          "ok": "In Ordnung",
+          "warning": "Warnung",
+          "problem": "Störung"
+        }
+      },
+      "faults": {
+        "name": "Störungen"
+      },
+      "warnings": {
+        "name": "Warnungen"
+      },
+      "hottest": {
+        "name": "Wärmstes Gerät"
+      }
+    },
+    "binary_sensor": {
+      "problem": {
+        "name": "Problem"
+      }
+    }
+  }
+}

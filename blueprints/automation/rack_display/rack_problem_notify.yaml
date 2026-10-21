@@ -1,0 +1,83 @@
+blueprint:
+  name: Rack Display – notify on rack fault
+  description: >-
+    Sends a push notification when a rack reports a fault (binary sensor "Problem" of Rack Display),
+    listing the affected devices. Optionally notifies again when everything is fine.
+  domain: automation
+  source_url: https://github.com/42bios/ha-rack-display/blob/main/blueprints/automation/rack_display/rack_problem_notify.yaml
+  input:
+    problem_sensor:
+      name: Rack problem sensor
+      description: binary_sensor.<rack>_problem
+      selector:
+        entity:
+          filter:
+            - integration: rack_display
+              domain: binary_sensor
+    notify_device:
+      name: Device to notify
+      description: Phone with the Home Assistant app
+      selector:
+        device:
+          filter:
+            - integration: mobile_app
+    delay:
+      name: Wait before notifying
+      description: Ignore short faults (e.g. a device rebooting)
+      default: 2
+      selector:
+        number:
+          min: 0
+          max: 60
+          unit_of_measurement: min
+    notify_resolved:
+      name: Notify when resolved
+      default: true
+      selector:
+        boolean:
+
+mode: queued
+max: 5
+
+triggers:
+  - trigger: state
+    entity_id: !input problem_sensor
+    to: "on"
+    for:
+      minutes: !input delay
+    id: fault
+  - trigger: state
+    entity_id: !input problem_sensor
+    from: "on"
+    to: "off"
+    id: resolved
+
+variables:
+  sensor: !input problem_sensor
+  resolved_wanted: !input notify_resolved
+  rack: "{{ device_attr(device_id(sensor), 'name') or state_attr(sensor, 'friendly_name') }}"
+  problems: "{{ state_attr(sensor, 'problems') or [] }}"
+
+actions:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: fault
+        sequence:
+          - domain: mobile_app
+            type: notify
+            device_id: !input notify_device
+            title: "{{ rack }}: Störung"
+            message: >-
+              {{ problems | join('\n') if problems else 'Ein Gerät meldet eine Störung.' }}
+      - conditions:
+          - condition: trigger
+            id: resolved
+          - condition: template
+            value_template: "{{ resolved_wanted }}"
+        sequence:
+          - domain: mobile_app
+            type: notify
+            device_id: !input notify_device
+            title: "{{ rack }}: wieder in Ordnung"
+            message: Alle Geräte melden keine Störung mehr.

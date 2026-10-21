@@ -1,0 +1,55 @@
+{
+  "blocks": {
+    "batteries": {
+      "name": "Akkus",
+      "desc": "Akkustände mehrerer Geräte als Liste, schwache zuerst",
+      "group": "zustand",
+      "items": true,
+      "size": "half",
+      "layout": {
+        "w": 6,
+        "h": 3
+      },
+      "min_layout": {
+        "w": 3,
+        "h": 2
+      },
+      "suggest": {
+        "domain": "sensor",
+        "device_class": "battery"
+      },
+      "options": [
+        {
+          "key": "warn",
+          "label": "Warnung unter (%)",
+          "type": "number",
+          "default": 25
+        },
+        {
+          "key": "alert",
+          "label": "Kritisch unter (%)",
+          "type": "number",
+          "default": 10
+        },
+        {
+          "key": "sort",
+          "label": "Sortierung",
+          "type": "select",
+          "default": "low",
+          "choices": [
+            [
+              "low",
+              "Schwache zuerst"
+            ],
+            [
+              "name",
+              "Nach Name"
+            ]
+          ]
+        }
+      ],
+      "author": "@42bios",
+      "community": true
+    }
+  }
+}

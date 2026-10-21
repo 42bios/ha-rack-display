@@ -1,0 +1,47 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Rack Display",
+        "description": "Sets up Rack Display. Build your rack afterwards in the rack editor: Settings → Integrations → Rack Display → Configure."
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Rack Display is already set up."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Rack Display",
+        "description": "**[Open rack editor]({editor})**\n\nIn the editor you create the rack, drag devices into rack units, link Home Assistant devices and upload photos.\n\nThe display itself is at [{display}]({display}) or as the “Rack Display” card in any dashboard."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "state": {
+        "name": "State",
+        "state": {
+          "ok": "OK",
+          "warning": "Warning",
+          "problem": "Fault"
+        }
+      },
+      "faults": {
+        "name": "Faults"
+      },
+      "warnings": {
+        "name": "Warnings"
+      },
+      "hottest": {
+        "name": "Hottest device"
+      }
+    },
+    "binary_sensor": {
+      "problem": {
+        "name": "Problem"
+      }
+    }
+  }
+}

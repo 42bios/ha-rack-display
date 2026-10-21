@@ -1,0 +1,12 @@
+/* Every rule starts with .mod-batteries (checked by the build) */
+.mod-batteries .list{display:flex;flex-direction:column;gap:6px;min-height:0;overflow:hidden}
+.mod-batteries .row{display:grid;grid-template-columns:minmax(0,1fr) 34px auto;gap:10px;align-items:center;font-size:13px}
+.mod-batteries .name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--label-2)}
+.mod-batteries .bat{position:relative;height:13px;border-radius:3px;box-shadow:inset 0 0 0 1.5px var(--label-3);padding:2px}
+.mod-batteries .bat::after{content:"";position:absolute;right:-3px;top:4px;width:2px;height:5px;border-radius:0 1px 1px 0;background:var(--label-3)}
+.mod-batteries .bat i{display:block;height:100%;border-radius:1.5px;background:var(--green)}
+.mod-batteries .row.warn .bat i{background:var(--yellow)}
+.mod-batteries .row.alert .bat i{background:var(--red)}
+.mod-batteries .row.alert b{color:var(--red)}
+.mod-batteries b{font-weight:600;font-variant-numeric:tabular-nums;min-width:3.2em;text-align:right}
+.mod-batteries b small{font-size:.75em;color:var(--label-2);margin-left:1px}

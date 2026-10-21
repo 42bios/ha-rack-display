@@ -1,0 +1,47 @@
+blueprint:
+  name: Rack Display – switch the TouchKio screen off when idle
+  description: >-
+    Turns the display of a TouchKio kiosk (e.g. the Raspberry Pi at the rack) off after a few
+    minutes without touch. Touching the screen wakes it up again (TouchKio).
+  domain: automation
+  source_url: https://github.com/42bios/ha-rack-display/blob/main/blueprints/automation/rack_display/touchkio_screen_off.yaml
+  input:
+    last_active:
+      name: Last active sensor
+      description: sensor.touchkio_<name>_last_active (minutes since the last touch)
+      selector:
+        entity:
+          filter:
+            - domain: sensor
+    display:
+      name: Display
+      description: light.touchkio_<name>_display
+      selector:
+        entity:
+          filter:
+            - domain: light
+    minutes:
+      name: Switch off after
+      default: 5
+      selector:
+        number:
+          min: 1
+          max: 120
+          unit_of_measurement: min
+
+mode: single
+
+triggers:
+  - trigger: numeric_state
+    entity_id: !input last_active
+    above: !input minutes
+
+conditions:
+  - condition: state
+    entity_id: !input display
+    state: "on"
+
+actions:
+  - action: light.turn_off
+    target:
+      entity_id: !input display

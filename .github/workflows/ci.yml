@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Build integration and validate modules
+        run: python3 frontend-src/build.py ci
+      - name: Syntax check of the built frontend
+        run: |
+          for f in custom_components/rack_display/frontend/*.js; do
+            cp "$f" "/tmp/$(basename "$f" .js).mjs"
+            node --check "/tmp/$(basename "$f" .js).mjs"
+          done
+      - name: Python syntax
+        run: python3 -m py_compile custom_components/rack_display/*.py

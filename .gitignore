@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.DS_Store
+._*
+# Sicherungen der HA-Seite (enthalten echte Daten, nicht ins Repo)
+backups/
+frontend-src/deploy.env
+docs/rack-looks.png

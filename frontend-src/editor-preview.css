@@ -1,0 +1,51 @@
+/* Rack-Editor: Bearbeitungsgriffe in der Vorschau (im Schatten-DOM der Anzeige, nutzt deren Farben). */
+.dgrid.gm.ed-on>[data-bi]{position:relative;outline:1.5px dashed color-mix(in srgb,var(--blue) 55%,transparent);outline-offset:-1px;cursor:pointer}
+.dgrid.gm.ed-on>[data-bi].ed-sel{outline:2px solid var(--blue)}
+.dgrid.gm.ed-on>[data-bi].ed-drag{opacity:.7;z-index:3;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.dgrid.gm.ed-on>[data-bi].ed-bad{outline:2px solid var(--red)}
+.dgrid.gm.ed-on>.ed-before{box-shadow:-4px -4px 0 0 var(--blue)}
+.dgrid.gm.ed-on>.ed-after{box-shadow:4px 4px 0 0 var(--blue)}
+.ed-mv{position:absolute;left:50%;top:3px;transform:translateX(-50%);z-index:5;width:34px;height:16px;border-radius:8px;background:var(--blue);color:#fff;font:700 11px/16px var(--font);text-align:center;letter-spacing:-1px;cursor:grab;touch-action:none;font-style:normal}
+.ed-rs{position:absolute;right:3px;bottom:3px;z-index:5;width:18px;height:18px;border-radius:5px 2px 9px 2px;background:var(--blue);cursor:nwse-resize;touch-action:none}
+.ed-rs::after{content:"";position:absolute;inset:5px;border-right:2px solid #fff;border-bottom:2px solid #fff;border-radius:0 0 3px 0}
+.ed-sz{position:absolute;right:26px;bottom:4px;z-index:5;font:600 10px var(--font);color:var(--blue);background:var(--glass);padding:1px 5px;border-radius:5px}
+.empty-mod{opacity:.6;border-style:dashed}
+.ed-bar{position:absolute;left:8px;right:8px;bottom:8px;z-index:20;display:flex;align-items:center;gap:8px;justify-content:flex-end;pointer-events:none}
+.ed-bar span{flex:1;font-size:11px;color:var(--label-2);background:var(--glass);padding:5px 9px;border-radius:9px;box-shadow:0 2px 10px rgba(0,0,0,.2)}
+.ed-bar button{pointer-events:auto;border:0;border-radius:10px;padding:8px 12px;font:600 12px var(--font);color:#fff;background:var(--blue);box-shadow:0 4px 14px rgba(0,0,0,.25);cursor:pointer}
+.ed-bar button[data-ed="grid-off"]{background:var(--fill-2);color:var(--label)}
+.panel.detail{position:relative}
+.rack.ed-rk-on .door{opacity:0 !important;pointer-events:none}
+.dgrid.ed-on [data-ed-name]{outline:1.5px dashed color-mix(in srgb,var(--blue) 60%,transparent);outline-offset:3px;border-radius:4px;cursor:text}
+.dgrid.ed-on [data-ed-name]:focus{outline:2px solid var(--blue)}
+.dhero .thumb{position:relative}
+.ed-photo{position:absolute;right:6px;bottom:6px;z-index:6;border:0;border-radius:9px;padding:5px 9px;font:600 11px var(--font);color:#fff;background:rgba(10,132,255,.9);cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.rack.ed-rk-on .unums{opacity:1}
+.rack.ed-rk-on .hits .hit{cursor:grab;touch-action:none}
+.rack.ed-rk-on .hits .hit:hover{box-shadow:inset 0 0 0 1.5px var(--blue)}
+.ed-rk{position:absolute;left:var(--wl);right:var(--wr);top:var(--wt);bottom:var(--wb);display:grid;grid-template-rows:repeat(var(--units),1fr);z-index:6;pointer-events:none}
+.ed-plus{pointer-events:auto;grid-column:1;margin:1px 22%;min-height:0;border:1px dashed rgba(255,255,255,.4);border-radius:3px;background:rgba(10,132,255,.14);color:#fff;font:700 9px/1 var(--font);opacity:.55;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;overflow:hidden}
+.ed-plus:hover{opacity:1;background:rgba(10,132,255,.35)}
+.ed-ghost{grid-column:1;border-radius:3px;outline:2px solid var(--green);background:rgba(48,209,88,.25);z-index:2}
+.ed-ghost.bad{outline-color:var(--red);background:rgba(255,69,58,.25)}
+.ed-menu{position:absolute;right:0;bottom:44px;width:min(320px,100%);max-height:60cqh;overflow:auto;pointer-events:auto;background:var(--glass);border:1px solid var(--glass-border);border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.35);padding:6px;display:grid;gap:2px}
+.ed-menu button{all:unset;cursor:pointer;display:grid;gap:1px;padding:7px 10px;border-radius:9px}
+.ed-menu button:hover{background:var(--fill)}
+.ed-menu b{font:600 13px var(--font);color:var(--label)}.ed-menu b em{font-style:normal;font-weight:500;font-size:11px;color:var(--blue);margin-left:4px}
+.ed-menu span{font-size:11px;color:var(--label-2)}
+.ed-bar button[data-ed="add"]{background:var(--green)}
+.dgrid.gm.ed-on{position:relative}
+.ed-gridbg{position:absolute;z-index:0;display:grid;grid-template-columns:repeat(12,minmax(0,1fr));grid-template-rows:repeat(var(--gr),minmax(0,1fr));pointer-events:none}
+/* Fangraster: gepunktete Linien mittig in den Abständen zwischen den Feldern */
+.ed-gridbg{--gl:color-mix(in srgb,var(--label) 30%,transparent);outline:1px dotted var(--gl);outline-offset:calc(var(--gy) / 2)}
+.ed-gridbg i{position:relative}
+.ed-gridbg i::after{content:"";position:absolute;right:calc(var(--gx) / -2);top:calc(var(--gy) / -2);bottom:calc(var(--gy) / -2);border-right:1px dotted var(--gl)}
+.ed-gridbg i::before{content:"";position:absolute;left:calc(var(--gx) / -2);right:calc(var(--gx) / -2);bottom:calc(var(--gy) / -2);border-bottom:1px dotted var(--gl)}
+.ed-gridbg i:nth-child(12n)::after{display:none}
+.ed-gridbg i:nth-last-child(-n+12)::before{display:none}
+.dgrid.gm.ed-on>[data-bi]{z-index:1}
+.empty-mod{opacity:.85;border-style:dashed}
+.empty-mod .sk,[data-bi]>.sk{margin-top:4px}
+/* Im Editor bleiben ausgeschaltete Module bedienbar und deckend (Raster scheint nicht durch) */
+.dgrid.gm.ed-on>.card.offdim{opacity:1 !important;filter:saturate(.15) !important;pointer-events:auto !important}
+.dgrid.gm.ed-on>.card.offdim>*:not(.ed-mv):not(.ed-rs):not(.ed-sz){opacity:.55}

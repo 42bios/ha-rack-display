@@ -1,0 +1,26 @@
+{
+  "type": "batteries",
+  "name": "Batteries",
+  "desc": "Battery levels of several devices as a list, weakest first",
+  "group": "zustand",
+  "items": true,
+  "size": "half",
+  "layout": { "w": 6, "h": 3 },
+  "min_layout": { "w": 3, "h": 2 },
+  "suggest": { "domain": "sensor", "device_class": "battery" },
+  "options": [
+    { "key": "warn", "label": "Warning below (%)", "type": "number", "default": 25 },
+    { "key": "alert", "label": "Critical below (%)", "type": "number", "default": 10 },
+    { "key": "sort", "label": "Sort order", "type": "select", "default": "low", "choices": [["low", "Weakest first"], ["name", "By name"]] }
+  ],
+  "de": {
+    "Batteries": "Akkus",
+    "Battery levels of several devices as a list, weakest first": "Akkustände mehrerer Geräte als Liste, schwache zuerst",
+    "Warning below (%)": "Warnung unter (%)",
+    "Critical below (%)": "Kritisch unter (%)",
+    "Sort order": "Sortierung",
+    "Weakest first": "Schwache zuerst",
+    "By name": "Nach Name"
+  },
+  "author": "@42bios"
+}
