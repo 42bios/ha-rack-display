@@ -8,6 +8,10 @@
 
 Home Assistant custom integration that shows your server rack as an interactive view – in its own panel (`/rack`), on a touch display mounted right at the rack (e.g. a Raspberry Pi running TouchKio), or inside a dashboard.
 
+If you find this project useful, you can support its development and testing by buying me a coffee.
+
+<a href="https://buymeacoffee.com/42bios"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy me a coffee" width="217" height="60"></a>
+
 <img src="docs/brand/icon@2x.png" width="160" alt="Rack Display logo">
 
 > **Disclaimer:** This is an unofficial, community-maintained integration and is not affiliated with, endorsed by, or supported by Ubiquiti, APC/Schneider Electric or any other device manufacturer. All product names, logos, and brands are property of their respective owners and are used for identification purposes only.
