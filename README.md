@@ -12,14 +12,6 @@ Home Assistant custom integration that shows your server rack as an interactive 
 
 [![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=42bios&repository=ha-rack-display&category=integration)
 
-<a href="https://www.buymeacoffee.com/42bios">
-  <img
-    src="https://cdn.buymeacoffee.com/buttons/v2/arial-yellow.png"
-    alt="Buy Me a Coffee"
-    width="180"
-  />
-</a>
-
 > **Disclaimer:** This is an unofficial, community-maintained integration and is not affiliated with, endorsed by, or supported by Ubiquiti, APC/Schneider Electric or any other device manufacturer. All product names, logos, and brands are property of their respective owners and are used for identification purposes only.
 
 <p align="center">
@@ -29,6 +21,14 @@ Home Assistant custom integration that shows your server rack as an interactive 
   <img src="docs/rack-photo.jpg" alt="Raspberry Pi touch display mounted on the rack door" height="330">
 </p>
 <p align="center"><sub>Overview · switch with ports and live throughput · UPS with power flow · prototype mounted on the rack door</sub></p>
+
+<a href="https://www.buymeacoffee.com/42bios">
+  <img
+    src="https://cdn.buymeacoffee.com/buttons/v2/arial-yellow.png"
+    alt="Buy Me a Coffee"
+    width="180"
+  />
+</a>
 
 ## Features
 
