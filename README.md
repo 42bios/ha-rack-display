@@ -5,13 +5,20 @@
 [![Hassfest](https://github.com/42bios/ha-rack-display/actions/workflows/hassfest.yml/badge.svg)](https://github.com/42bios/ha-rack-display/actions/workflows/hassfest.yml)
 [![HACS Custom](https://img.shields.io/badge/HACS-Custom-blue.svg)](https://hacs.xyz/)
 [![Version](https://img.shields.io/github/v/release/42bios/ha-rack-display?color=blue)](https://github.com/42bios/ha-rack-display/releases)
-[![buy me a coffee – donate](https://img.shields.io/badge/buy%20me%20a%20coffee-donate-yellow?style=flat)](https://buymeacoffee.com/42bios)
 
 Home Assistant custom integration that shows your server rack as an interactive view – in its own panel (`/rack`), on a touch display mounted right at the rack (e.g. a Raspberry Pi running TouchKio), or inside a dashboard.
 
 <img src="docs/brand/icon@2x.png" width="160" alt="Rack Display logo">
 
 [![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=42bios&repository=ha-rack-display&category=integration)
+
+<a href="https://www.buymeacoffee.com/42bios">
+  <img
+    src="https://cdn.buymeacoffee.com/buttons/v2/arial-yellow.png"
+    alt="Buy Me a Coffee"
+    width="180"
+  />
+</a>
 
 > **Disclaimer:** This is an unofficial, community-maintained integration and is not affiliated with, endorsed by, or supported by Ubiquiti, APC/Schneider Electric or any other device manufacturer. All product names, logos, and brands are property of their respective owners and are used for identification purposes only.
 
@@ -117,15 +124,7 @@ The frontend source lives in `frontend-src/` and is built into `custom_component
 
 ## Support
 
-If you find this project useful, you can support development and testing:
-
-<a href="https://www.buymeacoffee.com/42bios">
-  <img
-    src="https://cdn.buymeacoffee.com/buttons/v2/arial-yellow.png"
-    alt="Buy Me a Coffee"
-    width="180"
-  />
-</a>
+If you find this project useful, you can [buy me a coffee](https://buymeacoffee.com/42bios) to support development and testing.
 
 Use [Issues](https://github.com/42bios/ha-rack-display/issues) to report bugs or request features, and [Discussions](https://github.com/42bios/ha-rack-display/discussions) to ask questions and share your setup.
 
