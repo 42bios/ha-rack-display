@@ -4,7 +4,7 @@
 [![HACS](https://github.com/42bios/ha-rack-display/actions/workflows/validate-hacs.yml/badge.svg)](https://github.com/42bios/ha-rack-display/actions/workflows/validate-hacs.yml)
 [![Hassfest](https://github.com/42bios/ha-rack-display/actions/workflows/hassfest.yml/badge.svg)](https://github.com/42bios/ha-rack-display/actions/workflows/hassfest.yml)
 [![HACS Custom](https://img.shields.io/badge/HACS-Custom-blue.svg)](https://hacs.xyz/)
-[![Version](https://img.shields.io/github/v/release/42bios/ha-rack-display)](https://github.com/42bios/ha-rack-display/releases)
+[![Version](https://img.shields.io/github/v/release/42bios/ha-rack-display?color=blue)](https://github.com/42bios/ha-rack-display/releases)
 [![buy me a coffee – donate](https://img.shields.io/badge/buy%20me%20a%20coffee-donate-yellow?style=flat)](https://buymeacoffee.com/42bios)
 
 Home Assistant custom integration that shows your server rack as an interactive view – in its own panel (`/rack`), on a touch display mounted right at the rack (e.g. a Raspberry Pi running TouchKio), or inside a dashboard.
