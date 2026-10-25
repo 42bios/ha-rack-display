@@ -2,7 +2,7 @@
    Rack anlegen, Geräte per Drag & Drop in Höheneinheiten setzen, Eigenschaften, HA-Gerät und Fotos pflegen.
    Rechts läuft die echte Anzeige als Live-Vorschau mit dem ungespeicherten Stand. */
 const RDE_BASE = "/rack_display/frontend";
-const RDE_VERSION = "1792520725";
+const RDE_VERSION = "1792961151";
 
 // Vorlagen der Palette (Gerätetyp, Standardhöhe, passiv, Seite)
 const RDE_PALETTE = [

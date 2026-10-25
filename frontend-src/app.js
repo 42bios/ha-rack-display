@@ -367,12 +367,15 @@ function createApp(ROOT, WRAP) {
     }
     // USV
     if (R.battery) {
-      const src = num(R.source), lv = round(num(R.battery)), rt = round(num(R.runtime));
+      // apc_rack_power ab 0.4 liefert Zustände als Text, ältere Versionen als RFC-1628-Zahl
+      const srcText = ok(st(R.source)) ? st(R.source).state : "";
+      const src = { battery: 5, bypass: 4, normal: 3 }[srcText] ?? num(R.source), lv = round(num(R.battery)), rt = round(num(R.runtime));
       const outV = round(num(R.output_voltage)), outA = num(R.output_current);
       d.flow = { inV: round(num(R.input_voltage)), hz: round(num(R.input_frequency), 1), outV, batt: lv, runtime: rt, loadPct: round(num(R.load)),
         load: outV && outA ? Math.round(outV * outA) : null, source: src === 5 ? "Batterie" : "Netz", bypass: src === 4, ids: { in: R.input_voltage, out: R.output_voltage } };
       HIST.want.add(R.input_voltage); HIST.want.add(R.output_voltage); HIST.want.add(R.load);
-      const stc = { 1: "bestanden", 2: "Warnung", 3: "Fehler", 4: "abgebrochen", 5: "läuft", 6: "kein Test" }[num(R.selftest)];
+      const stc = { 1: "bestanden", 2: "Warnung", 3: "Fehler", 4: "abgebrochen", 5: "läuft", 6: "kein Test" }[num(R.selftest)]
+        || { passed: "bestanden", warning: "Warnung", error: "Fehler", aborted: "abgebrochen", in_progress: "läuft", none: "kein Test" }[ok(st(R.selftest)) ? st(R.selftest).state : ""];
       const bdRaw = ok(st(R.battery_replace)) ? st(R.battery_replace).state : "", bdm = bdRaw.match(/^(\d{1,2})\/\d{1,2}\/(\d{4})$/) || bdRaw.match(/^(\d{4})-(\d{2})/);
       const bdate = !bdm ? bdRaw.slice(0, 10) : bdm[1].length === 4 ? `${bdm[2]}/${bdm[1]}` : `${bdm[1].padStart(2, "0")}/${bdm[2]}`;
       const nmc = ok(st(R.nmc_model)) ? st(R.nmc_model).state : null, bt = round(num(R.battery_temp)), bv = num(R.battery_voltage);
