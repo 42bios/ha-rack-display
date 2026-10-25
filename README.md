@@ -119,8 +119,7 @@ The frontend source lives in `frontend-src/` and is built into `custom_component
 
 If you find this project useful, you can [buy me a coffee](https://buymeacoffee.com/42bios) to support development and testing.
 
-- Issues: https://github.com/42bios/ha-rack-display/issues
-- Releases: https://github.com/42bios/ha-rack-display/releases
+Use [Issues](https://github.com/42bios/ha-rack-display/issues) to report bugs or request features, and [Discussions](https://github.com/42bios/ha-rack-display/discussions) to ask questions and share your setup.
 
 ## License
 
