@@ -5,12 +5,9 @@
 [![Hassfest](https://github.com/42bios/ha-rack-display/actions/workflows/hassfest.yml/badge.svg)](https://github.com/42bios/ha-rack-display/actions/workflows/hassfest.yml)
 [![HACS Custom](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://hacs.xyz/)
 [![Version](https://img.shields.io/github/v/release/42bios/ha-rack-display)](https://github.com/42bios/ha-rack-display/releases)
+[![buy me a coffee – donate](https://img.shields.io/badge/buy%20me%20a%20coffee-donate-yellow?style=flat)](https://buymeacoffee.com/42bios)
 
 Home Assistant custom integration that shows your server rack as an interactive view – in its own panel (`/rack`), on a touch display mounted right at the rack (e.g. a Raspberry Pi running TouchKio), or inside a dashboard.
-
-If you find this project useful, you can support its development and testing by buying me a coffee.
-
-[![buy me a coffee – donate](https://img.shields.io/badge/buy%20me%20a%20coffee-donate-yellow?style=flat-square)](https://buymeacoffee.com/42bios)
 
 <img src="docs/brand/icon@2x.png" width="160" alt="Rack Display logo">
 
@@ -119,6 +116,8 @@ The frontend source lives in `frontend-src/` and is built into `custom_component
 - The `Release` workflow publishes a GitHub release with notes grouped via `.github/release.yml`.
 
 ## Support
+
+If you find this project useful, you can [buy me a coffee](https://buymeacoffee.com/42bios) to support development and testing.
 
 - Issues: https://github.com/42bios/ha-rack-display/issues
 - Releases: https://github.com/42bios/ha-rack-display/releases
