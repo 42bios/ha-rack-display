@@ -11,6 +11,8 @@ Home Assistant custom integration that shows your server rack as an interactive 
 
 <img src="docs/brand/icon@2x.png" width="160" alt="Rack Display logo">
 
+[![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=42bios&repository=ha-rack-display&category=integration)
+
 > **Disclaimer:** This is an unofficial, community-maintained integration and is not affiliated with, endorsed by, or supported by Ubiquiti, APC/Schneider Electric or any other device manufacturer. All product names, logos, and brands are property of their respective owners and are used for identification purposes only.
 
 <p align="center">
@@ -43,8 +45,6 @@ Home Assistant custom integration that shows your server rack as an interactive 
 ## Installation
 
 ### HACS (recommended)
-
-[![Open your Home Assistant instance and open this repository in HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=42bios&repository=ha-rack-display&category=integration)
 
 1. Open HACS in Home Assistant.
 2. Open the menu (three dots) → `Custom repositories`.
