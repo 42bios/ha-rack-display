@@ -62,7 +62,8 @@ ROLE_RULES: list[tuple[str, str, str, set[str] | None]] = [
     ("ram", "sensor", r"memory_utilization|speicherauslastung|arbeitsspeicher|memory_use", None),
     ("power", "sensor", r".", {"power"}),
     ("uptime", "sensor", r"uptime|betriebszeit|systemlaufzeit", None),
-    ("state", "sensor", r"(^|_)(state|zustand)$", None),
+    # Verbindungs-/Gerätezustand; Lastzustände (z. B. apc_rack_power load_state) sind keiner
+    ("state", "sensor", r"(^|_)(?<!load_)(state|zustand)$", None),
     ("firmware", "update", r".", None),
 ]
 

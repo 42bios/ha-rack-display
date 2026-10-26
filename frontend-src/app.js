@@ -302,7 +302,7 @@ function createApp(ROOT, WRAP) {
     }
     // Zustand und Meldungen
     if (Object.values(R).length && Object.values(R).every(id => !ok(st(id)))) { d.state = "alert"; d.msgs.push(["alert", "Keine Werte", "Alle Sensoren sind nicht verfügbar"]); }
-    const stt = st(R.state);
+    const stt = /load_state$/.test(R.state || "") ? undefined : st(R.state);
     if (ok(stt) && !["connected", "online", "on", "home"].includes(stt.state)) { d.state = "alert"; d.msgs.push(["alert", "Nicht erreichbar", stt.state === "not_home" ? "Gerät ist nicht im Netzwerk" : `Zustand: ${stt.state}`]); }
     const tracker = R.state?.startsWith("device_tracker.") && ok(stt);
     for (const p of m.problems) if (st(p)?.state === "on") { d.state = "alert"; d.msgs.push(["alert", st(p).attributes.friendly_name || "Problem", "meldet ein Problem"]); }
