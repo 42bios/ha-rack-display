@@ -17,5 +17,5 @@
   "issue_tracker": "https://github.com/42bios/ha-rack-display/issues",
   "requirements": [],
   "single_config_entry": true,
-  "version": "0.1.2"
+  "version": "0.1.3"
 }
