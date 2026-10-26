@@ -592,7 +592,9 @@
     "Eigenes Popup bearbeiten ›": "Edit own popup ›",
     "+ Eigenes Popup (HA-Gerät verknüpfen)": "+ Own popup (link HA device)",
     "Popup entfernt": "Popup removed",
-    "Gerät entfernen": "Remove device"
+    "Gerät entfernen": "Remove device",
+    "Zähler": "Meter",
+    "Heute": "Today"
   },
   "patterns": [
     [

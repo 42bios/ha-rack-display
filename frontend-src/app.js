@@ -93,6 +93,13 @@ function createApp(ROOT, WRAP) {
         }
         rest = ids.filter(id => !stats?.[id]?.length);
       } catch (e) { /* ältere HA-Version: alles über die Historie */ }
+      // Energiezähler: Stand um Mitternacht direkt aus der Historie (Statistiken können Lücken haben, z. B. nach einem Neustart)
+      const eIds = ids.filter(id => st(id)?.attributes.device_class === "energy");
+      if (eIds.length) try {
+        const r0 = await HASS.connection.sendMessagePromise({ type: "history/history_during_period", start_time: midnight.toISOString(), end_time: new Date(+midnight + 60e3).toISOString(),
+          entity_ids: eIds, minimal_response: true, no_attributes: true, include_start_time_state: true });
+        for (const [id, rows] of Object.entries(r0)) { const v = rows.map(x => parseFloat(x.s)).find(x => !isNaN(x)); if (v != null) HIST.energyStart[id] = v; }
+      } catch (e) { /* bleibt beim Wert aus den Statistiken */ }
       if (rest.length) {
         const res = await HASS.connection.sendMessagePromise({ type: "history/history_during_period", start_time: start.toISOString(), end_time: end.toISOString(),
           entity_ids: rest, minimal_response: true, no_attributes: true, significant_changes_only: false });
@@ -394,7 +401,8 @@ function createApp(ROOT, WRAP) {
       // apc_rack_power meldet derzeit alle Ausgänge als „aus“, obwohl Last anliegt → Zustand unbekannt
       d.outletsUnknown = d.outlets.every(x => !x.on) && power > 20;
       d.totalPower = power;
-      d.facts = [["Leistung", `${fmt(power)} W`], ["Strom", `${fmt(num(R.current), 1)} A`], ["Spannung", `${fmt(num(R.voltage))} V`], ["Energie", num(R.energy) >= 1000 ? `${fmt(num(R.energy) / 1000, 2)} MWh` : `${fmt(num(R.energy))} kWh`]];
+      d.facts = [["Leistung", `${fmt(power)} W`], ["Strom", `${fmt(num(R.current), 1)} A`], ["Spannung", `${fmt(num(R.voltage))} V`], (() => { const e = num(R.energy), e0 = HIST.energyStart?.[R.energy]; // Zählerstand seit Inbetriebnahme ist wenig aussagekräftig: lieber „heute“
+        return e != null && e0 != null ? ["Heute", `${fmt(e - e0, 1)} kWh`] : ["Zähler", e >= 1000 ? `${fmt(e / 1000, 2)} MWh` : `${fmt(e)} kWh`]; })()];
       HIST.want.add(R.power); HIST.want.add(R.current); if (R.energy) HIST.want.add(R.energy);
       d.energyId = R.energy;
     }
