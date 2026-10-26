@@ -69,6 +69,7 @@ PATCH = [
     ("renderRack", '$("pduHit").classList.toggle("sel", S.sel === "pdu");',
      'const pdu0 = ZERO_U[0]; $("pduHit").hidden = S.side !== "rear" || !pdu0; if (pdu0){ $("pduHit").dataset.id = pdu0.id; $("pduHit").setAttribute("aria-label", pdu0.name + ", Rückseite"); }\n  $("pduHit").classList.toggle("sel", !!pdu0 && S.sel === pdu0.id);'),
     ("renderRack", 'empties.map(u => `<button class="hit empty" style="grid-row:${RACK.units - u + 1}" data-slot="${u}" aria-label="HE ${u} frei, Gerät einsetzen">+</button>`).join("");', '"";'),
+    ("renderPanel", "  let body;\n", "  if (Date.now() < NAV.until && !NAV.now) { if (!NAV.pending) { NAV.pending = true; setTimeout(() => { NAV.pending = false; renderPanel(); }, NAV.until - Date.now() + 10); } return; }\n  let body;\n"),
     ("renderPanel", "if (S.slot) body = library(S.slot);\n  else if", "if"),
     ("renderPanel", "body = detail(byId(S.sel));", "body = showDetail(byId(S.sel));"),
     # Passt die Detailansicht nicht, fällt zuerst die History weg (kein Scrollen)

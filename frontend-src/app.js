@@ -32,6 +32,8 @@ function createApp(ROOT, WRAP) {
   let DEAD = false;
   rdObserve(ROOT);
   let RACK = { name: "", units: 42, badge: "", plate: "", label1: "", label2: "", power: {}, color: "light", door: "mesh", labelColor: "" };
+  // Während des Hereingleitens kein Neuaufbau des Popups (sonst startet die Animation von vorn und es „wackelt“)
+  const NAV = { until: 0, now: false, pending: false };
   let DEVICES = [], ZERO_U = [], SLOTTED = [], PDU_IMG = "", RAW = null, HASS = null;
   let ARMED = null;
   const S = { sel: null, mode: "view", door: true, side: "front", port: null };
@@ -1538,12 +1540,13 @@ function createApp(ROOT, WRAP) {
     }
     else return;
     if (S.sel !== prevSel) navAnim(S.sel ? "nav-in" : "nav-out");
-    render();
+    NAV.now = true; try { render(); } finally { NAV.now = false; }
   });
   let navT;
   function navAnim(cls) {
     WRAP.classList.remove("nav-in", "nav-out"); void WRAP.offsetWidth;
-    WRAP.classList.add(cls); clearTimeout(navT); navT = setTimeout(() => WRAP.classList.remove(cls), 500);
+    WRAP.classList.add(cls); clearTimeout(navT); navT = setTimeout(() => WRAP.classList.remove(cls), 460);
+    NAV.until = Date.now() + 480;
   }
 
   const timer = setInterval(tick, 10000);
