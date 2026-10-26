@@ -30,7 +30,7 @@ ROLE_RULES: list[tuple[str, str, str, set[str] | None]] = [
     ("battery_temp", "sensor", r"batterietemperatur|battery_temp", None),
     ("battery_voltage", "sensor", r"batteriespannung|battery_voltage", None),
     ("nmc_model", "sensor", r"(^|_)modellnummer$|_model_number$|(^|_)netzwerkkarte$|_network_card_model$", None),
-    ("selftest", "sensor", r"selbsttest|self_test", None),
+    ("selftest", "sensor", r"selbsttest_ergebnis$|self_test_result$|(^|_)(selbsttest|self_test)$", None),
     ("battery_replace", "sensor", r"battery_replace|batterie_austausch|batterie_eingebaut|battery_installed", None),
     ("alarms", "sensor", r"alarme|alarms", None),
     ("on_battery_seconds", "sensor", r"sekunden_auf_batterie|seconds_on_battery|zeit_auf_batterie|time_on_battery", None),
