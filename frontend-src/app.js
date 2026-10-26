@@ -32,13 +32,13 @@ function createApp(ROOT, WRAP) {
   let DEAD = false;
   rdObserve(ROOT);
   let RACK = { name: "", units: 42, badge: "", plate: "", label1: "", label2: "", power: {}, color: "light", door: "mesh", labelColor: "" };
-  let DEVICES = [], ZERO_U = [], PDU_IMG = "", RAW = null, HASS = null;
+  let DEVICES = [], ZERO_U = [], SLOTTED = [], PDU_IMG = "", RAW = null, HASS = null;
   let ARMED = null;
   const S = { sel: null, mode: "view", door: true, side: "front", port: null };
   const $ = id => ROOT.getElementById(id);
   const nf = { format: x => new Intl.NumberFormat(rdLoc()).format(x) };
   const css = v => getComputedStyle(WRAP).getPropertyValue(v).trim();
-  const allDevices = () => [...DEVICES, ...ZERO_U];
+  const allDevices = () => [...DEVICES, ...ZERO_U, ...SLOTTED];
   const members = id => DEVICES.filter(d => d.id === id || d.group === id).sort((a, b) => b.u - a.u);
   const selOf = d => d.group || d.id;
   const isSel = d => S.sel && selOf(d) === S.sel;
@@ -427,11 +427,16 @@ function createApp(ROOT, WRAP) {
     RACK = { name: rack.name, units: rack.units, badge: s.badge || "", plate: s.plate || "", label1: s.label1 || "", label2: s.label2 || "", power: rack.power || {}, color: s.color || "light", door: s.door || "mesh", labelColor: s.label_color || "", heatmap: !!s.heatmap };
     const front = [], rear = [];
     LABELS = Object.assign({}, ...rack.devices.map(r => r.labels || {}));
-    for (const r of rack.devices) (r.side === "rear0u" ? rear : front).push(buildDevice(r));
+    const kids = [];
+    for (const r of rack.devices) (r.parent ? kids : r.side === "rear0u" ? rear : front).push(buildDevice(r));
+    // Geräte in einem Modulrahmen (z. B. Cloud Key): eigenes Popup, Zustand fließt in den Rahmen ein
+    for (const k of kids) { const r = rack.devices.find(x => x.id === k.id); k.parent = r.parent; const f = front.find(x => x.id === k.parent); k.mod = f?.modules?.find(m => m.device === k.id) || null; k.frameName = f?.name || ""; }
+    for (const f of front) { const ks = kids.filter(k => k.parent === f.id && k.mod); if (!ks.length) continue;
+      f.kids = ks; f.passive = false; const ss = ks.filter(k => !k.passive).map(k => k.state); f.state = ss.includes("alert") ? "alert" : ss.includes("warn") ? "warn" : "ok"; }
     // Gruppen (z. B. USV + Zusatzbatterie) teilen sich Zustand und Meldungen des Hauptgeräts
     for (const d of front) if (d.group) { const g = front.find(x => x.id === d.group); if (g) d.state = g.state; }
     for (const d of front) { const sub = front.filter(x => x.group === d.id); if (sub.length) d.model = [d.model, ...sub.map(x => x.model.replace(/^APC /, ""))].join(" + "); }
-    DEVICES = front; ZERO_U = rear;
+    DEVICES = front; ZERO_U = rear; SLOTTED = kids;
     const pdu = rack.devices.find(r => r.side === "rear0u");
     PDU_IMG = pdu?.options?.vertical_image || "";
     const w = st(rack.wled?.entity_id);
@@ -926,23 +931,35 @@ function createApp(ROOT, WRAP) {
   }
   // Modulrahmen: Steckplätze, Module können mehrere Plätze breit sein (m.w); Fronten je Art (m.kind) als Zeichnung
   const SLOT_FACE = {
-    temp: { w: 50, c: "#d0621f", draw: (m, v, on) => `<text x="7" y="25" class="t1">RACK</text><text x="7" y="33" class="t1" style="fill:#d0621f">TEMP</text>
-      <rect x="37" y="15" width="5" height="16" rx="2.5" fill="none" stroke="#c9c5ba" stroke-width="1.4"/><circle cx="39.5" cy="32" r="4" fill="none" stroke="#c9c5ba" stroke-width="1.4"/><circle cx="39.5" cy="32" r="2.4" fill="#d0621f"/><rect x="38.8" y="20" width="1.4" height="10" fill="#d0621f"/>
-      <rect x="10" y="38" width="30" height="1.2" fill="#d0621f"/><rect x="11" y="41" width="28" height="9" fill="#2a2926"/><rect x="10" y="52" width="30" height="1.2" fill="#d0621f"/>
-      ${v ? `<text x="25" y="48" class="lcd" style="fill:${on}">${v}</text>` : ""}
-      <rect x="10" y="60" width="1.2" height="15" fill="#d0621f"/><rect x="38.8" y="60" width="1.2" height="15" fill="#d0621f"/>${SLOT_RJ(16, 61)}<text x="25" y="83" class="t2">LAN / PoE</text>` },
-    ntp: { w: 50, c: "#1f4f8f", draw: (m, v, on) => `<text x="25" y="23" class="t0">NTP</text><text x="25" y="28" class="t2">TIME SERVER</text>
-      <rect x="10" y="31" width="30" height="1.2" fill="#1f4f8f"/><rect x="11" y="33.5" width="28" height="8" fill="#2a2926"/><rect x="10" y="43" width="30" height="1.2" fill="#1f4f8f"/>
-      <text x="25" y="39.8" class="lcd" style="fill:#9fe7ff">${new Date().toLocaleTimeString(rdLoc(), { hour: "2-digit", minute: "2-digit" })}</text>
-      <text x="16" y="51" class="t3">DISPLAY</text><text x="35" y="51" class="t3">PWR PPS</text>
-      <circle cx="16" cy="56" r="3.6" fill="#1f4f8f"/><circle cx="31" cy="56" r="2.2" fill="#1a1a1a" stroke="#c9c5ba" stroke-width=".9"/><circle cx="31" cy="56" r="1.3" fill="${on}"/>
-      <circle cx="39" cy="56" r="2.2" fill="#1a1a1a" stroke="#c9c5ba" stroke-width=".9"/><circle cx="39" cy="56" r="1.3" fill="${on}" class="${on === SLOT_OK ? "pps" : ""}"/>
-      <circle cx="16" cy="70" r="4.6" fill="#55534f" stroke="#1d1d1d" stroke-width="1.4"/>${SLOT_RJ(28, 64)}
-      <text x="16" y="82" class="t2">GNSS</text><text x="34" y="82" class="t2">LAN / PoE</text><text x="25" y="87.5" class="t3">GNSS DISCIPLINED</text>` },
-    cloudkey: { w: 145, c: null, plate: "#2e2e2e", draw: (m, v, on) => `<rect x="20" y="28" width="110" height="26" rx="5" fill="#0d0e10"/>
-      <rect x="27" y="31" width="96" height="20" rx="3" fill="url(#ckb)"/><rect x="30" y="35" width="14" height="10" rx="1.2" fill="#111" stroke="#3a3d42" stroke-width=".5"/>
-      <rect x="32" y="39" width="7" height="1.6" fill="#3dd6f5" opacity=".85"/><circle cx="116" cy="41" r="1.6" fill="${on === SLOT_OK ? "#4fb3ff" : on}"/><rect x="60" y="47" width="30" height="1" rx=".5" fill="#c2c5ca"/>
-      <text x="96" y="75" class="t2" font-size="5.5">LAN/PoE</text><rect x="104" y="68" width="11" height="10" fill="#0c0d0f" stroke="#555" stroke-width=".6"/><rect x="106.5" y="70" width="6" height="3" fill="#1d1e20"/>` },
+    temp: { w: 56, c: "#d0621f", draw: (m, v, on) => `<text x="8" y="24" class="t1">RACK</text><text x="8" y="33" class="t1" style="fill:#d0621f">TEMP</text>
+      <rect x="41.5" y="13" width="5" height="17" rx="2.5" fill="none" stroke="#c9c5ba" stroke-width="1.4"/><circle cx="44" cy="32" r="4.2" fill="none" stroke="#c9c5ba" stroke-width="1.4"/><circle cx="44" cy="32" r="2.5" fill="#d0621f"/><rect x="43.3" y="19" width="1.4" height="11" fill="#d0621f"/>
+      <path d="M49 16h3M49 20h3M49 24h3" stroke="#c9c5ba" stroke-width="1.2"/>
+      <rect x="11" y="39" width="34" height="1.3" fill="#d0621f"/><rect x="12" y="41.5" width="32" height="10" fill="#2a2926"/><rect x="11" y="53.3" width="34" height="1.3" fill="#d0621f"/>
+      ${v ? `<text x="28" y="49.4" class="lcd" style="fill:${on}">${v}</text>` : ""}
+      <rect x="11" y="59" width="1.3" height="19" fill="#d0621f"/><rect x="43.7" y="59" width="1.3" height="19" fill="#d0621f"/>${SLOT_RJ(19, 61)}<text x="28" y="85" class="t2">LAN / PoE</text>` },
+    ntp: { w: 56, c: "#1f4f8f", draw: (m, v, on) => `<text x="28" y="23" class="t0">NTP</text><text x="28" y="28.5" class="t2">TIME SERVER</text>
+      <rect x="11" y="31.5" width="34" height="1.3" fill="#1f4f8f"/><rect x="12" y="34" width="32" height="8.5" fill="#2a2926"/><rect x="11" y="44" width="34" height="1.3" fill="#1f4f8f"/>
+      <text x="28" y="40.6" class="lcd" style="fill:#9fe7ff">${new Date().toLocaleTimeString(rdLoc(), { hour: "2-digit", minute: "2-digit" })}</text>
+      <text x="17" y="51" class="t3">DISPLAY</text><text x="37.5" y="51" class="t3">PWR PPS</text>
+      <circle cx="17" cy="56.5" r="4.2" fill="#1f4f8f"/><circle cx="33" cy="56.5" r="2.4" fill="#1a1a1a" stroke="#c9c5ba" stroke-width=".9"/><circle cx="33" cy="56.5" r="1.4" fill="${on}"/>
+      <circle cx="42" cy="56.5" r="2.4" fill="#1a1a1a" stroke="#c9c5ba" stroke-width=".9"/><circle cx="42" cy="56.5" r="1.4" fill="${on}" class="${on === SLOT_OK ? "pps" : ""}"/>
+      <circle cx="17" cy="70" r="5" fill="#55534f" stroke="#1d1d1d" stroke-width="1.4"/>${SLOT_RJ(29, 63)}
+      <text x="17" y="82" class="t2">GNSS</text><text x="38" y="82" class="t2">LAN / PoE</text><text x="28" y="88" class="t3">GNSS DISCIPLINED</text>` },
+    cloudkey: { w: 168, c: null, plate: "#2e2e2e", draw: (m, v, on, k) => { const f = k?.blocks ? factsOf(k) : [], num = re => f.find(x => re.test(x[0]))?.[1]?.split(" ")[0];
+      const cl = num(/client/i) ?? "–", dv = (+num(/ap/i) || 0) + (+num(/switch/i) || 0) || "–", up = on === SLOT_OK;
+      return `<rect x="22" y="27" width="124" height="28" rx="5" fill="#0d0e10"/>
+      <rect x="26" y="29.5" width="116" height="23" rx="4.5" fill="url(#ckb)"/><rect x="28" y="31.2" width="112" height="19.6" rx="3.4" fill="#0a0a0b"/>
+      <rect x="99" y="33" width="38" height="12.6" rx="1" fill="#141416"/>
+      <text x="101" y="36.4" style="font-size:2.6px;text-anchor:start;fill:#6e6e73">UniFi Network</text>
+      <circle cx="102.4" cy="39.6" r="1.5" fill="none" stroke="#e6e6e8" stroke-width=".35"/><path d="M100.9 39.6h3M102.4 38.1v3" stroke="#e6e6e8" stroke-width=".3"/>
+      <text x="104.6" y="40.6" style="font-size:3px;text-anchor:start;fill:${up ? "#f2f2f4" : "#ff9f0a"}">${up ? "Online" : "Offline"}</text>
+      <circle cx="133.6" cy="38.2" r="2.3" fill="#f2f2f4"/><circle cx="133.6" cy="38.2" r="1.2" fill="none" stroke="#141416" stroke-width=".35"/>
+      <path d="M99 42.4h38M106 42.4v3.2" stroke="#2c2c2e" stroke-width=".3"/>
+      <path d="M101.2 44.6a1 1 0 0 1 .4-1.9a1.4 1.4 0 0 1 2.6.3a.8.8 0 0 1 .1 1.6z" fill="none" stroke="#e6e6e8" stroke-width=".3"/>
+      <circle cx="117" cy="44" r="1.1" fill="none" stroke="#6e6e73" stroke-width=".3"/><text x="118.8" y="45.1" style="font-size:3px;text-anchor:start;fill:#f2f2f4">${cl}</text>
+      <rect x="127" y="42.9" width="2" height="2.1" rx=".3" fill="none" stroke="#6e6e73" stroke-width=".3"/><text x="130.3" y="45.1" style="font-size:3px;text-anchor:start;fill:#f2f2f4">${dv}</text>
+      <text x="118" y="49.2" style="font-size:2.7px;font-weight:600;fill:#5a5a5e">Cloud Key Plus</text>
+      <text x="108" y="75" class="t2" style="font-size:5.5px">LAN/PoE</text><rect x="118" y="68" width="11" height="10" fill="#0c0d0f" stroke="#555" stroke-width=".6"/><rect x="120.5" y="70" width="6" height="3" fill="#1d1e20"/>`; } },
   };
   const SLOT_OK = "#34c759";
   const SLOT_RJ = (x, y) => `<rect x="${x}" y="${y}" width="18" height="14" fill="#5a5853"/><rect x="${x + 2}" y="${y + 2}" width="14" height="10" fill="#161616"/><rect x="${x + 6}" y="${y + 2}" width="6" height="2.5" fill="#5a5853"/><path d="M${x + 4.5} ${y + 9}h9" stroke="#8c8a84" stroke-width="1.6" stroke-dasharray=".7 .7"/>`;
@@ -952,9 +969,9 @@ function createApp(ROOT, WRAP) {
     const lp = m.entity ? (s ? lamp(m.entity) : "warn") : d.state === "alert" ? "alert" : d.state === "warn" ? "warn" : "ok";
     const on = lp === "alert" ? "#ff3b30" : lp === "warn" ? "#ffcc00" : lp === "off" ? "#3a3a3a" : SLOT_OK;
     const W = f.w, holes = W > 60 ? [[14, 10], [W - 14, 10], [14, 90], [W - 14, 90]] : [[W / 2, 9], [W / 2, 91]];
-    return `<svg viewBox="0 0 ${W} 100" preserveAspectRatio="none"><defs><linearGradient id="ckb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4f5f7"/><stop offset="1" stop-color="#cfd2d6"/></linearGradient></defs>
+    return `<svg class="sface" viewBox="0 0 ${W} 100" preserveAspectRatio="none"><defs><linearGradient id="ckb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fbfbfc"/><stop offset="1" stop-color="#dcdee2"/></linearGradient></defs>
       <rect width="${W}" height="100" rx="2" fill="${f.plate || "#0b0b0c"}"/>${f.c ? `<rect x="3" y="3" width="${W - 6}" height="94" rx="3" fill="none" stroke="${f.c}" stroke-width="1.6"/>` : ""}
-      ${holes.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="3.2" fill="#8d9096"/><circle cx="${x}" cy="${y}" r="1.6" fill="#4a4c50"/>`).join("")}${f.draw(m, v, on)}</svg>`;
+      ${holes.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="3.2" fill="#8d9096"/><circle cx="${x}" cy="${y}" r="1.6" fill="#4a4c50"/>`).join("")}${f.draw(m, v, on, d)}</svg>`;
   }
   // Steckplätze mit Belegung: [{n, m, w}] – ein breites Modul belegt die folgenden Plätze mit
   function slotRuns(d) {
@@ -962,21 +979,43 @@ function createApp(ROOT, WRAP) {
     for (let i = 1; i <= n;) { const m = mods.find(x => x.slot === i), w = m ? Math.max(1, Math.min(+m.w || 1, n - i + 1)) : 1; out.push({ n: i, m, w }); i += w; }
     return out;
   }
+  const kidOf = (f, m) => m?.device ? (f.kids || []).find(k => k.id === m.device) : null;
+  // Kopfbild eines Moduls: der ganze Rahmen, das Modul hervorgehoben
+  function slotThumb(d) {
+    const f = DEVICES.find(x => x.id === d.parent); if (!f || !d.mod) return "";
+    f._hl = d.mod.slot; const html = face(f); f._hl = null; const ar = 9.9 / (f.h || 2);
+    return `<div class="thumb" style="aspect-ratio:${ar};--ar:${ar}">${html}</div>`;
+  }
+  // Kennzahlen eines Geräts aus seinem Kopf-Modul (für Übersichten)
+  function factsOf(k) {
+    const hb = k.blocks?.find(b => b.type === "header"); if (!hb?.items?.length || k.off) return k.facts || [];
+    return hb.items.slice(0, 4).map(ref => [ref, entOf(ref, k.R)]).filter(x => x[1] && st(x[1])).map(([ref, id]) => { const v = valueOf(id); return [nameOf(hb, ref, id), `${v.v}${v.u ? " " + v.u : ""}`]; });
+  }
   function frameInner(d) {
     const n = d.slots || 10;
-    return `<i class="in"><span class="slots" style="--n:${n}">${slotRuns(d).map(({ m, w }) =>
-      `<span class="slot ${m ? (m.status === "planned" ? "planned" : "mod " + (m.kind || "")) : ""}" style="${w > 1 ? `grid-column:span ${w}` : ""}">${m && m.status !== "planned" ? slotFace(m, d) : ""}</span>`).join("")}</span></i>`;
+    return `<i class="in"><span class="slots ${d._hl ? "hl" : ""}" style="--n:${n}">${slotRuns(d).map(({ m, w }) =>
+      `<span class="slot ${m ? (m.status === "planned" ? "planned" : "mod " + (m.kind || "")) : ""} ${m && d._hl === m.slot ? "on" : ""}" style="${w > 1 ? `grid-column:span ${w}` : ""}">${m && m.status !== "planned" ? slotFace(m, kidOf(d, m) || d) : ""}</span>`).join("")}</span></i>`;
   }
   function slotsCard(d) {
     const n = d.slots || 10, mods = d.modules || [], runs = [];
     // aufeinanderfolgende freie Plätze zu einer Zeile zusammenfassen
     slotRuns(d).forEach(x => { const p = runs[runs.length - 1]; if (!x.m && p && !p.m) p.w += x.w; else runs.push({ ...x }); });
     const used = runs.filter(x => x.m && x.m.status !== "planned").reduce((a, x) => a + x.w, 0), plan = mods.filter(m => m.status === "planned").length;
-    return `<section class="card"><h2>Steckplätze <em>${used} von ${n} belegt${plan ? ` · ${plan} geplant` : ""}</em></h2>
-      <div class="slotlist">${runs.map(({ n: i, m, w }) => {
-        const s = m?.entity && st(m.entity), trk = s && m.entity.startsWith("device_tracker.");
-        const v = s ? (trk ? { v: s.state === "home" ? "Online" : "Offline", u: "" } : valueOf(m.entity)) : null, l = v ? lamp(m.entity) : "";
-        return `<div class="sl ${m ? (m.status === "planned" ? "planned" : "on") : ""}"><span>${w > 1 ? `${i}–${i + w - 1}` : i}</span><b>${m ? m.name : "frei"}</b><em>${m ? (m.status === "planned" ? "geplant" : "") + (m.desc ? `${m.status === "planned" ? " · " : ""}${m.desc}` : "") : ""}</em>${v ? `<strong class="slv ${l}">${v.v}${v.u ? `<small>${v.u}</small>` : ""}</strong>` : ""}</div>`; }).join("")}</div></section>`;
+    const tile = ({ n: i, m, w }) => {
+      const pos = w > 1 ? `${i}–${i + w - 1}` : `${i}`;
+      if (!m) return `<div class="slt free"><span class="sn">${pos}</span><b>frei</b></div>`;
+      const k = kidOf(d, m), s = m.entity && st(m.entity), trk = s && m.entity.startsWith("device_tracker.");
+      const state = k ? (k.passive ? "off" : k.state) : s ? ({ alert: "alert", warn: "warn", off: "off" }[lamp(m.entity)] || "ok") : m.status === "planned" ? "off" : "";
+      const txt = k ? STATE_TXT[state] : trk ? (s.state === "home" ? "Online" : "Offline") : m.status === "planned" ? "geplant" : s ? "" : "";
+      const facts = k ? factsOf(k).slice(0, 3) : s && !trk ? [["Wert", (v => `${v.v}${v.u ? " " + v.u : ""}`)(valueOf(m.entity))]] : trk && s.attributes.ip ? [["IP", s.attributes.ip]] : [];
+      const tag = k ? "button" : "div";
+      return `<${tag} class="slt ${m.status === "planned" ? "planned" : ""} ${k ? "link" : ""}" ${k ? `data-id="${k.id}"` : ""} style="--w:${w}">
+        <span class="slf">${m.status !== "planned" ? `<span class="slot mod ${m.kind || ""}">${slotFace(m, k || d)}</span>` : ""}</span>
+        <span class="slm"><span class="slh"><b>${m.name}</b>${txt ? `<span class="chip ${state}"><i></i>${txt}</span>` : ""}</span>
+          <em>Platz ${pos}${m.desc ? ` · ${m.desc}` : ""}</em>
+          ${facts.length ? `<span class="slx">${facts.map(([a, b]) => `<span><small>${a}</small><b>${b}</b></span>`).join("")}</span>` : ""}</span>${k ? '<i class="chev">›</i>' : ""}</${tag}>`; };
+    return `<section class="card slotc"><h2>Steckplätze <em>${used} von ${n} belegt${plan ? ` · ${plan} geplant` : ""}</em></h2>
+      <div class="sltl">${runs.map(tile).join("")}</div></section>`;
   }
   // Einschalten (z. B. IPMI): erst beim zweiten Tippen innerhalb von 4 s
   function powerOnBtn(d) {
@@ -991,7 +1030,7 @@ function createApp(ROOT, WRAP) {
     const hb = d.blocks.find(b => b.type === "header");
     if (hb?.items?.length && !d.off) d.facts = hb.items.slice(0, 4).map(ref => [ref, entOf(ref, d.R)]).filter(x => x[1]).map(([ref, id]) => { const v = valueOf(id); return [nameOf(hb, ref, id), `${v.v}${v.u ? " " + v.u : ""}`]; });
     const mm = members(d.id), lo = Math.min(...mm.map(x => x.u)), hi = Math.max(...mm.map(x => x.u + x.h - 1));
-    const where = d.u ? `${d.type === "shelf" ? "auf Fachboden " : ""}HE ${lo}${hi > lo ? "–" + hi : ""}` : "Rückseite, 0 HE";
+    const where = d.parent ? `${d.frameName || "Modulrahmen"} · ${d.mod?.w > 1 ? `Platz ${d.mod.slot}–${d.mod.slot + d.mod.w - 1}` : `Platz ${d.mod?.slot ?? "–"}`}` : d.u ? `${d.type === "shelf" ? "auf Fachboden " : ""}HE ${lo}${hi > lo ? "–" + hi : ""}` : "Rückseite, 0 HE";
     return `<section class="card"><div class="dhero">
       <div class="top"><div style="min-width:0"><h1 data-ed-name style="font:700 24px/1.1 var(--font-display);margin:0 0 4px">${d.name}</h1><div class="sub" style="color:var(--label-2);font-size:13px">${d.model} · ${where}</div></div>
         ${d.off && d.options?.power_on && st(d.options.power_on) ? powerOnBtn(d) : `<span class="chip ${d.passive ? "off" : d.state}"><i></i>${d.off ? "Aus" : STATE_TXT[d.passive ? "off" : d.state]}</span>`}</div>
@@ -1483,7 +1522,7 @@ function createApp(ROOT, WRAP) {
     else if (t.dataset.port) { S.port = +t.dataset.port; }
     else if (t.dataset.bay) { S.bay = t.dataset.bay; }
     else if (t.dataset.id) { S.port = null; S.sel = S.sel === t.dataset.id && t.classList.contains("hit") ? null : t.dataset.id; }
-    else if (t.dataset.back !== undefined) { S.sel = null; }
+    else if (t.dataset.back !== undefined) { S.sel = byId(S.sel)?.parent || null; }
     else if (t.id === "doorOpen" || t.id === "doorClosed" || t.id === "sideRear" || t.id === "sideHeat") {
       S.heat = t.id === "sideHeat";
       S.side = t.id === "sideRear" ? "rear" : "front"; S.door = t.id === "doorClosed";

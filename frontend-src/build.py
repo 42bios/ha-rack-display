@@ -41,6 +41,9 @@ PATCH = [
     ("face", "shelf:'<div class=\"plate\"></div><div class=\"box\"></div>',", "shelf:shelfInner(d),"),
     ("rearFace", '["blank", "cm", "bl"]', '["blank", "cm", "bl", "frame"]'),
     ("headThumb", "const ar = d.thumbAspect ||", "const ar = imgAr(d.image) || d.thumbAspect ||"),
+    ("headThumb", "const m = d.group ? [] : members(d.id);", "if (d.parent) return slotThumb(d);\n  const m = d.group ? [] : members(d.id);"),
+    # Modulrahmen: Module mit eigenem Gerät im Rack direkt antippbar
+    ("renderRack", '$("pduHit").hidden = S.side !== "rear";', '$("hits").innerHTML += S.side === "rear" ? "" : DEVICES.filter(f => f.kids).flatMap(f => f.kids.map(k => { const n = f.slots || 10, L = 4.5 + 91 * (0.035 + 0.93 * (0.01 + 0.98 * (k.mod.slot - 1) / n)), W = 91 * 0.93 * 0.98 * (k.mod.w || 1) / n; return `<button class="hit sub ${k.state} ${isSel(k) ? "sel" : ""}" style="grid-row:${rowOf(f)};margin:0 0 0 ${L.toFixed(2)}%;width:${W.toFixed(2)}%;justify-self:start" data-id="${k.id}" aria-label="${k.name}"></button>`; })).join("");\n  $("pduHit").hidden = S.side !== "rear";'),
     ("leds48", "p = d.ports[n - 1]", "p = d.ports.find(x => x.n === n) || {}"),
     ("leds48", "animation-duration:${(0.12 + (h % 9) * 0.07).toFixed(2)}s", "animation-duration:${ledDur(p, h)}s"),
     ("leds48", '<i class="pl-led ${p.speed ? "link" : "off"}" style=', '<i class="pl-led ${p.speed ? "link" : "off"}" data-n="${n}" style='),
@@ -51,7 +54,7 @@ PATCH = [
     ("renderRack", '$("plate").hidden = !RACK.plate;', '$("plate").hidden = !RACK.plate; $("badge").hidden = !RACK.badge;'),
     # Gesamtstatus: auch Meldungen zählen (z. B. „Keine Daten“ = Hinweis), damit Kopfzeile und Hinweise übereinstimmen
     ("worst", 'return s.includes("alert") ? "alert" : s.includes("warn") ? "warn" : "ok";',
-     'const m = DEVICES.concat(ZERO_U).filter(d => !d.passive && !d.group).flatMap(d => (d.msgs || []).map(x => x[0])); return s.includes("alert") || m.includes("alert") ? "alert" : s.includes("warn") || m.includes("warn") ? "warn" : "ok";'),
+     'const m = allDevices().filter(d => !d.passive && !d.group).flatMap(d => (d.msgs || []).map(x => x[0])); return s.includes("alert") || m.includes("alert") ? "alert" : s.includes("warn") || m.includes("warn") ? "warn" : "ok";'),
     # Verlaufszeilen: Kurve exakt so hoch wie ihre Zeile (keine Mindesthöhe)
     ("fillCharts", "Math.max(70, el.clientHeight)", "Math.max(el.closest(\".tr2,.mt\") ? 14 : 70, el.clientHeight)"),
     ("fillCharts", "Math.max(160, el.clientWidth)", "el.closest(\".mt\") ? el.clientWidth : Math.max(160, el.clientWidth)"),

@@ -336,7 +336,7 @@ class RackDisplayEditor extends HTMLElement {
     const devs = this.rack.devices.filter(d => !RackDisplayEditor.filler(d)).sort((a, b) => (a.side === "rear0u") - (b.side === "rear0u") || (b.u || 0) - (a.u || 0));
     L.innerHTML = this.drawerHead() + `${outside.length ? `<div class="found over">${outside.length} Gerät(e) passen nicht in ${this.rack.units} HE: ${outside.map(d => `<button class="btn" data-place="${esc(d.id)}">${esc(d.name)} einsetzen</button>`).join(" ")}</div>` : ""}<div class="card sheet">
       ${sec("devs", "Geräte", `<div class="dlist"><button class="dl ov" data-open-dev="__ov"><span class="du">▦</span><b>Übersicht</b><small>Startseite neben dem Rack</small></button>
-        ${(() => { const isP = d => d.passive || RDE_PASSIVE.includes(d.template), row = d => { const passive = isP(d); return `<button class="dl ${passive ? "passive" : ""}" data-open-dev="${esc(d.id)}"><span class="du">${d.side === "rear0u" ? "0" : d.h > 1 ? `${d.u}–${d.u + d.h - 1}` : d.u}</span><b>${esc(d.name)}</b><small>${esc(d.model || RDE_TEMPLATES.find(t => t[0] === d.template)?.[1] || "")}</small>${passive ? "" : `<i class="ha ${d.ha_devices?.length ? "on" : ""}" title="${d.ha_devices?.length ? "Mit Home Assistant verknüpft" : "Nicht verknüpft"}"></i>`}</button>`; };
+        ${(() => { const isP = d => d.passive || RDE_PASSIVE.includes(d.template), row = d => { const passive = isP(d); return `<button class="dl ${passive ? "passive" : ""}" data-open-dev="${esc(d.id)}"><span class="du">${d.parent ? "▤" : d.side === "rear0u" ? "0" : d.h > 1 ? `${d.u}–${d.u + d.h - 1}` : d.u}</span><b>${esc(d.name)}</b><small>${esc(d.model || RDE_TEMPLATES.find(t => t[0] === d.template)?.[1] || "")}</small>${passive ? "" : `<i class="ha ${d.ha_devices?.length ? "on" : ""}" title="${d.ha_devices?.length ? "Mit Home Assistant verknüpft" : "Nicht verknüpft"}"></i>`}</button>`; };
           const act = devs.filter(d => !isP(d)), pas = devs.filter(isP);
           return act.map(row).join("") + (pas.length ? `</div>${this.sec("passive", `Passive Elemente`, `<div class="dlist">${pas.map(row).join("")}</div>`, `${pas.length}`)}<div class="dlist">` : ""); })()}</div>
         <p class="hint">Antippen zum Bearbeiten. Im Rack rechts: ziehen zum Verschieben, ＋ zum Einsetzen.</p>`, `${units} von ${this.rack.units} HE`)}
@@ -406,7 +406,8 @@ class RackDisplayEditor extends HTMLElement {
       ${sec("general", "Allgemein", `<label class="f">Name<input data-dev-f="name" value="${esc(d.name)}"></label>
       <label class="f">Modell<input data-dev-f="model" value="${esc(d.model)}"></label>
       <div class="row2"><label class="f">Vorlage<select data-dev-f="template">${RDE_TEMPLATES.map(([k, n]) => `<option value="${k}" ${k === d.template ? "selected" : ""}>${n}</option>`).join("")}</select></label>
-      ${d.side === "rear0u" ? `<label class="f">Position<select data-dev-f="side"><option value="rear0u" selected>Rückseite (0 HE)</option><option value="front">Vorne in HE</option></select></label>`
+      ${d.parent ? `<label class="f">Position<input disabled value="${esc((this.rack.devices.find(x => x.id === d.parent)?.name || "Modulrahmen") + " · Platz " + ((this.rack.devices.find(x => x.id === d.parent)?.options?.modules || []).find(m => m.device === d.id)?.slot ?? "–"))}"></label>`
+        : d.side === "rear0u" ? `<label class="f">Position<select data-dev-f="side"><option value="rear0u" selected>Rückseite (0 HE)</option><option value="front">Vorne in HE</option></select></label>`
         : `<label class="f">Höhe (HE)<input type="number" min="1" max="12" data-dev-f="h" value="${d.h}"></label>`}</div>
       <label class="chk"><input type="checkbox" data-dev-f="passive" ${d.passive ? "checked" : ""}> Passiv (ohne Sensoren)</label>
       ${passive ? "" : `<label class="chk"><input type="checkbox" data-dev-opt="sometimes_off" ${d.options?.sometimes_off ? "checked" : ""}> <span>Nicht immer eingeschaltet<small class="hint" style="display:block;margin:0">Aus = grau, keine Warnungen</small></span></label>
@@ -467,7 +468,8 @@ class RackDisplayEditor extends HTMLElement {
           <select data-slot="${i + 1}:status" ${m.name ? "" : "disabled"}><option value="installed" ${st === "installed" ? "selected" : ""}>eingebaut</option><option value="planned" ${st === "planned" ? "selected" : ""}>geplant</option></select>
           ${m.name ? `<select class="sk" data-slot="${i + 1}:kind">${KINDS.map(([k, t]) => `<option value="${k}" ${(m.kind || "") === k ? "selected" : ""}>${t}</option>`).join("")}</select>
           <select data-slot="${i + 1}:w" title="Breite in Steckplätzen">${Array.from({ length: Math.min(6, n - i) }, (_, k) => `<option value="${k + 1}" ${w === k + 1 ? "selected" : ""}>${k + 1} ${k ? "Plätze" : "Platz"}</option>`).join("")}</select>
-          <input class="sd" data-slot="${i + 1}:desc" value="${esc(m.desc || "")}" placeholder="Beschreibung, z. B. LAN · OLED"><input class="sd" list="slotents" data-slot="${i + 1}:entity" value="${esc(m.entity || "")}" placeholder="Entität für Live-Wert (optional)">` : ""}</div>`; }).join("")}</div>
+          <input class="sd" data-slot="${i + 1}:desc" value="${esc(m.desc || "")}" placeholder="Beschreibung, z. B. LAN · OLED"><input class="sd" list="slotents" data-slot="${i + 1}:entity" value="${esc(m.entity || "")}" placeholder="Entität für Live-Wert (optional)">
+          ${m.status !== "planned" ? (m.device && this.rack.devices.some(x => x.id === m.device) ? `<span class="sd" style="display:flex;gap:6px"><button class="btn" data-open-dev="${esc(m.device)}">Eigenes Popup bearbeiten ›</button><button class="btn" data-slot-unlink="${i + 1}" title="Gerät entfernen">Entfernen</button></span>` : `<button class="btn sd" data-slot-dev="${i + 1}">+ Eigenes Popup (HA-Gerät verknüpfen)</button>`) : ""}` : ""}</div>`; }).join("")}</div>
       <p class="hint">Name eintragen belegt den Steckplatz; leeren gibt ihn frei. Mit Entität zeigt das Popup den aktuellen Wert.</p>`;
   }
   /* ---------- Stromleiste: Ausgänge benennen ---------- */
@@ -759,6 +761,12 @@ class RackDisplayEditor extends HTMLElement {
       if (t.dataset.shelfAdd) { this.shelfItems(this.dev()).push({ name: "", kind: "mini" }); this.changed(); this.renderSheet(); return; }
       if (t.dataset.shelfDel !== undefined) { const L = this.shelfItems(this.dev()); L.splice(+t.dataset.shelfDel, 1); this.changed(); this.renderSheet(); return; }
       if (t.dataset.openDev) { this.openDev(t.dataset.openDev); return; }
+      if (t.dataset.slotDev) { const f = this.dev(), m = (f.options?.modules || []).find(x => x.slot === +t.dataset.slotDev); if (!m) return;
+        const k = { id: this.newId(m.name || "Modul"), name: m.name || "Modul", model: m.desc || "", template: "generic", u: 0, h: 1, side: "front", parent: f.id, passive: false, ha_devices: [], roles: {}, options: {} };
+        this.rack.devices.push(k); m.device = k.id; this.changed(); this.openDev(k.id); this.toast(`Popup für „${k.name}“ angelegt – jetzt HA-Gerät wählen`); return; }
+      if (t.dataset.slotUnlink) { const f = this.dev(), m = (f.options?.modules || []).find(x => x.slot === +t.dataset.slotUnlink); if (!m?.device) return;
+        const id = m.device; this.rack.devices = this.rack.devices.filter(x => x.id !== id); delete m.device; this.changed(); this.renderSheet();
+        this.toast("Popup entfernt"); return; }
       if (t.dataset.openBlk !== undefined) { this._selBlk = +t.dataset.openBlk; this._drawer = "module"; this._pickBlk = null; this.renderLeft(); this.decorate(); return; }
       if (t.dataset.act === "save") this.save();
       else if (t.dataset.act === "export") this.exportRack();

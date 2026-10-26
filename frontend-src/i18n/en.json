@@ -588,7 +588,11 @@
     "Platz": "slot",
     "Plätze": "slots",
     "Offline": "Offline",
-    "Online": "Online"
+    "Online": "Online",
+    "Eigenes Popup bearbeiten ›": "Edit own popup ›",
+    "+ Eigenes Popup (HA-Gerät verknüpfen)": "+ Own popup (link HA device)",
+    "Popup entfernt": "Popup removed",
+    "Gerät entfernen": "Remove device"
   },
   "patterns": [
     [
@@ -998,6 +1002,26 @@
     [
       "^1 Platz$",
       "1 slot"
+    ],
+    [
+      "^Popup für „(.+)“ angelegt – jetzt HA-Gerät wählen$",
+      "Popup for “$1” created – now pick the HA device"
+    ],
+    [
+      "^Platz (\\d+)–(\\d+)$",
+      "Slots $1–$2"
+    ],
+    [
+      "^Platz (\\d+)$",
+      "Slot $1"
+    ],
+    [
+      "^Platz (\\d+(?:–\\d+)?) · (.+)$",
+      "Slot $1 · $2"
+    ],
+    [
+      "^(.+) · Platz (.+)$",
+      "$1 · slot $2"
     ]
   ]
 }
