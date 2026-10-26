@@ -1023,15 +1023,22 @@ button.if2{border:0;font:inherit;color:inherit;text-align:left;cursor:pointer}
 .dsk em{font-style:normal;color:var(--label-2);font-family:var(--mono);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* Modulrahmen: Steckplätze */
-.f-frame .in .slots{position:absolute;inset:6% 2%;display:grid;grid-template-columns:repeat(var(--n),1fr);gap:1.5%}
-.f-frame .slot{display:block;border-radius:1.5px}
+.f-frame .in .slots{position:absolute;inset:2% 1%;display:grid;grid-template-columns:repeat(var(--n),1fr);gap:0 .3%}
+.f-frame .slot{display:block;border-radius:1.5px;position:relative;overflow:hidden}
 .f-frame .slot.planned{border:1px dashed rgba(255,255,255,.28)}
 .f-frame .slot.mod{background:linear-gradient(180deg,#2b2d31,#1c1d20);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.12);position:relative}
 .f-frame .slot .oled{position:absolute;left:18%;right:18%;top:14%;height:22%;background:#0b0d10;box-shadow:inset 0 0 0 .5px #3a3d42;border-radius:1px}
 .f-frame .slot .oled::after{content:"";position:absolute;left:15%;right:30%;top:40%;height:12%;background:#3dd6f5;opacity:.85}
 .f-frame .slot .rj{position:absolute;left:22%;right:22%;bottom:12%;height:24%;background:#0c0d0f;border-radius:1px;box-shadow:inset 0 0 0 .5px #444}
+.f-frame .slot svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.f-frame .slot.temp,.f-frame .slot.ntp,.f-frame .slot.cloudkey{background:none;box-shadow:none}
+.f-frame .slot svg text{font-family:var(--font, -apple-system, "Helvetica Neue", Arial, sans-serif);text-anchor:middle;fill:#c9c5ba}
+.f-frame .slot svg .t0{font-size:10px;font-weight:500}.f-frame .slot svg .t1{font-size:7.2px;text-anchor:start}.f-frame .slot svg .t2{font-size:4.2px}.f-frame .slot svg .t3{font-size:3.4px}
+.f-frame .slot svg .lcd{font:600 6px var(--mono, ui-monospace, monospace);text-anchor:middle}
+.f-frame .slot svg .pps{animation:rd-pps 1s steps(1) infinite}
+@keyframes rd-pps{0%{opacity:1}12%{opacity:.15}}
 .slotlist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
-.sl{display:grid;grid-template-columns:20px minmax(0,1fr);grid-template-rows:auto auto;column-gap:6px;padding:7px 9px;border-radius:10px;background:var(--fill);font-size:12.5px;align-items:baseline}
+.sl{display:grid;grid-template-columns:minmax(20px,auto) minmax(0,1fr) auto;grid-template-rows:auto auto;column-gap:6px;padding:7px 9px;border-radius:10px;background:var(--fill);font-size:12.5px;align-items:baseline}
 .sl span{grid-row:1 / 3;font:600 11px var(--mono);color:var(--label-3)}
 .sl b{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sl em{font-style:normal;font-size:11px;color:var(--label-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -1509,7 +1516,7 @@ button.if2{border:0;font:inherit;color:inherit;text-align:left;cursor:pointer}
 .sk-cam{flex:1;min-height:40px;border-radius:10px}
 .lite .sk i,.lite .sk-big,.lite .sk-ring,.lite .sk-cam,.lite .sk-chart path{animation:none}
 .bays24.bycol{grid-auto-flow:column;grid-template-rows:repeat(var(--br),auto)}
-.sl .slv{margin-left:auto;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}.sl .slv small{font-size:.75em;color:var(--label-2);margin-left:2px;font-weight:500}
+.sl .slv{grid-column:3;grid-row:1 / 3;align-self:center;margin-left:auto;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}.sl .slv small{font-size:.75em;color:var(--label-2);margin-left:2px;font-weight:500}
 .sl .slv.alert{color:var(--red)}.sl .slv.warn{color:var(--warn-ink)}
 /* Port-Kacheln (wenige Ports): bei schmalen Modulen weniger Spalten statt abgeschnittener Texte */
 @container cell (max-width:420px){.dgrid.gm .ifs{grid-template-columns:repeat(2,minmax(0,1fr)) !important}}

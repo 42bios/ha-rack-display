@@ -924,17 +924,59 @@ function createApp(ROOT, WRAP) {
     let x = Math.max(6, (100 - tot) / 2);
     return `<i class="sh-back"></i><i class="sh-wall l"></i><i class="sh-wall r"></i>${items.map(it => { const k = SHELF_KIND[it.kind] || SHELF_KIND.box, el = `<i class="sh-it ${it.kind || "box"}" style="left:${x}%;width:${k.w}%;height:${k.h}%">${it.self || it.kind === "ck" ? `<b class="sh-led ${it.self ? d.state : "ok"}"></b>` : ""}</i>`; x += k.w + 4; return el; }).join("")}<i class="plate"></i>`;
   }
+  // Modulrahmen: Steckplätze, Module können mehrere Plätze breit sein (m.w); Fronten je Art (m.kind) als Zeichnung
+  const SLOT_FACE = {
+    temp: { w: 50, c: "#d0621f", draw: (m, v, on) => `<text x="7" y="25" class="t1">RACK</text><text x="7" y="33" class="t1" style="fill:#d0621f">TEMP</text>
+      <rect x="37" y="15" width="5" height="16" rx="2.5" fill="none" stroke="#c9c5ba" stroke-width="1.4"/><circle cx="39.5" cy="32" r="4" fill="none" stroke="#c9c5ba" stroke-width="1.4"/><circle cx="39.5" cy="32" r="2.4" fill="#d0621f"/><rect x="38.8" y="20" width="1.4" height="10" fill="#d0621f"/>
+      <rect x="10" y="38" width="30" height="1.2" fill="#d0621f"/><rect x="11" y="41" width="28" height="9" fill="#2a2926"/><rect x="10" y="52" width="30" height="1.2" fill="#d0621f"/>
+      ${v ? `<text x="25" y="48" class="lcd" style="fill:${on}">${v}</text>` : ""}
+      <rect x="10" y="60" width="1.2" height="15" fill="#d0621f"/><rect x="38.8" y="60" width="1.2" height="15" fill="#d0621f"/>${SLOT_RJ(16, 61)}<text x="25" y="83" class="t2">LAN / PoE</text>` },
+    ntp: { w: 50, c: "#1f4f8f", draw: (m, v, on) => `<text x="25" y="23" class="t0">NTP</text><text x="25" y="28" class="t2">TIME SERVER</text>
+      <rect x="10" y="31" width="30" height="1.2" fill="#1f4f8f"/><rect x="11" y="33.5" width="28" height="8" fill="#2a2926"/><rect x="10" y="43" width="30" height="1.2" fill="#1f4f8f"/>
+      <text x="25" y="39.8" class="lcd" style="fill:#9fe7ff">${new Date().toLocaleTimeString(rdLoc(), { hour: "2-digit", minute: "2-digit" })}</text>
+      <text x="16" y="51" class="t3">DISPLAY</text><text x="35" y="51" class="t3">PWR PPS</text>
+      <circle cx="16" cy="56" r="3.6" fill="#1f4f8f"/><circle cx="31" cy="56" r="2.2" fill="#1a1a1a" stroke="#c9c5ba" stroke-width=".9"/><circle cx="31" cy="56" r="1.3" fill="${on}"/>
+      <circle cx="39" cy="56" r="2.2" fill="#1a1a1a" stroke="#c9c5ba" stroke-width=".9"/><circle cx="39" cy="56" r="1.3" fill="${on}" class="${on === SLOT_OK ? "pps" : ""}"/>
+      <circle cx="16" cy="70" r="4.6" fill="#55534f" stroke="#1d1d1d" stroke-width="1.4"/>${SLOT_RJ(28, 64)}
+      <text x="16" y="82" class="t2">GNSS</text><text x="34" y="82" class="t2">LAN / PoE</text><text x="25" y="87.5" class="t3">GNSS DISCIPLINED</text>` },
+    cloudkey: { w: 145, c: null, plate: "#2e2e2e", draw: (m, v, on) => `<rect x="20" y="28" width="110" height="26" rx="5" fill="#0d0e10"/>
+      <rect x="27" y="31" width="96" height="20" rx="3" fill="url(#ckb)"/><rect x="30" y="35" width="14" height="10" rx="1.2" fill="#111" stroke="#3a3d42" stroke-width=".5"/>
+      <rect x="32" y="39" width="7" height="1.6" fill="#3dd6f5" opacity=".85"/><circle cx="116" cy="41" r="1.6" fill="${on === SLOT_OK ? "#4fb3ff" : on}"/><rect x="60" y="47" width="30" height="1" rx=".5" fill="#c2c5ca"/>
+      <text x="96" y="75" class="t2" font-size="5.5">LAN/PoE</text><rect x="104" y="68" width="11" height="10" fill="#0c0d0f" stroke="#555" stroke-width=".6"/><rect x="106.5" y="70" width="6" height="3" fill="#1d1e20"/>` },
+  };
+  const SLOT_OK = "#34c759";
+  const SLOT_RJ = (x, y) => `<rect x="${x}" y="${y}" width="18" height="14" fill="#5a5853"/><rect x="${x + 2}" y="${y + 2}" width="14" height="10" fill="#161616"/><rect x="${x + 6}" y="${y + 2}" width="6" height="2.5" fill="#5a5853"/><path d="M${x + 4.5} ${y + 9}h9" stroke="#8c8a84" stroke-width="1.6" stroke-dasharray=".7 .7"/>`;
+  function slotFace(m, d) {
+    const f = SLOT_FACE[m.kind]; if (!f) return '<i class="oled"></i><i class="rj"></i>';
+    const s = m.entity && st(m.entity), v = s && m.kind === "temp" ? (() => { const x = valueOf(m.entity); return x.v + (x.u === "°C" ? "°" : ""); })() : "";
+    const lp = m.entity ? (s ? lamp(m.entity) : "warn") : d.state === "alert" ? "alert" : d.state === "warn" ? "warn" : "ok";
+    const on = lp === "alert" ? "#ff3b30" : lp === "warn" ? "#ffcc00" : lp === "off" ? "#3a3a3a" : SLOT_OK;
+    const W = f.w, holes = W > 60 ? [[14, 10], [W - 14, 10], [14, 90], [W - 14, 90]] : [[W / 2, 9], [W / 2, 91]];
+    return `<svg viewBox="0 0 ${W} 100" preserveAspectRatio="none"><defs><linearGradient id="ckb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4f5f7"/><stop offset="1" stop-color="#cfd2d6"/></linearGradient></defs>
+      <rect width="${W}" height="100" rx="2" fill="${f.plate || "#0b0b0c"}"/>${f.c ? `<rect x="3" y="3" width="${W - 6}" height="94" rx="3" fill="none" stroke="${f.c}" stroke-width="1.6"/>` : ""}
+      ${holes.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="3.2" fill="#8d9096"/><circle cx="${x}" cy="${y}" r="1.6" fill="#4a4c50"/>`).join("")}${f.draw(m, v, on)}</svg>`;
+  }
+  // Steckplätze mit Belegung: [{n, m, w}] – ein breites Modul belegt die folgenden Plätze mit
+  function slotRuns(d) {
+    const n = d.slots || 10, mods = d.modules || [], out = [];
+    for (let i = 1; i <= n;) { const m = mods.find(x => x.slot === i), w = m ? Math.max(1, Math.min(+m.w || 1, n - i + 1)) : 1; out.push({ n: i, m, w }); i += w; }
+    return out;
+  }
   function frameInner(d) {
     const n = d.slots || 10;
-    return `<i class="in"><span class="slots" style="--n:${n}">${Array.from({ length: n }, (_, i) => { const m = (d.modules || []).find(x => x.slot === i + 1);
-      return `<span class="slot ${m ? (m.status === "planned" ? "planned" : "mod " + (m.kind || "")) : ""}">${m && m.status !== "planned" ? '<i class="oled"></i><i class="rj"></i>' : ""}</span>`; }).join("")}</span></i>`;
+    return `<i class="in"><span class="slots" style="--n:${n}">${slotRuns(d).map(({ m, w }) =>
+      `<span class="slot ${m ? (m.status === "planned" ? "planned" : "mod " + (m.kind || "")) : ""}" style="${w > 1 ? `grid-column:span ${w}` : ""}">${m && m.status !== "planned" ? slotFace(m, d) : ""}</span>`).join("")}</span></i>`;
   }
   function slotsCard(d) {
-    const n = d.slots || 10, mods = d.modules || [];
-    return `<section class="card"><h2>Steckplätze <em>${mods.filter(m => m.status !== "planned").length} von ${n} belegt${mods.some(m => m.status === "planned") ? ` · ${mods.filter(m => m.status === "planned").length} geplant` : ""}</em></h2>
-      <div class="slotlist">${Array.from({ length: n }, (_, i) => { const m = mods.find(x => x.slot === i + 1);
-        const v = m?.entity && st(m.entity) ? valueOf(m.entity) : null, l = v ? lamp(m.entity) : "";
-        return `<div class="sl ${m ? (m.status === "planned" ? "planned" : "on") : ""}"><span>${i + 1}</span><b>${m ? m.name : "frei"}</b><em>${m ? (m.status === "planned" ? "geplant" : "") + (m.desc ? `${m.status === "planned" ? " · " : ""}${m.desc}` : "") : ""}</em>${v ? `<strong class="slv ${l}">${v.v}${v.u ? `<small>${v.u}</small>` : ""}</strong>` : ""}</div>`; }).join("")}</div></section>`;
+    const n = d.slots || 10, mods = d.modules || [], runs = [];
+    // aufeinanderfolgende freie Plätze zu einer Zeile zusammenfassen
+    slotRuns(d).forEach(x => { const p = runs[runs.length - 1]; if (!x.m && p && !p.m) p.w += x.w; else runs.push({ ...x }); });
+    const used = runs.filter(x => x.m && x.m.status !== "planned").reduce((a, x) => a + x.w, 0), plan = mods.filter(m => m.status === "planned").length;
+    return `<section class="card"><h2>Steckplätze <em>${used} von ${n} belegt${plan ? ` · ${plan} geplant` : ""}</em></h2>
+      <div class="slotlist">${runs.map(({ n: i, m, w }) => {
+        const s = m?.entity && st(m.entity), trk = s && m.entity.startsWith("device_tracker.");
+        const v = s ? (trk ? { v: s.state === "home" ? "Online" : "Offline", u: "" } : valueOf(m.entity)) : null, l = v ? lamp(m.entity) : "";
+        return `<div class="sl ${m ? (m.status === "planned" ? "planned" : "on") : ""}"><span>${w > 1 ? `${i}–${i + w - 1}` : i}</span><b>${m ? m.name : "frei"}</b><em>${m ? (m.status === "planned" ? "geplant" : "") + (m.desc ? `${m.status === "planned" ? " · " : ""}${m.desc}` : "") : ""}</em>${v ? `<strong class="slv ${l}">${v.v}${v.u ? `<small>${v.u}</small>` : ""}</strong>` : ""}</div>`; }).join("")}</div></section>`;
   }
   // Einschalten (z. B. IPMI): erst beim zweiten Tippen innerhalb von 4 s
   function powerOnBtn(d) {

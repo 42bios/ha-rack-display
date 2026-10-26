@@ -38,6 +38,7 @@ const RDE_TEMPLATES = [
   ["ks", "Patchfeld"], ["lwl", "LWL-Patchfeld"], ["frame", "Modulrahmen"], ["cm", "Kabelführung"], ["bl", "Blende"],
 ];
 const RDE_PASSIVE = ["ks", "lwl", "cm", "bl", "frame", "patch", "blank"];
+const SLOT_W = { cloudkey: 3 };
 
 // Rückfragen in der Sprache der Oberfläche
 const rdAsk = s => confirm(window.__rackDisplay?.rdT ? window.__rackDisplay.rdT(s) : s);
@@ -453,13 +454,20 @@ class RackDisplayEditor extends HTMLElement {
   /* ---------- Modulrahmen: Steckplätze ---------- */
   slotSection(d) {
     const n = d.options?.slots || 10, mods = d.options?.modules || [];
-    const ents = Object.keys(this._hass.states).filter(id => /^(sensor|binary_sensor)\./.test(id)).sort();
+    const ents = Object.keys(this._hass.states).filter(id => /^(sensor|binary_sensor|device_tracker)\./.test(id)).sort();
+    const KINDS = [["", "Standard (OLED + LAN)"], ["temp", "Rack-Temperatur"], ["ntp", "NTP-Zeitserver"], ["cloudkey", "Cloud-Key-Modul"]];
+    let cover = 0, by = null;
     return `<label class="f">Anzahl Steckplätze<input type="number" min="1" max="24" data-slot-n value="${n}"></label>
       <datalist id="slotents">${ents.slice(0, 1500).map(id => `<option value="${esc(id)}">${esc(this._hass.states[id].attributes.friendly_name || "")}</option>`).join("")}</datalist>
-      <div class="slots-ed">${Array.from({ length: n }, (_, i) => { const m = mods.find(x => x.slot === i + 1) || {}, st = m.name ? m.status || "installed" : "";
+      <div class="slots-ed">${Array.from({ length: n }, (_, i) => {
+        if (cover > 0) { cover--; return `<div class="se covered"><span class="sn">${i + 1}</span><span class="hint" style="margin:0">gehört zu ${esc(by)}</span></div>`; }
+        const m = mods.find(x => x.slot === i + 1) || {}, st = m.name ? m.status || "installed" : "", w = Math.max(1, Math.min(+m.w || 1, n - i));
+        if (m.name && w > 1) { cover = w - 1; by = m.name; }
         return `<div class="se ${st}"><span class="sn">${i + 1}</span><input data-slot="${i + 1}:name" value="${esc(m.name || "")}" placeholder="frei">
           <select data-slot="${i + 1}:status" ${m.name ? "" : "disabled"}><option value="installed" ${st === "installed" ? "selected" : ""}>eingebaut</option><option value="planned" ${st === "planned" ? "selected" : ""}>geplant</option></select>
-          ${m.name ? `<input class="sd" data-slot="${i + 1}:desc" value="${esc(m.desc || "")}" placeholder="Beschreibung, z. B. LAN · OLED"><input class="sd" list="slotents" data-slot="${i + 1}:entity" value="${esc(m.entity || "")}" placeholder="Entität für Live-Wert (optional)">` : ""}</div>`; }).join("")}</div>
+          ${m.name ? `<select class="sk" data-slot="${i + 1}:kind">${KINDS.map(([k, t]) => `<option value="${k}" ${(m.kind || "") === k ? "selected" : ""}>${t}</option>`).join("")}</select>
+          <select data-slot="${i + 1}:w" title="Breite in Steckplätzen">${Array.from({ length: Math.min(6, n - i) }, (_, k) => `<option value="${k + 1}" ${w === k + 1 ? "selected" : ""}>${k + 1} ${k ? "Plätze" : "Platz"}</option>`).join("")}</select>
+          <input class="sd" data-slot="${i + 1}:desc" value="${esc(m.desc || "")}" placeholder="Beschreibung, z. B. LAN · OLED"><input class="sd" list="slotents" data-slot="${i + 1}:entity" value="${esc(m.entity || "")}" placeholder="Entität für Live-Wert (optional)">` : ""}</div>`; }).join("")}</div>
       <p class="hint">Name eintragen belegt den Steckplatz; leeren gibt ihn frei. Mit Entität zeigt das Popup den aktuellen Wert.</p>`;
   }
   /* ---------- Stromleiste: Ausgänge benennen ---------- */
@@ -666,7 +674,8 @@ class RackDisplayEditor extends HTMLElement {
       if (t.dataset.slotN !== undefined) { const d = this.dev(), o = (d.options ||= {}); o.slots = Math.max(1, Math.min(24, +t.value || 10)); o.modules = (o.modules || []).filter(m => m.slot <= o.slots); this.changed(); clearTimeout(this._st); this._st = setTimeout(() => this.renderSheet(), 500); return; }
       if (t.dataset.slot) { const [n, k] = t.dataset.slot.split(":"), d = this.dev(), o = (d.options ||= {}), L = (o.modules ||= []); let m = L.find(x => x.slot === +n);
         if (k === "name") { if (!t.value.trim()) { o.modules = L.filter(x => x !== m); this.changed(); clearTimeout(this._st); this._st = setTimeout(() => this.renderSheet(), 700); return; } if (!m) { m = { slot: +n, name: "", status: "installed" }; L.push(m); L.sort((x, y) => x.slot - y.slot); clearTimeout(this._st); this._st = setTimeout(() => this.renderSheet(), 900); } m.name = t.value; }
-        else if (m) { if (t.value) m[k] = t.value; else delete m[k]; }
+        else if (m) { if (t.value) m[k] = k === "w" ? +t.value : t.value; else delete m[k];
+          if (k === "w" || k === "kind") { if (k === "w") { if (m.w <= 1) delete m.w; o.modules = L.filter(x => x === m || x.slot <= m.slot || x.slot >= m.slot + (m.w || 1)); } if (k === "kind" && SLOT_W[t.value] && !m.w) m.w = SLOT_W[t.value]; this.changed(); this.renderSheet(); return; } }
         this.changed(); return; }
       if (t.dataset.outletName) { const d = this.dev(), on = ((d.options ||= {}).outlet_names ||= {}); if (t.value.trim()) on[t.dataset.outletName] = t.value.trim(); else delete on[t.dataset.outletName]; this.changed(); return; }
       if (t.dataset.blkLabel) { const b = this.blocks(this.dev())[+t.dataset.blkLabel]; b.label = t.value || undefined; this.changed(); return; }
