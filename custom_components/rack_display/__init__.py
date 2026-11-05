@@ -128,6 +128,8 @@ async def _register_panel(hass: HomeAssistant) -> None:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if store := hass.data.get(DOMAIN, {}).get("store"):
+        await store.async_flush()
     frontend.async_remove_panel(hass, PANEL_URL)
     frontend.async_remove_panel(hass, EDITOR_URL)
     if module := hass.data.pop(f"{DOMAIN}_module", None):

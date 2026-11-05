@@ -82,6 +82,10 @@ class RackStore:
         self._store.async_delay_save(lambda: {"racks": self.racks}, 1.0)
         async_dispatcher_send(self.hass, SIGNAL_UPDATED, rack_id)
 
+    async def async_flush(self) -> None:
+        """Sofort schreiben (vor dem Neuladen, sonst liest der neue Speicher den alten Stand)."""
+        await self._store.async_save({"racks": self.racks})
+
     def list(self) -> list[dict[str, Any]]:
         return [copy.deepcopy(r) for r in self.racks.values()]
 
