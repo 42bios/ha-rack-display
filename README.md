@@ -45,11 +45,13 @@ Home Assistant custom integration that shows your server rack as an interactive 
 
 ### HACS (recommended)
 
-1. Open HACS in Home Assistant.
-2. Open the menu (three dots) → `Custom repositories`.
-3. Repository URL: `https://github.com/42bios/ha-rack-display`, category: `Integration`.
-4. Install **Rack Display** and restart Home Assistant.
-5. Add the integration in `Settings → Devices & services → Add integration → Rack Display`.
+[![Open your Home Assistant instance and open this repository in HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=42bios&repository=ha-rack-display&category=integration)
+
+1. Open HACS in Home Assistant and search for **Rack Display**.
+2. Install it and restart Home Assistant.
+3. Add the integration in `Settings → Devices & services → Add integration → Rack Display`.
+
+If Rack Display does not show up in the search yet, add it as a custom repository first: HACS → menu (three dots) → `Custom repositories` → `https://github.com/42bios/ha-rack-display`, category `Integration`.
 
 ### Manual
 

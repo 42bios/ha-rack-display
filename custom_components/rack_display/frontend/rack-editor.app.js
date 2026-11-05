@@ -2,7 +2,7 @@
    Rack anlegen, Geräte per Drag & Drop in Höheneinheiten setzen, Eigenschaften, HA-Gerät und Fotos pflegen.
    Rechts läuft die echte Anzeige als Live-Vorschau mit dem ungespeicherten Stand. */
 const RDE_BASE = "/rack_display/frontend";
-const RDE_VERSION = "1793033524";
+const RDE_VERSION = "1793858571";
 
 // Vorlagen der Palette (Gerätetyp, Standardhöhe, passiv, Seite)
 const RDE_PALETTE = [
@@ -1265,7 +1265,7 @@ class RackDisplayEditor extends HTMLElement {
   }
   // Rack als Datei sichern (Fotos bleiben Verweise auf /rack_display/images) bzw. als neues Rack einlesen
   exportRack() {
-    const rack = structuredClone(this.rack); rack.devices.forEach(d => { delete d.map; delete d.labels; });
+    const rack = JSON.parse(JSON.stringify(this.rack).replace(/(\/rack_display\/images\/[^"?]+)\?[^"]*/g, "$1")); rack.devices.forEach(d => { delete d.map; delete d.labels; });   // Foto-Adressen ohne Signatur
     const blob = new Blob([JSON.stringify({ format: "rack-display", version: 1, exported: new Date().toISOString(), rack }, null, 2)], { type: "application/json" });
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `rack-${this.rack.id}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
     this.toast("Rack exportiert");

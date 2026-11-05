@@ -51,6 +51,10 @@ PATCH = [
     # Blenden und Kabelführungen sind nicht antippbar
     ("renderRack", 'DEVICES.map(d => `<button class="hit', 'DEVICES.filter(d => !["bl", "cm", "blank"].includes(d.type)).map(d => `<button class="hit'),
     # Leeres Schild/Typenschild nicht als leere Fläche zeichnen
+    # Beschriftungen kommen maskiert aus der Konfiguration; textContent braucht den Klartext
+    ("renderRack", '$("badge").textContent = RACK.badge; $("cap").textContent = RACK.badge; $("plate").textContent = RACK.plate;', '$("badge").textContent = unescH(RACK.badge); $("cap").textContent = unescH(RACK.badge); $("plate").textContent = unescH(RACK.plate);'),
+    ("renderRack", '$("doorL1").textContent = RACK.label1;', '$("doorL1").textContent = unescH(RACK.label1);'),
+    ("renderRack", '$("doorL2").textContent = RACK.label2;', '$("doorL2").textContent = unescH(RACK.label2);'),
     ("renderRack", '$("plate").hidden = !RACK.plate;', '$("plate").hidden = !RACK.plate; $("badge").hidden = !RACK.badge;'),
     # Gesamtstatus: auch Meldungen zählen (z. B. „Keine Daten“ = Hinweis), damit Kopfzeile und Hinweise übereinstimmen
     ("worst", 'return s.includes("alert") ? "alert" : s.includes("warn") ? "warn" : "ok";',

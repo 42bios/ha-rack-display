@@ -13,7 +13,6 @@ from __future__ import annotations
 from pathlib import Path
 
 from homeassistant.components import frontend, panel_custom
-from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.const import Platform
@@ -34,9 +33,8 @@ from .const import (
     PANEL_TITLE,
     PANEL_URL,
     URL_FRONTEND,
-    URL_IMAGES,
 )
-from .http import FrontendView, ImageUploadView
+from .http import FrontendView, ImageUploadView, ImageView
 from .live import LiveBuffer
 from .screen import ScreenTimeout
 from .entity import wanted_racks
@@ -83,12 +81,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await _register_panel(hass)
         return True
     hass.data[f"{DOMAIN}_registered"] = True
-    await hass.http.async_register_static_paths(
-        [
-            StaticPathConfig(URL_IMAGES, str(image_dir), True),
-        ]
-    )
     hass.http.register_view(FrontendView())
+    hass.http.register_view(ImageView(hass))
     hass.http.register_view(ImageUploadView(hass))
     websocket_api.async_register(hass)
 

@@ -47,7 +47,15 @@ function createApp(ROOT, WRAP) {
   const byId = id => allDevices().find(d => d.id === id);
 
   /* ---------- Werte aus Home Assistant ---------- */
-  const st = id => (id && HASS ? HASS.states[id] : undefined);
+  // Alles aus Home Assistant und aus der Rack-Konfiguration landet in HTML-Vorlagen: Texte werden deshalb beim Eintritt
+  // einmal maskiert (Zustände je Zustandsobjekt zwischengespeichert), damit Namen oder Zustände mit Markup nie als HTML wirken
+  const escH = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const unescH = s => String(s ?? "").replace(/&(amp|lt|gt|quot|#39);/g, (_, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e]));
+  const escDeep = v => typeof v === "string" ? escH(v) : Array.isArray(v) ? v.map(escDeep) : v && typeof v === "object" ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, escDeep(x)])) : v;
+  const unescDeep = v => typeof v === "string" ? unescH(v) : Array.isArray(v) ? v.map(unescDeep) : v && typeof v === "object" ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, unescDeep(x)])) : v;
+  const SAFE = new WeakMap();
+  const st = id => { const s = id && HASS ? HASS.states[id] : undefined; if (!s) return s;
+    let c = SAFE.get(s); if (!c) { c = { ...s, state: escH(s.state), attributes: escDeep(s.attributes) }; SAFE.set(s, c); } return c; };
   const ok = s => s && !["unknown", "unavailable", ""].includes(s.state);
   const num = id => { const s = st(id); if (!ok(s)) return null; const x = parseFloat(s.state); if (isNaN(x)) return null;
     const u = s.attributes.unit_of_measurement; return u === "kW" ? x * 1000 : x; };
@@ -452,7 +460,7 @@ function createApp(ROOT, WRAP) {
     const w = st(rack.wled?.entity_id);
     WLED.on = w?.state === "on";
     if (WLED.on && !WLED.loop && WLED.effects) { WLED.loop = true; requestAnimationFrame(wledFrame); }
-    if (w) { const i = WLED.effects.findIndex(e => e[0].toLowerCase() === String(w.attributes.effect || "").toLowerCase()); WLED.fx = i < 0 ? 0 : i; }
+    if (w) { const i = WLED.effects.findIndex(e => e[0].toLowerCase() === unescH(w.attributes.effect || "").toLowerCase()); WLED.fx = i < 0 ? 0 : i; }
   }
 
   /*@@PROTO_FUNCS@@*/
@@ -1265,13 +1273,13 @@ function createApp(ROOT, WRAP) {
     g.querySelectorAll("circle").forEach((c, k) => { const v = T.series[k].v[i]; c.style.display = v == null ? "none" : ""; c.setAttribute("cx", T.X(i)); if (v != null) c.setAttribute("cy", T.Y(v)); });
     const card = svg.closest(".card"), t = new Date(Date.now() - (T.n - 1 - i) * 300e3);
     card.querySelector(".tread").textContent = i === T.n - 1 ? "jetzt" : t.toLocaleTimeString(rdLoc(), { hour: "2-digit", minute: "2-digit" }) + " Uhr";
-    T.series.forEach(s => { const b = card.querySelector(`b[data-s="${s.id}"]`); if (b) b.textContent = `${fmt(s.v[i], s.dec ?? 0)} ${s.unit}`; });
+    T.series.forEach(s => { const b = card.querySelector(`b[data-s="${s.id}"]`); if (b) b.textContent = `${fmt(s.v[i], s.dec ?? 0)} ${unescH(s.unit)}`; });
   }
   function traceLeave(e) {
     const card = e.target.closest?.(".trace"); if (!card) return;
     const svg = card.querySelector(".trace-svg"), T = svg && TRACE[svg.dataset.k]; if (!T) return;
     svg.querySelector(".tguide").style.display = "none"; card.querySelector(".tread").textContent = "24 Std.";
-    T.series.forEach(s => { const b = card.querySelector(`b[data-s="${s.id}"]`); if (b) b.textContent = `${valueOf(s.id).v} ${s.unit}`; });
+    T.series.forEach(s => { const b = card.querySelector(`b[data-s="${s.id}"]`); if (b) b.textContent = unescH(`${valueOf(s.id).v} ${s.unit}`); });
   }
   function chartCard(c) {
     if (c.style === "trace") return traceCard(c.multi ? c : { label: c.label, warn: c.warn, series: [{ id: c.entity, label: c.label, unit: c.unit, color: c.color, dec: c.dec, warn: c.warn }] });
@@ -1382,7 +1390,6 @@ function createApp(ROOT, WRAP) {
     note: (d, b) => d.slots ? slotsCard(d) : (b.text || d.passive) && `<section class="card"><p class="note" style="margin:0">${b.text || "Passives Element ohne Sensoren. Im Editor der Integration lässt sich hier eine Belegung oder Notiz hinterlegen."}</p></section>`,
   };
   // Community-Module (modules/<typ>/render.js): bekommen nur ctx mit fertig aufbereiteten Werten und liefern HTML
-  const escH = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   for (const [type, mod] of Object.entries(RD_MODULES)) {
     const render = mod.render, tr = s => rdIsDe() ? (mod.de?.[s] ?? s) : s;   // Module schreiben Englisch, „de“ übersetzt
     const meta = RD_CATALOG.blocks[type] || {};
@@ -1391,10 +1398,10 @@ function createApp(ROOT, WRAP) {
         return { id, name: nameOf(b, ref, id), state: s.state, value: v.v, unit: v.u, number: v.n ?? null, status: lamp(id), available: ok(s), attributes: { ...s.attributes } }; });
       if (meta.items && !items.length) return "";
       const opt = k => b[k] ?? (meta.options || []).find(o => o.key === k)?.default;
-      const ctx = { device: { id: d.id, name: d.name, model: d.model, state: d.state, off: !!d.off }, items, option: opt, fmt, esc: escH, t: tr, lang: () => RD_LANG };
+      const ctx = { device: unescDeep({ id: d.id, name: d.name, model: d.model, state: d.state, off: !!d.off }), items: unescDeep(items), option: k => unescDeep(opt(k)), fmt, esc: escH, t: tr, lang: () => RD_LANG };
       let html = "";
-      try { html = render(ctx, b) || ""; } catch (err) { console.warn(`Rack Display: Modul ${type}:`, err); html = `<p class="note">${rdIsDe() ? "Fehler im Modul" : "Module error"} ${escH(type)}</p>`; }
-      return html && `<section class="card mod mod-${type}">${b.label !== "" ? `<h2>${escH(b.label || meta.name || type)}</h2>` : ""}${html}</section>`;
+      try { html = render(ctx, unescDeep(b)) || ""; } catch (err) { console.warn(`Rack Display: Modul ${type}:`, err); html = `<p class="note">${rdIsDe() ? "Fehler im Modul" : "Module error"} ${escH(type)}</p>`; }
+      return html && `<section class="card mod mod-${type}">${b.label !== "" ? `<h2>${b.label || escH(meta.name || type)}</h2>` : ""}${html}</section>`;
     };
   }
   function renderBlocks(d) {
@@ -1579,7 +1586,7 @@ function createApp(ROOT, WRAP) {
   }
   let lastRender = 0, pending = null;
   return {
-    setRack(rack) { RAW = rack; rdForceLang(rack?.display?.lang); setTimeout(nightCheck, 0); HIST.want.clear(); DISC.clear(); buildModel(rack); computeWatch(); render(true); loadHistory(true); loadEvents(); },
+    setRack(rack) { RAW = escDeep(rack); rack = RAW; rdForceLang(rack?.display?.lang); setTimeout(nightCheck, 0); HIST.want.clear(); DISC.clear(); buildModel(rack); computeWatch(); render(true); loadHistory(true); loadEvents(); },
     setHass(h) {
       HASS = h; rdSetLang(h);
       if (!RAW) return;
@@ -1597,6 +1604,7 @@ function createApp(ROOT, WRAP) {
     onPanel(fn) { EDIT_HOOK = fn; },
     // Editor-Bibliothek: ein Modul für ein Gerät in einen Behälter zeichnen (inkl. Kurven); false = keine Daten
     renderBlockInto(el, id, b) {
+      b = escDeep(b);
       const d = id === "__ov" ? ovModel() : byId(id); if (!d) return false;
       const html = b.type === "header" ? headCard(d) : BLOCK_RENDER[b.type]?.(d, b); if (!html) { el.innerHTML = ""; return false; }
       const start = CHARTS.length; el.innerHTML = html;
@@ -1680,6 +1688,8 @@ class RackDisplayElement extends HTMLElement {
     this._app.setHass(this._hass);
     await this._load();
     const unsub = await this._hass.connection.subscribeMessage(() => this._app && this._load(), { type: "rack_display/subscribe" });
+    // Foto-Adressen sind signiert und laufen ab: einmal am Tag frisch laden (Kiosk läuft oft tagelang)
+    clearInterval(this._rt); this._rt = setInterval(() => this._app && this._load(), 24 * 3600e3);
     if (this._app) this._unsub = unsub; else unsub();  // während des Starts geschlossen
   }
   async _load() {
@@ -1693,7 +1703,7 @@ class RackDisplayElement extends HTMLElement {
     else this._wrap.innerHTML = `<p style="padding:24px">Noch kein Rack angelegt.</p>`;
   }
   disconnectedCallback() {
-    this._app?.destroy(); this._unsub?.(); this._stage?._ro?.disconnect(); clearInterval(this._vt);
+    this._app?.destroy(); this._unsub?.(); this._stage?._ro?.disconnect(); clearInterval(this._vt); clearInterval(this._rt);
     this._app = null; this._unsub = null; this._started = false;
   }
 }

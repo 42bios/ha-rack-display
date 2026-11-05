@@ -13,6 +13,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .blocks import CATALOG
 from .const import DOMAIN, SIGNAL_UPDATED
+from .http import map_images, sign_image
 from .mapping import resolve
 
 
@@ -38,6 +39,11 @@ def _with_mapping(hass: HomeAssistant, rack: dict[str, Any]) -> dict[str, Any]:
     return rack
 
 
+def _signed(hass: HomeAssistant, connection: websocket_api.ActiveConnection, rack: dict[str, Any]) -> dict[str, Any]:
+    """Kopie des Racks mit signierten Foto-Adressen (die Fotos selbst gibt es nur mit Anmeldung)."""
+    return map_images(rack, lambda url: sign_image(hass, url, connection.refresh_token_id))
+
+
 @websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/live", vol.Required("entity_ids"): [str]})
 @callback
 def ws_live(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
@@ -55,7 +61,7 @@ def async_register(hass: HomeAssistant) -> None:
 @callback
 def ws_racks(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
     """Alle Racks inklusive aufgelöster Entitäten (für Anzeige und Editor)."""
-    racks = [_with_mapping(hass, r) for r in _store(hass).list()]
+    racks = [_signed(hass, connection, _with_mapping(hass, r)) for r in _store(hass).list()]
     connection.send_result(msg["id"], {"racks": racks, "catalog": CATALOG})
 
 
@@ -64,11 +70,12 @@ def ws_racks(hass: HomeAssistant, connection: websocket_api.ActiveConnection, ms
 @callback
 def ws_rack_save(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
     try:
-        rack = _store(hass).save(msg["rack"])
+        # gespeichert wird immer die Adresse ohne Signatur
+        rack = _store(hass).save(map_images(msg["rack"], lambda url: url.split("?", 1)[0]))
     except vol.Invalid as err:
         connection.send_error(msg["id"], "invalid", str(err))
         return
-    connection.send_result(msg["id"], {"rack": _with_mapping(hass, rack)})
+    connection.send_result(msg["id"], {"rack": _signed(hass, connection, _with_mapping(hass, rack))})
 
 
 @websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/rack/delete", vol.Required("rack_id"): str})

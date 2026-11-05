@@ -3,7 +3,7 @@
    (Rack, Fronten, Kacheln, Diagramme) werden beim Build aus dem Prototyp eingesetzt: 
 */
 const RD_BASE = "/rack_display/frontend";
-const RD_VERSION = "1793033524";
+const RD_VERSION = "1793858571";
 const RD_CATALOG = {"version": 1, "blocks": {"header": {"name": "Kopf", "size": "full", "desc": "Name, Modell, Position, Frontbild, bis zu 4 Kennzahlen", "items": true, "group": "kopf"}, "tiles": {"name": "Aktuelle Werte", "size": "full", "desc": "Kacheln mit den wichtigsten Messwerten", "group": "werte"}, "values": {"name": "Werte", "size": "full", "desc": "Beliebige Entitäten als Kacheln", "items": true, "group": "werte"}, "entity": {"name": "Einzelwert", "size": "half", "desc": "Ein Wert als eigene Kachel – wahlweise mit 24-Std.-Kurve", "items": true, "group": "werte"}, "bars": {"name": "Balken", "size": "half", "desc": "Auslastung als Balken (0–100 % oder eigener Bereich)", "items": true, "group": "werte"}, "status": {"name": "Status", "size": "half", "desc": "Zustände als Liste mit Ampel", "items": true, "group": "zustand"}, "ports": {"name": "Ports", "size": "full", "desc": "Alle Ports mit Geschwindigkeit, PoE und Live-Durchsatz", "group": "netzwerk"}, "poe": {"name": "PoE", "size": "half", "desc": "PoE-Leistung gesamt und je Port", "group": "netzwerk"}, "system": {"name": "System", "size": "half", "desc": "CPU, RAM und Temperatur über 24 Std.", "slots": ["cpu", "ram", "cpu_temp"], "group": "system"}, "internet": {"name": "Internet", "size": "half", "desc": "Download und Upload über 24 Std.", "slots": ["wan_down", "wan_up"], "group": "netzwerk"}, "flow": {"name": "Energiefluss", "size": "full", "desc": "Online-USV: Netz, Akku, Last", "group": "strom"}, "voltage": {"name": "Spannung", "size": "half", "desc": "Ein- und Ausgangsspannung über 24 Std.", "slots": ["input_voltage", "output_voltage"], "group": "strom"}, "chart": {"name": "Verlauf", "size": "half", "desc": "Ein bis drei Messwerte über 24 Std.", "slots": ["source"], "items": true, "group": "diagramme"}, "outlets": {"name": "Ausgänge", "size": "full", "desc": "Ausgänge einer Stromleiste mit Belegung", "group": "strom"}, "disks": {"name": "Festplatten", "size": "full", "desc": "Schächte, Zustand und Belegung", "group": "speicher"}, "recording": {"name": "Aufnahme", "size": "half", "desc": "Speicherdauer, Aufnahmearten, Kameras", "group": "speicher"}, "messages": {"name": "Meldungen", "size": "full", "desc": "Störungen, Hinweise und Infos des Geräts", "group": "sonstiges"}, "note": {"name": "Notiz", "size": "full", "desc": "Freier Text, z. B. Belegung eines Patchfelds", "group": "sonstiges"}, "gauge": {"name": "Tacho", "size": "half", "desc": "Ein Wert als Halbkreis-Anzeige mit Min/Max und Warnfarben", "items": true, "group": "werte"}, "ring": {"name": "Ring", "size": "half", "desc": "Ein Wert als Ring (z. B. Auslastung in %)", "items": true, "group": "werte"}, "stat": {"name": "Kennzahl", "size": "half", "desc": "Große Zahl mit Veränderung gegenüber gestern", "items": true, "group": "werte"}, "progress": {"name": "Fortschritt", "size": "half", "desc": "Ein Wert als Balken mit Min/Max", "items": true, "group": "werte"}, "histogram": {"name": "Balkendiagramm", "size": "half", "desc": "Stundenwerte der letzten 24 Std. als Balken", "items": true, "group": "diagramme"}, "chips": {"name": "Status-Chips", "size": "full", "desc": "Mehrere Zustände kompakt als Chips mit Ampel", "items": true, "group": "zustand"}, "switch": {"name": "Schalter", "size": "half", "desc": "Schalter, Lichter, Lüfter direkt bedienen", "items": true, "group": "steuerung"}, "button": {"name": "Aktionen", "size": "half", "desc": "Skripte, Szenen und Tasten auslösen", "items": true, "group": "steuerung"}, "camera": {"name": "Kamera", "size": "half", "desc": "Standbild einer Kamera (aktualisiert sich laufend)", "items": true, "group": "speicher"}, "heading": {"name": "Überschrift", "size": "full", "desc": "Titel mit Untertitel zum Gliedern", "group": "sonstiges"}, "clock": {"name": "Uhr", "size": "half", "desc": "Uhrzeit und Datum", "group": "sonstiges"}, "ov_power": {"name": "Strom (Übersicht)", "size": "full", "desc": "Leistung des Racks, USV-Akku, Verbraucher und 24-Std.-Verlauf", "group": "uebersicht"}, "ov_temp": {"name": "Temperatur (Übersicht)", "size": "full", "desc": "Wärmstes Gerät und Temperaturen aller Geräte", "group": "uebersicht"}, "ov_hints": {"name": "Hinweise (Übersicht)", "size": "full", "desc": "Warnungen und Störungen aller Geräte", "group": "uebersicht"}, "ov_stats": {"name": "Kennzahlen-Leiste", "size": "full", "desc": "Internet, PoE, Stromleiste, USV auf einen Blick", "group": "uebersicht"}, "bays": {"name": "Laufwerksschächte", "size": "full", "desc": "Schächte mit Parität, Daten und Cache, Temperatur, Belegung und Ruhezustand", "items": true, "group": "speicher"}, "array": {"name": "Array", "size": "half", "desc": "Belegung, Zustand, Cache-Pools und Parität eines Arrays", "items": true, "group": "speicher"}, "batteries": {"name": "Akkus", "desc": "Akkustände mehrerer Geräte als Liste, schwache zuerst", "group": "zustand", "items": true, "size": "half", "layout": {"w": 6, "h": 3}, "min_layout": {"w": 3, "h": 2}, "suggest": {"domain": "sensor", "device_class": "battery"}, "options": [{"key": "warn", "label": "Warnung unter (%)", "type": "number", "default": 25}, {"key": "alert", "label": "Kritisch unter (%)", "type": "number", "default": 10}, {"key": "sort", "label": "Sortierung", "type": "select", "default": "low", "choices": [["low", "Schwache zuerst"], ["name", "Nach Name"]]}], "author": "@42bios", "community": true}}, "templates": {"gw": ["header", "ports", "internet", "system", "messages"], "switch": ["header", "ports", "poe", "system", "messages"], "sfp": ["header", "ports", "poe", "system", "messages"], "nvr": ["header", "disks", "recording", "system", "messages"], "fanpanel": ["header", "tiles", "system", "messages"], "server": ["header", "tiles", "system", "messages"], "ups": ["header", "flow", {"type": "chart", "source": "load", "label": "Last"}, "voltage", "messages"], "pdu": ["header", "outlets", {"type": "chart", "source": "power", "label": "Gesamtleistung"}, {"type": "chart", "source": "current", "label": "Strom", "color": "--teal", "dec": 1, "warn": 13}, "messages"], "generic": ["header", "tiles", "messages"], "passive": ["header", "note"]}, "passive_templates": ["patch", "ks", "lwl", "cm", "bl", "blank", "frame"], "displays": [{"key": "pi-portrait", "name": "7\" Pi-Display hochkant", "w": 480, "h": 800, "inch": 7}, {"key": "pi-landscape", "name": "7\" Pi-Display quer", "w": 800, "h": 480, "inch": 7}, {"key": "hd", "name": "HD 1280 × 720", "w": 1280, "h": 720, "inch": 10.1}, {"key": "hd-portrait", "name": "HD hochkant 720 × 1280", "w": 720, "h": 1280, "inch": 10.1}, {"key": "fhd", "name": "Full HD 1920 × 1080", "w": 1920, "h": 1080, "inch": 23.8}, {"key": "tablet", "name": "Tablet 1024 × 768", "w": 1024, "h": 768, "inch": 9.7}, {"key": "custom", "name": "Eigene Größe"}, {"key": "fill", "name": "Nur Dashboard – ganze Fläche nutzen"}], "groups": {"uebersicht": "Übersicht", "kopf": "Kopf", "werte": "Werte & Anzeigen", "diagramme": "Diagramme", "zustand": "Zustand", "steuerung": "Steuerung", "netzwerk": "Netzwerk", "system": "System", "strom": "Strom & USV", "speicher": "Speicher & Video", "sonstiges": "Text & Sonstiges"}};
 // Community-Module: werden beim Bauen aus modules/<typ>/render.js eingesetzt
 const RD_MODULES = {};
@@ -130,7 +130,15 @@ function createApp(ROOT, WRAP) {
   const byId = id => allDevices().find(d => d.id === id);
 
   /* ---------- Werte aus Home Assistant ---------- */
-  const st = id => (id && HASS ? HASS.states[id] : undefined);
+  // Alles aus Home Assistant und aus der Rack-Konfiguration landet in HTML-Vorlagen: Texte werden deshalb beim Eintritt
+  // einmal maskiert (Zustände je Zustandsobjekt zwischengespeichert), damit Namen oder Zustände mit Markup nie als HTML wirken
+  const escH = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const unescH = s => String(s ?? "").replace(/&(amp|lt|gt|quot|#39);/g, (_, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e]));
+  const escDeep = v => typeof v === "string" ? escH(v) : Array.isArray(v) ? v.map(escDeep) : v && typeof v === "object" ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, escDeep(x)])) : v;
+  const unescDeep = v => typeof v === "string" ? unescH(v) : Array.isArray(v) ? v.map(unescDeep) : v && typeof v === "object" ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, unescDeep(x)])) : v;
+  const SAFE = new WeakMap();
+  const st = id => { const s = id && HASS ? HASS.states[id] : undefined; if (!s) return s;
+    let c = SAFE.get(s); if (!c) { c = { ...s, state: escH(s.state), attributes: escDeep(s.attributes) }; SAFE.set(s, c); } return c; };
   const ok = s => s && !["unknown", "unavailable", ""].includes(s.state);
   const num = id => { const s = st(id); if (!ok(s)) return null; const x = parseFloat(s.state); if (isNaN(x)) return null;
     const u = s.attributes.unit_of_measurement; return u === "kW" ? x * 1000 : x; };
@@ -535,7 +543,7 @@ function createApp(ROOT, WRAP) {
     const w = st(rack.wled?.entity_id);
     WLED.on = w?.state === "on";
     if (WLED.on && !WLED.loop && WLED.effects) { WLED.loop = true; requestAnimationFrame(wledFrame); }
-    if (w) { const i = WLED.effects.findIndex(e => e[0].toLowerCase() === String(w.attributes.effect || "").toLowerCase()); WLED.fx = i < 0 ? 0 : i; }
+    if (w) { const i = WLED.effects.findIndex(e => e[0].toLowerCase() === unescH(w.attributes.effect || "").toLowerCase()); WLED.fx = i < 0 ? 0 : i; }
   }
 
   function leds48(d){
@@ -584,9 +592,9 @@ function renderRack(){
   rack.classList.toggle("edit", S.mode === "edit");
   rack.classList.toggle("has-sel", !!S.sel && !!DEVICES.find(d => selOf(d) === S.sel));
   rack.classList.toggle("rear", S.side === "rear");
-  $("badge").textContent = RACK.badge; $("cap").textContent = RACK.badge; $("plate").textContent = RACK.plate; $("plate").hidden = !RACK.plate; $("badge").hidden = !RACK.badge;
-  $("doorL1").textContent = RACK.label1;
-  $("doorL2").textContent = RACK.label2;
+  $("badge").textContent = unescH(RACK.badge); $("cap").textContent = unescH(RACK.badge); $("plate").textContent = unescH(RACK.plate); $("plate").hidden = !RACK.plate; $("badge").hidden = !RACK.badge;
+  $("doorL1").textContent = unescH(RACK.label1);
+  $("doorL2").textContent = unescH(RACK.label2);
 
   $("unums").innerHTML = Array.from({length:RACK.units}, (_, i) => `<span>${RACK.units - i}</span>`).join("");
   $("bay").innerHTML = DEVICES.map(d =>
@@ -1607,13 +1615,13 @@ function cutDoor(){
     g.querySelectorAll("circle").forEach((c, k) => { const v = T.series[k].v[i]; c.style.display = v == null ? "none" : ""; c.setAttribute("cx", T.X(i)); if (v != null) c.setAttribute("cy", T.Y(v)); });
     const card = svg.closest(".card"), t = new Date(Date.now() - (T.n - 1 - i) * 300e3);
     card.querySelector(".tread").textContent = i === T.n - 1 ? "jetzt" : t.toLocaleTimeString(rdLoc(), { hour: "2-digit", minute: "2-digit" }) + " Uhr";
-    T.series.forEach(s => { const b = card.querySelector(`b[data-s="${s.id}"]`); if (b) b.textContent = `${fmt(s.v[i], s.dec ?? 0)} ${s.unit}`; });
+    T.series.forEach(s => { const b = card.querySelector(`b[data-s="${s.id}"]`); if (b) b.textContent = `${fmt(s.v[i], s.dec ?? 0)} ${unescH(s.unit)}`; });
   }
   function traceLeave(e) {
     const card = e.target.closest?.(".trace"); if (!card) return;
     const svg = card.querySelector(".trace-svg"), T = svg && TRACE[svg.dataset.k]; if (!T) return;
     svg.querySelector(".tguide").style.display = "none"; card.querySelector(".tread").textContent = "24 Std.";
-    T.series.forEach(s => { const b = card.querySelector(`b[data-s="${s.id}"]`); if (b) b.textContent = `${valueOf(s.id).v} ${s.unit}`; });
+    T.series.forEach(s => { const b = card.querySelector(`b[data-s="${s.id}"]`); if (b) b.textContent = unescH(`${valueOf(s.id).v} ${s.unit}`); });
   }
   function chartCard(c) {
     if (c.style === "trace") return traceCard(c.multi ? c : { label: c.label, warn: c.warn, series: [{ id: c.entity, label: c.label, unit: c.unit, color: c.color, dec: c.dec, warn: c.warn }] });
@@ -1724,7 +1732,6 @@ function cutDoor(){
     note: (d, b) => d.slots ? slotsCard(d) : (b.text || d.passive) && `<section class="card"><p class="note" style="margin:0">${b.text || "Passives Element ohne Sensoren. Im Editor der Integration lässt sich hier eine Belegung oder Notiz hinterlegen."}</p></section>`,
   };
   // Community-Module (modules/<typ>/render.js): bekommen nur ctx mit fertig aufbereiteten Werten und liefern HTML
-  const escH = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   for (const [type, mod] of Object.entries(RD_MODULES)) {
     const render = mod.render, tr = s => rdIsDe() ? (mod.de?.[s] ?? s) : s;   // Module schreiben Englisch, „de“ übersetzt
     const meta = RD_CATALOG.blocks[type] || {};
@@ -1733,10 +1740,10 @@ function cutDoor(){
         return { id, name: nameOf(b, ref, id), state: s.state, value: v.v, unit: v.u, number: v.n ?? null, status: lamp(id), available: ok(s), attributes: { ...s.attributes } }; });
       if (meta.items && !items.length) return "";
       const opt = k => b[k] ?? (meta.options || []).find(o => o.key === k)?.default;
-      const ctx = { device: { id: d.id, name: d.name, model: d.model, state: d.state, off: !!d.off }, items, option: opt, fmt, esc: escH, t: tr, lang: () => RD_LANG };
+      const ctx = { device: unescDeep({ id: d.id, name: d.name, model: d.model, state: d.state, off: !!d.off }), items: unescDeep(items), option: k => unescDeep(opt(k)), fmt, esc: escH, t: tr, lang: () => RD_LANG };
       let html = "";
-      try { html = render(ctx, b) || ""; } catch (err) { console.warn(`Rack Display: Modul ${type}:`, err); html = `<p class="note">${rdIsDe() ? "Fehler im Modul" : "Module error"} ${escH(type)}</p>`; }
-      return html && `<section class="card mod mod-${type}">${b.label !== "" ? `<h2>${escH(b.label || meta.name || type)}</h2>` : ""}${html}</section>`;
+      try { html = render(ctx, unescDeep(b)) || ""; } catch (err) { console.warn(`Rack Display: Modul ${type}:`, err); html = `<p class="note">${rdIsDe() ? "Fehler im Modul" : "Module error"} ${escH(type)}</p>`; }
+      return html && `<section class="card mod mod-${type}">${b.label !== "" ? `<h2>${b.label || escH(meta.name || type)}</h2>` : ""}${html}</section>`;
     };
   }
   function renderBlocks(d) {
@@ -1921,7 +1928,7 @@ function cutDoor(){
   }
   let lastRender = 0, pending = null;
   return {
-    setRack(rack) { RAW = rack; rdForceLang(rack?.display?.lang); setTimeout(nightCheck, 0); HIST.want.clear(); DISC.clear(); buildModel(rack); computeWatch(); render(true); loadHistory(true); loadEvents(); },
+    setRack(rack) { RAW = escDeep(rack); rack = RAW; rdForceLang(rack?.display?.lang); setTimeout(nightCheck, 0); HIST.want.clear(); DISC.clear(); buildModel(rack); computeWatch(); render(true); loadHistory(true); loadEvents(); },
     setHass(h) {
       HASS = h; rdSetLang(h);
       if (!RAW) return;
@@ -1939,6 +1946,7 @@ function cutDoor(){
     onPanel(fn) { EDIT_HOOK = fn; },
     // Editor-Bibliothek: ein Modul für ein Gerät in einen Behälter zeichnen (inkl. Kurven); false = keine Daten
     renderBlockInto(el, id, b) {
+      b = escDeep(b);
       const d = id === "__ov" ? ovModel() : byId(id); if (!d) return false;
       const html = b.type === "header" ? headCard(d) : BLOCK_RENDER[b.type]?.(d, b); if (!html) { el.innerHTML = ""; return false; }
       const start = CHARTS.length; el.innerHTML = html;
@@ -2063,6 +2071,8 @@ class RackDisplayElement extends HTMLElement {
     this._app.setHass(this._hass);
     await this._load();
     const unsub = await this._hass.connection.subscribeMessage(() => this._app && this._load(), { type: "rack_display/subscribe" });
+    // Foto-Adressen sind signiert und laufen ab: einmal am Tag frisch laden (Kiosk läuft oft tagelang)
+    clearInterval(this._rt); this._rt = setInterval(() => this._app && this._load(), 24 * 3600e3);
     if (this._app) this._unsub = unsub; else unsub();  // während des Starts geschlossen
   }
   async _load() {
@@ -2076,7 +2086,7 @@ class RackDisplayElement extends HTMLElement {
     else this._wrap.innerHTML = `<p style="padding:24px">Noch kein Rack angelegt.</p>`;
   }
   disconnectedCallback() {
-    this._app?.destroy(); this._unsub?.(); this._stage?._ro?.disconnect(); clearInterval(this._vt);
+    this._app?.destroy(); this._unsub?.(); this._stage?._ro?.disconnect(); clearInterval(this._vt); clearInterval(this._rt);
     this._app = null; this._unsub = null; this._started = false;
   }
 }
