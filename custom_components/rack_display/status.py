@@ -42,7 +42,9 @@ def device_status(hass: HomeAssistant, dev: dict[str, Any]) -> dict[str, Any] | 
     roles = {k: v for k, v in (m.get("roles") or {}).items() if v}
     opts = dev.get("options") or {}
     state_id = roles.get("state")
-    out = {"name": dev.get("name") or dev.get("id"), "state": "ok", "messages": [], "temperature": None}
+    # auch ausgeschaltete Geräte beobachten, sonst fällt das Wiedereinschalten nicht auf
+    watch = sorted({*roles.values(), *(m.get("problems") or [])})
+    out = {"name": dev.get("name") or dev.get("id"), "state": "ok", "messages": [], "temperature": None, "watch": watch}
     if opts.get("sometimes_off"):
         trk = hass.states.get(state_id) if state_id and state_id.split(".")[0] in ("device_tracker", "binary_sensor", "switch") else None
         vals = [v for v in roles.values() if v != state_id]
@@ -69,7 +71,6 @@ def device_status(hass: HomeAssistant, dev: dict[str, Any]) -> dict[str, Any] | 
             add("alert", f"Temperatur {temp:.0f} °C")
         elif temp >= TEMP_WARN:
             add("warn", f"Temperatur {temp:.0f} °C")
-    out["watch"] = sorted({*roles.values(), *(m.get("problems") or [])})
     return out
 
 

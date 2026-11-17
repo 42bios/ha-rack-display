@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import time
 import uuid
 from datetime import timedelta
 from http import HTTPStatus
@@ -15,7 +16,7 @@ from homeassistant.components.http.auth import async_sign_path
 from homeassistant.components.http.const import KEY_HASS_REFRESH_TOKEN_ID
 from homeassistant.core import HomeAssistant
 
-from .const import IMAGE_DIR, IMAGE_MAX_BYTES, IMAGE_SIGN_DAYS, IMAGE_TYPES, URL_FRONTEND, URL_IMAGES
+from .const import IMAGE_DIR, IMAGE_KEEP_SECONDS, IMAGE_MAX_BYTES, IMAGE_SIGN_DAYS, IMAGE_TYPES, URL_FRONTEND, URL_IMAGES
 
 _IMAGE_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*\.(jpg|jpeg|png|webp)$")
 
@@ -34,6 +35,24 @@ def map_images(value, fn):
     if isinstance(value, dict):
         return {k: map_images(v, fn) for k, v in value.items()}
     return value
+
+
+def remove_unused_images(folder: Path, config_text: str, min_age: float = IMAGE_KEEP_SECONDS) -> list[str]:
+    """Löscht hochgeladene Fotos, die in keinem Rack mehr vorkommen (läuft im Executor).
+
+    Frisch hochgeladene Fotos bleiben, weil sie erst mit dem Speichern des Racks eingetragen werden."""
+    removed: list[str] = []
+    limit = time.time() - min_age
+    for path in folder.iterdir():
+        if not path.is_file() or not _IMAGE_NAME.match(path.name) or path.name in config_text:
+            continue
+        try:
+            if path.stat().st_mtime < limit:
+                path.unlink()
+                removed.append(path.name)
+        except OSError:
+            continue
+    return removed
 
 
 class ImageView(HomeAssistantView):

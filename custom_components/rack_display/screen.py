@@ -31,7 +31,7 @@ class ScreenTimeout:
     @callback
     def start(self) -> None:
         self._load()
-        self._unsubs.append(async_dispatcher_connect(self.hass, SIGNAL_UPDATED, lambda _r: self._load()))
+        self._unsubs.append(async_dispatcher_connect(self.hass, SIGNAL_UPDATED, self._load))
         self._unsubs.append(async_track_time_interval(self.hass, self._check, timedelta(seconds=30)))
 
     @callback
@@ -41,7 +41,7 @@ class ScreenTimeout:
         self._unsubs = []
 
     @callback
-    def _load(self) -> None:
+    def _load(self, _rack_id: str | None = None) -> None:
         self._targets = []
         for rack in self.store.list():
             scr = (rack.get("display") or {}).get("screen") or {}

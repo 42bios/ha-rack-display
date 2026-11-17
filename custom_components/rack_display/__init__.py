@@ -10,6 +10,8 @@ Stellt bereit:
 
 from __future__ import annotations
 
+import json
+import logging
 from pathlib import Path
 
 from homeassistant.components import frontend, panel_custom
@@ -17,6 +19,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.const import Platform
 from homeassistant.core import CoreState, Event, HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import websocket_api
@@ -34,7 +37,7 @@ from .const import (
     PANEL_URL,
     URL_FRONTEND,
 )
-from .http import FrontendView, ImageUploadView, ImageView
+from .http import FrontendView, ImageUploadView, ImageView, remove_unused_images
 from .live import LiveBuffer
 from .screen import ScreenTimeout
 from .entity import wanted_racks
@@ -43,6 +46,8 @@ from .storage import RackStore
 PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR]
 
 VERSION = "0.1.0"
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -64,8 +69,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _start)
 
     # Zustand je Rack als HA-Entitäten; kommen Racks hinzu/weg (oder „HA-Entitäten“ wird umgeschaltet), neu laden
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     have = {r["id"] for r in wanted_racks(store)}
+    # Geräte gelöschter Racks (oder mit abgeschalteten „HA-Entitäten“) samt ihren Entitäten entfernen
+    dev_reg = dr.async_get(hass)
+    for device in dr.async_entries_for_config_entry(dev_reg, entry.entry_id):
+        if not any(domain == DOMAIN and rack_id in have for domain, rack_id in device.identifiers):
+            dev_reg.async_remove_device(device.id)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     @callback
     def _racks_changed(_rack_id: str | None) -> None:
@@ -81,6 +91,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await _register_panel(hass)
         return True
     hass.data[f"{DOMAIN}_registered"] = True
+    # Fotos, die in keinem Rack mehr vorkommen, einmal je HA-Start löschen
+    config_text = json.dumps(store.racks)
+    if removed := await hass.async_add_executor_job(remove_unused_images, image_dir, config_text):
+        _LOGGER.info("Removed %d unused rack photo(s)", len(removed))
     hass.http.register_view(FrontendView())
     hass.http.register_view(ImageView(hass))
     hass.http.register_view(ImageUploadView(hass))

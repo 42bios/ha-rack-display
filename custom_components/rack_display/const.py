@@ -29,3 +29,5 @@ IMAGE_MAX_BYTES = 8 * 1024 * 1024
 IMAGE_TYPES = {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"}
 # Fotos nur mit Anmeldung: das Frontend bekommt signierte Adressen, die so lange gelten (die Anzeige lädt täglich neu)
 IMAGE_SIGN_DAYS = 7
+# Nicht mehr verwendete Fotos werden beim Start gelöscht, frühestens so lange nach dem Hochladen
+IMAGE_KEEP_SECONDS = 24 * 3600

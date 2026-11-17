@@ -30,7 +30,7 @@ class LiveBuffer:
     @callback
     def start(self) -> None:
         self._refresh()
-        self._unsub_signal = async_dispatcher_connect(self.hass, SIGNAL_UPDATED, lambda _rack_id: self._refresh())
+        self._unsub_signal = async_dispatcher_connect(self.hass, SIGNAL_UPDATED, self._refresh)
 
     @callback
     def stop(self) -> None:
@@ -40,7 +40,7 @@ class LiveBuffer:
         self._unsub_track = self._unsub_signal = None
 
     @callback
-    def _refresh(self) -> None:
+    def _refresh(self, _rack_id: str | None = None) -> None:
         """Beobachtete Entitäten aus allen Racks neu bestimmen."""
         ids: set[str] = set()
         for rack in self.store.list():
