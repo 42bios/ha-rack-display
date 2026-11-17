@@ -45,7 +45,8 @@ from .storage import RackStore
 
 PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR]
 
-VERSION = "0.1.0"
+# Ersatz, falls frontend/version.txt fehlt (die Version der Integration steht nur in manifest.json)
+FALLBACK_BUILD = "0"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,11 +71,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Zustand je Rack als HA-Entitäten; kommen Racks hinzu/weg (oder „HA-Entitäten“ wird umgeschaltet), neu laden
     have = {r["id"] for r in wanted_racks(store)}
-    # Geräte gelöschter Racks (oder mit abgeschalteten „HA-Entitäten“) samt ihren Entitäten entfernen
-    dev_reg = dr.async_get(hass)
-    for device in dr.async_entries_for_config_entry(dev_reg, entry.entry_id):
-        if not any(domain == DOMAIN and rack_id in have for domain, rack_id in device.identifiers):
-            dev_reg.async_remove_device(device.id)
+    remove_stale_devices(hass, entry, have)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     @callback
@@ -104,12 +101,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
+@callback
+def remove_stale_devices(hass: HomeAssistant, entry: ConfigEntry, rack_ids: set[str]) -> None:
+    """Entfernt Geräte gelöschter Racks (oder mit abgeschalteten „HA-Entitäten“) samt ihren Entitäten."""
+    dev_reg = dr.async_get(hass)
+    for device in dr.async_entries_for_config_entry(dev_reg, entry.entry_id):
+        if not any(domain == DOMAIN and rack_id in rack_ids for domain, rack_id in device.identifiers):
+            dev_reg.async_remove_device(device.id)
+
+
 def _build_version() -> str:
     """Version des eingespielten Frontends (frontend/version.txt), damit die Lader-Adresse je Stand neu ist."""
     try:
-        return (Path(__file__).parent / "frontend" / "version.txt").read_text().strip() or VERSION
+        return (Path(__file__).parent / "frontend" / "version.txt").read_text().strip() or FALLBACK_BUILD
     except OSError:
-        return VERSION
+        return FALLBACK_BUILD
 
 
 async def _register_panel(hass: HomeAssistant) -> None:

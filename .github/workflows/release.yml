@@ -12,6 +12,21 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Tag matches the manifest version
+        run: |
+          version="$(python3 -c "import json; print(json.load(open('custom_components/rack_display/manifest.json'))['version'])")"
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match manifest version $version"
+            exit 1
+          fi
+      - name: Committed build matches the source
+        run: |
+          python3 frontend-src/build.py "$(cat custom_components/rack_display/frontend/version.txt)"
+          git diff --exit-code -- custom_components/rack_display
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:

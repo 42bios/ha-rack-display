@@ -6,3 +6,4 @@ __pycache__/
 backups/
 frontend-src/deploy.env
 docs/rack-looks.png
+.pytest_cache/

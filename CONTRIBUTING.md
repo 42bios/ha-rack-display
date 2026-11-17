@@ -15,9 +15,11 @@ The interface is available in German and English; other languages use English. T
 
 ## Development
 
-The frontend source lives in `frontend-src/` and is built into `custom_components/rack_display/frontend/` with `python3 frontend-src/build.py`. `frontend-src/deploy.sh` builds the integration and copies it to a Home Assistant host via SSH; the connection details are read from `frontend-src/deploy.env` (not part of the repository).
+The frontend source lives in `frontend-src/` and is built into `custom_components/rack_display/frontend/` with `python3 frontend-src/build.py`. The backend tests run with `pip install -r requirements_test.txt` and `python -m pytest` (Linux or macOS).
+
+`frontend-src/deploy.sh` builds the integration and copies it to a Home Assistant host via SSH; the connection details are read from `frontend-src/deploy.env` (not part of the repository).
 
 ## Releases
 
 - Set the version in `custom_components/rack_display/manifest.json`, then create and push a matching semantic tag, for example `v0.2.0`.
-- The `Release` workflow publishes a GitHub release with notes grouped via `.github/release.yml`.
+- The `Release` workflow checks that the tag matches the manifest version and that the committed frontend build matches the source, then publishes a GitHub release with notes grouped via `.github/release.yml`.
