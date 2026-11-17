@@ -11,7 +11,11 @@ By contributing you agree that your contribution is licensed under the [GPLv3](L
 
 ## Translations
 
-The interface is available in German and English; other languages use English. The translations live in `frontend-src/i18n/`. The texts of the Home Assistant config flow live in `custom_components/rack_display/translations/`.
+The interface texts live in `frontend-src/i18n/<language>.json` as `"key": "text"`; values are inserted for `{0}`, `{1}`, …. English (`en.json`) is the source language and must contain every key. In the code a text is `TR("key")` or `TR("key", value)`; the build fails if a key is missing in `en.json`.
+
+To add a language, copy `en.json` to e.g. `fr.json` and translate the texts; keys you leave out fall back to English. The language follows the Home Assistant user and can be fixed per rack in the editor (Display → Language).
+
+The texts of the Home Assistant config flow live in `custom_components/rack_display/translations/`.
 
 ## Development
 

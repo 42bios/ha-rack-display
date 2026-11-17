@@ -1,10 +1,12 @@
 /* Rack Display – Oberfläche für Panel, Karte und Kiosk.
    Dieser Teil ist neu geschrieben (Daten aus Home Assistant). Die Darstellungsfunktionen
-   (Rack, Fronten, Kacheln, Diagramme) stehen in render.js und werden beim Build eingesetzt: /*@@PROTO@@*/
+   (Rack, Fronten, Kacheln, Diagramme) stehen in render.js und werden beim Build eingesetzt:
 */
 const RD_BASE = "/rack_display/frontend";
 const RD_VERSION = "@@VERSION@@";
-const RD_CATALOG = /*@@CATALOG@@*/null;
+// Katalog aus blocks.json; Texte sind beim Build markiert und werden je Sprache aufgelöst (rdCatalog())
+const RD_CATALOG_RAW = /*@@CATALOG@@*/null;
+const rdCatalog = rdPerLang(() => rdResolve(RD_CATALOG_RAW));
 // Community-Module: werden beim Bauen aus modules/<typ>/render.js eingesetzt
 const RD_MODULES = {};
 /*@@MODULES@@*/
@@ -64,7 +66,7 @@ function createApp(ROOT, WRAP) {
   const since = id => { const s = st(id); if (!ok(s)) return null;
     let sec; const x = parseFloat(s.state);
     if (s.attributes.unit_of_measurement === "s") sec = x; else { const t = Date.parse(s.state); if (isNaN(t)) return null; sec = (Date.now() - t) / 1000; }
-    const d = Math.floor(sec / 86400); return d >= 1 ? `${d} ${d === 1 ? "Tag" : "Tage"}` : `${Math.floor(sec / 3600)} Std.`; };
+    const d = Math.floor(sec / 86400); return d >= 1 ? `${d} ${d === 1 ? TR("day") : TR("days")}` : TR("n_h", Math.floor(sec / 3600)); };
 
   /* ---------- Verläufe (24 Std.) aus der Historie ---------- */
   const HIST = { data: {}, raw: {}, tried: new Set(), fine: new Set(), energyStart: {}, loading: false, last: 0, want: new Set() };
@@ -117,7 +119,7 @@ function createApp(ROOT, WRAP) {
       }
       ids.forEach(id => HIST.tried.add(id));
       HIST.last = Date.now();
-    } catch (e) { console.warn("Rack Display: Historie nicht geladen", e); }
+    } catch (e) { console.warn("Rack Display: history not loaded", e); }
     HIST.loading = false;
     if (!DEAD) renderPanel();
   }
@@ -142,11 +144,11 @@ function createApp(ROOT, WRAP) {
   const DLOG = {};
   const LOG_TXT = (id, s, d) => {
     const dom = id.split(".")[0];
-    if (dom === "update") return s === "on" ? "Firmware-Update verfügbar" : s === "off" ? `Auf ${st(id)?.attributes.installed_version || "neue Firmware"} aktualisiert` : null;
-    if (dom === "device_tracker") return s === "home" ? `${d.name} ist wieder online` : s === "not_home" ? `${d.name} war offline` : null;
-    if (dom === "binary_sensor" && /hitz|overheat/.test(id)) return s === "on" ? "Überhitzung gemeldet" : null;
-    if (dom === "switch" && /_poe$/.test(id)) { const n = id.match(/_(\d+)_poe$/)?.[1]; return `PoE an Port ${n} ${s === "on" ? "eingeschaltet" : "ausgeschaltet"}`; }
-    if (dom === "sensor" && /_(zustand|state)$/.test(id)) return { connected: "Verbunden", disconnected: "Getrennt", upgrading: "Firmware wird installiert", adopting: "Wird übernommen", provisioning: "Wird eingerichtet" }[s] || null;
+    if (dom === "update") return s === "on" ? TR("firmware_update_available") : s === "off" ? TR("updated_to_n", st(id)?.attributes.installed_version || TR("new_firmware")) : null;
+    if (dom === "device_tracker") return s === "home" ? TR("n_is_back_online", d.name) : s === "not_home" ? TR("n_was_offline", d.name) : null;
+    if (dom === "binary_sensor" && /hitz|overheat/.test(id)) return s === "on" ? TR("overheating_reported") : null;
+    if (dom === "switch" && /_poe$/.test(id)) { const n = id.match(/_(\d+)_poe$/)?.[1]; return TR(s === "on" ? "poe_on_port_n_switched_on" : "poe_on_port_n_switched_off", n); }
+    if (dom === "sensor" && /_(zustand|state)$/.test(id)) return { connected: TR("connected_2"), disconnected: TR("disconnected"), upgrading: TR("installing_firmware"), adopting: TR("adopting"), provisioning: TR("setting_up") }[s] || null;
     return null;
   };
   async function loadDevLog(d, devs) {
@@ -162,7 +164,7 @@ function createApp(ROOT, WRAP) {
     } catch (e) { c.last = Date.now(); }
     c.loading = false;
   }
-  const whenTxt = ms => new Date(ms).toLocaleString(rdLoc(), { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).replace(",", " um");
+  const whenTxt = ms => new Date(ms).toLocaleString(rdLoc(), { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).replace(",", " " + TR("at_time"));
 
   /* ---------- Modell: Rack aus dem Backend + Live-Zustände ---------- */
   const SPD_COL = { "25G": "--sp25g", "10G": "--sp10g", "2.5G": "--sp2g5", "1G": "--sp1g", "100M": "--sp100" };
@@ -236,7 +238,7 @@ function createApp(ROOT, WRAP) {
   function blocksOf(r) {
     if (Array.isArray(r.blocks)) return r.blocks;
     if (r.group) return [];
-    const C = RD_CATALOG, key = r.passive || C.passive_templates.includes(r.template) ? "passive" : C.templates[r.template] ? r.template : "generic";
+    const C = rdCatalog(), key = r.passive || C.passive_templates.includes(r.template) ? "passive" : C.templates[r.template] ? r.template : "generic";
     return C.templates[key].map(b => typeof b === "string" ? { type: b } : b);
   }
   // Verlauf-Block: Quelle ist eine Rolle (z. B. "load") oder eine Entitäts-ID
@@ -247,12 +249,12 @@ function createApp(ROOT, WRAP) {
       const series = b.items.slice(0, 4).map(ref => [ref, entOf(ref, R)]).filter(([, id]) => st(id)).map(([ref, id], i) => { HIST.want.add(id);
         return { id, label: b.names?.[ref] || shortName(id), unit: st(id).attributes.unit_of_measurement || "", color: b.colors?.[i] || COL[i], dec: Math.abs(num(id) || 0) < 10 ? 1 : 0, warn: b.warns?.[ref] }; });
       if (b.style === "trace") series.forEach(s => HIST.fine.add(s.id));
-      return series.length ? { multi: true, style: b.style, label: b.label || "Verlauf", series } : null;
+      return series.length ? { multi: true, style: b.style, label: rdLabel(b.label) || TR("history_2"), series } : null;
     }
     const id = entOf(b.items?.[0] || b.source, R);
     const s = st(id); if (!s) return null;
     HIST.want.add(id); if (b.style === "trace") HIST.fine.add(id);
-    return { style: b.style, label: b.label || s.attributes.friendly_name || b.source, unit: s.attributes.unit_of_measurement || "", entity: id, base: num(id) || 0,
+    return { style: b.style, label: rdLabel(b.label) || s.attributes.friendly_name || b.source, unit: s.attributes.unit_of_measurement || "", entity: id, base: num(id) || 0,
       color: b.color || "--blue", dec: b.dec ?? (Math.abs(num(id) || 0) < 10 ? 1 : 0), warn: b.warn };
   }
 
@@ -260,20 +262,20 @@ function createApp(ROOT, WRAP) {
   let LABELS = {};
   const shortName = id => LABELS[id] || st(id)?.attributes.friendly_name || id.split(".")[1];
   const nameOf = (b, ref, id) => b?.names?.[ref] || b?.names?.[id] || shortName(id);
-  const STATE_DE = { on: "An", off: "Aus", home: "Zuhause", not_home: "Abwesend", open: "Offen", closed: "Geschlossen", unavailable: "Nicht verfügbar", unknown: "Unbekannt", connected: "Verbunden", disconnected: "Getrennt", idle: "Bereit", recording: "Nimmt auf", streaming: "Streamt", playing: "Spielt", paused: "Pausiert", started: "Gestartet", stopped: "Gestoppt", too_many_missing_disks: "Platten fehlen", invalid_expansion: "Ungültige Erweiterung", parity_check: "Paritätsprüfung", rebuilding: "Wird neu aufgebaut", maintenance: "Wartung" };
+  const STATE_DE = rdPerLang(() => ({ on: TR("on"), off: TR("off"), home: TR("home"), not_home: TR("away"), open: TR("open"), closed: TR("closed"), unavailable: TR("unavailable"), unknown: TR("unknown"), connected: TR("connected_2"), disconnected: TR("disconnected"), idle: TR("ready"), recording: TR("recording"), streaming: TR("streaming"), playing: TR("playing"), paused: TR("paused"), started: TR("started"), stopped: TR("stopped"), too_many_missing_disks: TR("disks_missing"), invalid_expansion: TR("invalid_expansion"), parity_check: TR("parity_check"), rebuilding: TR("rebuilding"), maintenance: TR("maintenance") }));
   // Binärsensoren nach Geräteklasse in Klartext (Problem-Sensoren: OK/Problem statt Aus/An)
-  const BIN_DE = { problem: ["OK", "Problem"], running: ["Gestoppt", "Läuft"], connectivity: ["Getrennt", "Verbunden"], power: ["Aus", "An"], safety: ["Sicher", "Unsicher"] };
+  const BIN_DE = rdPerLang(() => ({ problem: ["OK", "Problem"], running: [TR("stopped"), TR("running")], connectivity: [TR("disconnected"), TR("connected_2")], power: [TR("off"), TR("on")], safety: [TR("safe"), TR("unsafe")] }));
   function valueOf(id) {
     const s = st(id); if (!s) return { v: "–", u: "" };
     const x = parseFloat(s.state), u = s.attributes.unit_of_measurement || "";
     if (!isNaN(x) && /^-?[\d.]+$/.test(s.state)) { if (u === "Mbit/s" && x >= 1000) return { v: fmt(x / 1000, x % 1000 ? 1 : 0), u: "Gbit/s", n: x };
       return { v: fmt(x, Math.abs(x) < 10 && x % 1 ? 1 : 0), u, n: x }; }
-    const bin = id.startsWith("binary_sensor.") && (/_active$/.test(id) && s.attributes.device_class === "running" ? ["Inaktiv", "Aktiv"] : BIN_DE[s.attributes.device_class]); if (bin && (s.state === "on" || s.state === "off")) return { v: bin[s.state === "on" ? 1 : 0], u: "" };
+    const bin = id.startsWith("binary_sensor.") && (/_active$/.test(id) && s.attributes.device_class === "running" ? [TR("inactive"), TR("active")] : BIN_DE()[s.attributes.device_class]); if (bin && (s.state === "on" || s.state === "off")) return { v: bin[s.state === "on" ? 1 : 0], u: "" };
     if (s.attributes.device_class === "timestamp") { const t = Date.parse(s.state); if (!isNaN(t)) {
       const sec = (Date.now() - t) / 1000;
-      if (sec > 0) { const dd = Math.floor(sec / 86400); return dd >= 1 ? { v: fmt(dd), u: dd === 1 ? "Tag" : "Tage" } : { v: fmt(Math.floor(sec / 3600)), u: "Std." }; }
+      if (sec > 0) { const dd = Math.floor(sec / 86400); return dd >= 1 ? { v: fmt(dd), u: dd === 1 ? TR("day") : TR("days") } : { v: fmt(Math.floor(sec / 3600)), u: TR("h") }; }
       return { v: new Date(t).toLocaleString(rdLoc(), { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }), u: "" }; } }
-    return { v: STATE_DE[s.state] || (/^[a-z0-9]+(_[a-z0-9]+)+$/.test(s.state) ? s.state[0].toUpperCase() + s.state.slice(1).replace(/_/g, " ") : s.state), u: "" };
+    return { v: STATE_DE()[s.state] || (/^[a-z0-9]+(_[a-z0-9]+)+$/.test(s.state) ? s.state[0].toUpperCase() + s.state.slice(1).replace(/_/g, " ") : s.state), u: "" };
   }
   // Für Einzel-Module: erste Entität eines Moduls
   function oneEnt(d, b) { const ref = b.items?.[0] || b.source, id = ref && entOf(ref, d.R); if (!id || !st(id)) return null; return { id, ref, label: nameOf(b, ref, id), v: valueOf(id) }; }
@@ -300,7 +302,7 @@ function createApp(ROOT, WRAP) {
     const m = r.map;
     if (r.passive) return d;
     if (!m && r.group) return d;  // Teil einer Gruppe (z. B. Zusatzbatterie), Werte kommen vom Hauptgerät
-    if (!m) { d.state = "off"; d.msgs.push(["warn", "Keine Daten", "Noch kein Home-Assistant-Gerät verknüpft"]); d.noData = true; return d; }
+    if (!m) { d.state = "off"; d.msgs.push(["warn", TR("no_data"), TR("no_home_assistant_device_linked_yet")]); d.noData = true; return d; }
     const R = m.roles;
     d.R = R;
     const temp = num(R.cpu_temp) ?? num(R.temperature), tempId = R.cpu_temp || R.temperature;
@@ -313,39 +315,39 @@ function createApp(ROOT, WRAP) {
       if ((trk && ["not_home", "off", "offline", "disconnected"].includes(trk.state)) || (vals.length && vals.every(id => !ok(st(id))))) {
         const since = trk?.last_changed || vals.map(id => st(id)?.last_changed).filter(Boolean).sort().at(-1);
         d.state = "off"; d.off = true; d.offSince = since;
-        d.msgs.push(["ok", "Ausgeschaltet", since ? `seit ${new Date(since).toLocaleString(rdLoc(), { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}` : "wird bei Bedarf eingeschaltet"]);
-        d.facts = [["Zustand", "Ausgeschaltet"], ...(since ? [["Aus seit", new Date(since).toLocaleString(rdLoc(), { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })]] : [])]; return d;
+        d.msgs.push(["ok", TR("switched_off"), since ? TR("since_n", new Date(since).toLocaleString(rdLoc(), { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })) : TR("switched_on_when_needed")]);
+        d.facts = [[TR("state"), TR("switched_off")], ...(since ? [[TR("off_since"), new Date(since).toLocaleString(rdLoc(), { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })]] : [])]; return d;
       }
     }
     // Zustand und Meldungen
-    if (Object.values(R).length && Object.values(R).every(id => !ok(st(id)))) { d.state = "alert"; d.msgs.push(["alert", "Keine Werte", "Alle Sensoren sind nicht verfügbar"]); }
+    if (Object.values(R).length && Object.values(R).every(id => !ok(st(id)))) { d.state = "alert"; d.msgs.push(["alert", TR("no_values"), TR("all_sensors_are_unavailable")]); }
     const stt = /load_state$/.test(R.state || "") ? undefined : st(R.state);
-    if (ok(stt) && !["connected", "online", "on", "home"].includes(stt.state)) { d.state = "alert"; d.msgs.push(["alert", "Nicht erreichbar", stt.state === "not_home" ? "Gerät ist nicht im Netzwerk" : `Zustand: ${stt.state}`]); }
+    if (ok(stt) && !["connected", "online", "on", "home"].includes(stt.state)) { d.state = "alert"; d.msgs.push(["alert", TR("unreachable"), stt.state === "not_home" ? TR("device_is_not_on_the_network") : TR("state_n", stt.state)]); }
     const tracker = R.state?.startsWith("device_tracker.") && ok(stt);
-    for (const p of m.problems) if (st(p)?.state === "on") { d.state = "alert"; d.msgs.push(["alert", st(p).attributes.friendly_name || "Problem", "meldet ein Problem"]); }
-    if (temp != null && temp >= TEMP_ALERT) { d.state = "alert"; d.msgs.push(["alert", `Temperatur über ${TEMP_ALERT} °C`, `aktuell ${fmt(temp)} °C`]); }
-    else if (temp != null && temp >= TEMP_WARN) { if (d.state === "ok") d.state = "warn"; d.msgs.push(["warn", `Temperatur über ${TEMP_WARN} °C`, `aktuell ${fmt(temp)} °C`]); }
-    if (st(R.firmware)?.state === "on") d.msgs.push(["ok", "Firmware-Update verfügbar", st(R.firmware).attributes.latest_version || ""]);
+    for (const p of m.problems) if (st(p)?.state === "on") { d.state = "alert"; d.msgs.push(["alert", st(p).attributes.friendly_name || "Problem", TR("reports_a_problem")]); }
+    if (temp != null && temp >= TEMP_ALERT) { d.state = "alert"; d.msgs.push(["alert", TR("temperature_above_n", `${TEMP_ALERT} °C`), TR("currently_n", `${fmt(temp)} °C`)]); }
+    else if (temp != null && temp >= TEMP_WARN) { if (d.state === "ok") d.state = "warn"; d.msgs.push(["warn", TR("temperature_above_n", `${TEMP_WARN} °C`), TR("currently_n", `${fmt(temp)} °C`)]); }
+    if (st(R.firmware)?.state === "on") d.msgs.push(["ok", TR("firmware_update_available"), st(R.firmware).attributes.latest_version || ""]);
     // Kacheln (für Geräte ohne eigene Spezialansicht)
     const T = d.tiles;
-    if (temp != null) T.push(["Temperatur", fmt(temp), "°C", null, temp >= TEMP_ALERT ? "alert" : temp >= TEMP_WARN ? "warn" : "", temp >= TEMP_WARN ? `Grenze ${TEMP_WARN} °C` : ""]);
-    if (cpu != null) T.push(["Prozessor", fmt(cpu), "%", cpu]);
-    if (ram != null) T.push(["Arbeitsspeicher", fmt(ram), "%", ram]);
-    if (num(R.storage) != null) T.push(["Speicher", fmt(round(num(R.storage))), "%", round(num(R.storage))]);
-    if (d.power != null) T.push(["Leistung", fmt(d.power), "W"]);
+    if (temp != null) T.push([TR("temperature"), fmt(temp), "°C", null, temp >= TEMP_ALERT ? "alert" : temp >= TEMP_WARN ? "warn" : "", temp >= TEMP_WARN ? TR("limit_n", `${TEMP_WARN} °C`) : ""]);
+    if (cpu != null) T.push([TR("processor"), fmt(cpu), "%", cpu]);
+    if (ram != null) T.push([TR("memory"), fmt(ram), "%", ram]);
+    if (num(R.storage) != null) T.push([TR("storage"), fmt(round(num(R.storage))), "%", round(num(R.storage))]);
+    if (d.power != null) T.push([TR("power_output"), fmt(d.power), "W"]);
     if (num(R.clients) != null) T.push(["Clients", fmt(num(R.clients)), ""]);
     // Kopf-Fakten
     const facts = [];
     if (since(R.uptime)) facts.push(["Uptime", since(R.uptime)]);
     if (num(R.clients) != null) facts.push(["Clients", fmt(num(R.clients))]);
-    if (num(R.latency) != null) facts.push(["Antwortzeit", `${fmt(num(R.latency))} ms`]);
-    if (num(R.active_ports) != null) facts.push(["Aktive Ports", fmt(num(R.active_ports))]);
+    if (num(R.latency) != null) facts.push([TR("latency"), `${fmt(num(R.latency))} ms`]);
+    if (num(R.active_ports) != null) facts.push([TR("active_ports"), fmt(num(R.active_ports))]);
     if (tracker) {
       const on = stt.state === "home";
-      T.push(["Netzwerk", on ? "Online" : "Offline", "", null, on ? "" : "alert"]);
-      if (stt.attributes.ip) facts.push(["IP-Adresse", stt.attributes.ip]);
-      if (stt.attributes.network) facts.push(["Netz", stt.attributes.network]);
-      facts.push(["Anschluss", stt.attributes.is_wired === false ? "WLAN" : "Kabel"]);
+      T.push([TR("network"), on ? "Online" : "Offline", "", null, on ? "" : "alert"]);
+      if (stt.attributes.ip) facts.push([TR("ip_address"), stt.attributes.ip]);
+      if (stt.attributes.network) facts.push([TR("mains"), stt.attributes.network]);
+      facts.push([TR("connection_type"), stt.attributes.is_wired === false ? TR("wifi") : TR("wired")]);
     }
     if (facts.length) d.facts = facts.slice(0, 4);
     // System-Diagramm oder Einzeldiagramm
@@ -379,7 +381,7 @@ function createApp(ROOT, WRAP) {
       if (s28.length) groups.push(["sfp28", s28]);
       d.portLayout = groups;
       d.traffic = d.ports.reduce((a, p) => [a[0] + (p.rx || 0), a[1] + (p.tx || 0)], [0, 0]);
-      if (d.facts && d.facts.length < 4) { d.facts.push(["Durchsatz", `${rateK(d.traffic[0] + d.traffic[1]).replace(/ (.)$/, " $1bit/s")}`]); }
+      if (d.facts && d.facts.length < 4) { d.facts.push([TR("throughput"), `${rateK(d.traffic[0] + d.traffic[1]).replace(/ (.)$/, " $1bit/s")}`]); }
       if (R.poe_total && num(R.poe_total) != null) d.poe = { used: Math.round(num(R.poe_total)), budget: o.poe_budget || (/48.?poe/i.test(d.model) ? 600 : null) };
     }
     // USV
@@ -389,20 +391,20 @@ function createApp(ROOT, WRAP) {
       const src = { battery: 5, bypass: 4, normal: 3 }[srcText] ?? num(R.source), lv = round(num(R.battery)), rt = round(num(R.runtime));
       const outV = round(num(R.output_voltage)), outA = num(R.output_current);
       d.flow = { inV: round(num(R.input_voltage)), hz: round(num(R.input_frequency), 1), outV, batt: lv, runtime: rt, loadPct: round(num(R.load)),
-        load: outV && outA ? Math.round(outV * outA) : null, source: src === 5 ? "Batterie" : "Netz", bypass: src === 4, ids: { in: R.input_voltage, out: R.output_voltage } };
+        load: outV && outA ? Math.round(outV * outA) : null, source: src === 5 ? TR("battery_source") : TR("mains"), bypass: src === 4, ids: { in: R.input_voltage, out: R.output_voltage } };
       HIST.want.add(R.input_voltage); HIST.want.add(R.output_voltage); HIST.want.add(R.load);
-      const stc = { 1: "bestanden", 2: "Warnung", 3: "Fehler", 4: "abgebrochen", 5: "läuft", 6: "kein Test" }[num(R.selftest)]
-        || { passed: "bestanden", warning: "Warnung", error: "Fehler", aborted: "abgebrochen", in_progress: "läuft", none: "kein Test" }[ok(st(R.selftest)) ? st(R.selftest).state : ""];
+      const stc = { 1: TR("passed"), 2: TR("warning"), 3: TR("error"), 4: TR("cancelled"), 5: TR("running_2"), 6: TR("no_test") }[num(R.selftest)]
+        || { passed: TR("passed"), warning: TR("warning"), error: TR("error"), aborted: TR("cancelled"), in_progress: TR("running_2"), none: TR("no_test") }[ok(st(R.selftest)) ? st(R.selftest).state : ""];
       const bdRaw = ok(st(R.battery_replace)) ? st(R.battery_replace).state : "", bdm = bdRaw.match(/^(\d{1,2})\/\d{1,2}\/(\d{4})$/) || bdRaw.match(/^(\d{4})-(\d{2})/);
       const bdate = !bdm ? bdRaw.slice(0, 10) : bdm[1].length === 4 ? `${bdm[2]}/${bdm[1]}` : `${bdm[1].padStart(2, "0")}/${bdm[2]}`;
       const nmc = ok(st(R.nmc_model)) ? st(R.nmc_model).state : null, bt = round(num(R.battery_temp)), bv = num(R.battery_voltage);
       d.ups = { bt, bv, bdate, nmc, selftest: stc, onBattSec: num(R.on_battery_seconds) };
-      d.facts = [nmc ? ["Netzwerkkarte", nmc] : ["Reserve", `${fmt(rt)} min`], bt != null ? ["Akku-Temp.", `${fmt(bt)} °C`] : ["Batterie", `${fmt(lv)} %`], bdate ? ["Akku-Datum", bdate] : ["Last", `${fmt(round(num(R.load)))} %`], ["Selbsttest", stc === "bestanden" ? "✓ OK" : stc || "–"]];
-      if (stc === "bestanden") d.msgs.push(["ok", "Selbsttest bestanden", [bv != null ? `Akku ${fmt(bv, 1)} V` : "", bt != null ? `${fmt(bt)} °C` : ""].filter(Boolean).join(" · ")]);
-      if (src === 5) { d.state = "alert"; d.msgs.unshift(["alert", "Batteriebetrieb", "Netz ausgefallen, Last läuft aus dem Akku"]); }
+      d.facts = [nmc ? [TR("network_card"), nmc] : [TR("runtime"), `${fmt(rt)} min`], bt != null ? [TR("battery_temp_short"), `${fmt(bt)} °C`] : [TR("battery_source"), `${fmt(lv)} %`], bdate ? [TR("battery_date"), bdate] : [TR("load_2"), `${fmt(round(num(R.load)))} %`], [TR("self_test"), stc === TR("passed") ? "✓ OK" : stc || "–"]];
+      if (stc === TR("passed")) d.msgs.push(["ok", TR("self_test_passed"), [bv != null ? `${TR("battery")} ${fmt(bv, 1)} V` : "", bt != null ? `${fmt(bt)} °C` : ""].filter(Boolean).join(" · ")]);
+      if (src === 5) { d.state = "alert"; d.msgs.unshift(["alert", TR("battery_operation"), TR("mains_failed_load_runs_on_battery")]); }
       d.facts = null;   // Kennzahlen stehen in der USV-Karte
-      if (num(R.alarms) > 0) { d.state = "alert"; d.msgs.unshift(["alert", `${fmt(num(R.alarms))} Alarm(e) an der USV`, ""]); }
-      if (stc && ["Warnung", "Fehler"].includes(stc)) { if (d.state === "ok") d.state = "warn"; d.msgs.push(["warn", `Selbsttest: ${stc}`, ""]); }
+      if (num(R.alarms) > 0) { d.state = "alert"; d.msgs.unshift(["alert", TR("n_alarms_at_the_ups", fmt(num(R.alarms))), ""]); }
+      if (stc && [TR("warning"), TR("error")].includes(stc)) { if (d.state === "ok") d.state = "warn"; d.msgs.push(["warn", TR("self_test_n", stc), ""]); }
     }
     // Stromleiste
     if (Object.keys(m.outlets).length) {
@@ -411,18 +413,18 @@ function createApp(ROOT, WRAP) {
       // apc_rack_power meldet derzeit alle Ausgänge als „aus“, obwohl Last anliegt → Zustand unbekannt
       d.outletsUnknown = d.outlets.every(x => !x.on) && power > 20;
       d.totalPower = power;
-      d.facts = [["Leistung", `${fmt(power)} W`], ["Strom", `${fmt(num(R.current), 1)} A`], ["Spannung", `${fmt(num(R.voltage))} V`], (() => { const e = num(R.energy), e0 = HIST.energyStart?.[R.energy]; // Zählerstand seit Inbetriebnahme ist wenig aussagekräftig: lieber „heute“
-        return e != null && e0 != null ? ["Heute", `${fmt(e - e0, 1)} kWh`] : ["Zähler", e >= 1000 ? `${fmt(e / 1000, 2)} MWh` : `${fmt(e)} kWh`]; })()];
+      d.facts = [[TR("power_output"), `${fmt(power)} W`], [TR("power"), `${fmt(num(R.current), 1)} A`], [TR("voltage"), `${fmt(num(R.voltage))} V`], (() => { const e = num(R.energy), e0 = HIST.energyStart?.[R.energy]; // Zählerstand seit Inbetriebnahme ist wenig aussagekräftig: lieber „heute“
+        return e != null && e0 != null ? [TR("today_2"), `${fmt(e - e0, 1)} kWh`] : [TR("meter"), e >= 1000 ? `${fmt(e / 1000, 2)} MWh` : `${fmt(e)} kWh`]; })()];
       HIST.want.add(R.power); HIST.want.add(R.current); if (R.energy) HIST.want.add(R.energy);
       d.energyId = R.energy;
     }
     // Rekorder
     if (m.disks.length) {
       d.disks = m.disks.map((id, i) => { const x = id.match(/_(hdd|ssd|disk)_(\d+)$/) || []; return { n: +(x[2] || i + 1), label: (x[1] || "Disk").toUpperCase(), state: st(id)?.state === "on" ? "warn" : ok(st(id)) ? "ok" : "off" }; }).sort((p, q) => p.n - q.n);
-      d.disks.filter(x => x.state === "warn").forEach(x => { d.state = "alert"; d.msgs.unshift(["alert", `Schacht ${x.n} (${x.label}) meldet ein Problem`, ""]); });
+      d.disks.filter(x => x.state === "warn").forEach(x => { d.state = "alert"; d.msgs.unshift(["alert", TR("bay_n_reports_a_problem", x.n, x.label), ""]); });
       d.raid = { used: num(R.storage), ...(o.storage || {}) };   // feste Angaben (RAID, Kapazität, Platten) aus dem Editor
       if (o.storage?.disk_label) d.disks.forEach(x => x.label = o.storage.disk_label);
-      const TN = { continuous: ["Dauer", "--blue"], detections: ["Erkennungen", "--purple"], timelapse: ["Zeitraffer", "--orange"] };
+      const TN = { continuous: [TR("continuous"), "--blue"], detections: [TR("detections"), "--purple"], timelapse: [TR("timelapse"), "--orange"] };
       const types = Object.entries(m.rec_types).map(([k, id]) => [TN[k]?.[0] || k, num(id) || 0, TN[k]?.[1] || "--teal"]).filter(t => t[1] >= 0.05);
       // Kameras am Rekorder (aus der Zuordnung, sonst über die Protect-Namensgebung gesucht)
       const cams = m.cameras || Object.keys(HASS?.states || {}).filter(id => /^camera\..+_high_resolution_channel$/.test(id));
@@ -431,9 +433,9 @@ function createApp(ROOT, WRAP) {
       const camOn = cams.filter(id => ok(st(id)));
       if (num(R.recording) != null || types.length) d.rec = { days: Math.round((num(R.recording) || 0) / 86400), types, cams: cams.length, camsOn: camOn.length, events: dets.length ? EVT.count(dets) : null };
       if (cams.length) {
-        if (camOn.length < cams.length) cams.filter(id => !ok(st(id))).forEach(id => { if (d.state === "ok") d.state = "warn"; d.msgs.unshift(["warn", "Kamera offline", (st(id)?.attributes.friendly_name || id).replace(/ High Resolution Channel$/i, "")]); });
+        if (camOn.length < cams.length) cams.filter(id => !ok(st(id))).forEach(id => { if (d.state === "ok") d.state = "warn"; d.msgs.unshift(["warn", TR("camera_offline"), (st(id)?.attributes.friendly_name || id).replace(/ High Resolution Channel$/i, "")]); });
       }
-      d.model = `${d.model} · ${m.disks.length} Schächte`;
+      d.model = `${d.model} · ${m.disks.length} ${TR("bays")}`;
       d.facts = null;
     }
     for (const b of d.blocks) if (b.type === "chart") chartOf(b, R);
@@ -484,10 +486,10 @@ function createApp(ROOT, WRAP) {
     const nMsg = allDevices().flatMap(d => d.msgs || []).filter(m => m[0] === st_).length;
     const w = RAW?.wled?.entity_id && st(RAW.wled.entity_id);
     return `<div class="bar">
-      ${inDetail ? `<button class="back pill" data-back aria-label="Zurück zur Übersicht">${ICONS.chev}</button>` : ""}
-      <div><h1>${RACK.name}</h1><div class="sub">${RACK.units} HE · ${DEVICES.reduce((a, d) => a + d.h, 0)} belegt · ${DEVICES.filter(d => !d.passive && !d.group).length + ZERO_U.length} aktive Geräte</div></div>
-      <span class="chip ${st_}"><i></i>${st_ === "ok" ? "Alles in Ordnung" : `${nMsg} ${st_ === "warn" ? (nMsg === 1 ? "Hinweis" : "Hinweise") : (nMsg === 1 ? "Störung" : "Störungen")}`}</span>
-      ${w ? `<span class="wled-chip ${w.state === "on" ? "" : "off"}"><button class="wsw" data-wled-power role="switch" aria-checked="${w.state === "on"}" aria-label="WLED ein- oder ausschalten"></button><span class="wfx">WLED · ${w.state === "on" ? (w.attributes.effect || "An") : "Aus"}</span></span>` : ""}
+      ${inDetail ? `<button class="back pill" data-back aria-label="${TR("back_to_overview")}">${ICONS.chev}</button>` : ""}
+      <div><h1>${RACK.name}</h1><div class="sub">${TR("n_u_n_used_n_active_devices", RACK.units, DEVICES.reduce((a, d) => a + d.h, 0), DEVICES.filter(d => !d.passive && !d.group).length + ZERO_U.length)}</div></div>
+      <span class="chip ${st_}"><i></i>${st_ === "ok" ? TR("all_good") : TR(st_ === "warn" ? (nMsg === 1 ? "1_notice" : "n_notices") : (nMsg === 1 ? "1_fault" : "n_faults"), nMsg)}</span>
+      ${w ? `<span class="wled-chip ${w.state === "on" ? "" : "off"}"><button class="wsw" data-wled-power role="switch" aria-checked="${w.state === "on"}" aria-label="${TR("switch_wled_on_or_off")}"></button><span class="wfx">${TR("wled_n", w.state === "on" ? (w.attributes.effect || TR("on")) : TR("off"))}</span></span>` : ""}
       <span class="spacer"></span>
       <span class="clock" id="clock"></span>
     </div>`;
@@ -503,7 +505,7 @@ function createApp(ROOT, WRAP) {
     const cap = RACK.power.capacity_w || 2700, pct = total != null ? total / cap : 0;
     const other = Math.max(0, (total || 0) - powered.reduce((a, d) => a + d.power, 0));
     const segs = powered.map((d, i) => ({ name: d.name, id: d.id, w: d.power, c: `var(${SEG_COLORS[i % SEG_COLORS.length]})` }))
-      .concat([{ name: powered.length ? "nicht zugeordnet" : "Gesamt", w: other, c: "var(--label-3)" }]);
+      .concat([{ name: powered.length ? "nicht zugeordnet" : TR("total"), w: other, c: "var(--label-3)" }]);
     const eId = pdu?.energyId, eNow = num(eId), eStart = HIST.energyStart[eId];
     const today = eNow != null && eStart != null ? eNow - eStart : null;
     const warnMsgs = active.flatMap(d => (d.msgs || []).filter(m => m[0] !== "ok").map(m => ({ d, m }))).sort((a, b) => (b.m[0] === "alert") - (a.m[0] === "alert"));
@@ -512,7 +514,7 @@ function createApp(ROOT, WRAP) {
     const chipT = !hot ? "off" : hot.t >= TEMP_ALERT ? "alert" : hot.t >= TEMP_WARN ? "warn" : "ok";
     const lv = ups?.flow.batt, rt = ups?.flow.runtime, bc = lv == null ? "var(--fill-2)" : lv < 20 ? "var(--red)" : lv < 50 ? "var(--orange)" : "var(--green)";
     const powerVals = HS(pdu?.R?.power, total || 0);
-    const gw = DEVICES.find(d => d.ports && d.facts?.some(f => f[0] === "Antwortzeit"));
+    const gw = DEVICES.find(d => d.ports && d.facts?.some(f => f[0] === TR("latency")));
     const poeSw = DEVICES.find(d => d.poe);
     return { active, bc, cap, chipT, eId, eNow, eStart, gw, hot, lv, other, pct, pdu, poeSw, powerVals, powered, rt, segs, temps, today, total, ups, warnMsgs };
   }
@@ -524,50 +526,50 @@ function createApp(ROOT, WRAP) {
     return { day: money(kwhToday * price), month: money(kwhToday / h * 24 * 30.4 * price) };
   }
   function ovPower(v) { const { active, bc, cap, chipT, eId, eNow, eStart, gw, hot, lv, other, pct, pdu, poeSw, powerVals, powered, rt, segs, temps, today, total, ups, warnMsgs } = v; return `<section class="card en">
-      <h2>Strom</h2>
+      <h2>${TR("power")}</h2>
       <div class="en-head">
         <div class="en-big">${fmt(total)}<small>W</small></div>
-        <div class="en-today"><b>${today != null ? fmt(today, 1) + " kWh" : "–"}</b><span>heute${(() => { const c = energyCost(today); return c ? ` · ≈ ${c.day}` : ""; })()}</span>${(() => { const c = energyCost(today); return c ? `<em class="en-cost">≈ ${c.month} / Monat</em>` : ""; })()}</div>
+        <div class="en-today"><b>${today != null ? fmt(today, 1) + " kWh" : "–"}</b><span>${TR("today")}${(() => { const c = energyCost(today); return c ? ` · ≈ ${c.day}` : ""; })()}</span>${(() => { const c = energyCost(today); return c ? `<em class="en-cost">${TR("n_month", c.month)}</em>` : ""; })()}</div>
       </div>
-      <div class="en-bar" role="img" aria-label="Auslastung der USV ${Math.round(pct * 100)} %">
+      <div class="en-bar" role="img" aria-label="${TR("ups_load_n", Math.round(pct * 100))}">
         ${segs.map(x => `<i style="width:${x.w / cap * 100}%;background:${x.c}"></i>`).join("")}
         <span class="en-warn" style="left:70%"></span>
       </div>
-      <div class="en-scale"><span>${Math.round(pct * 100)} % der USV-Kapazität${powered.length ? "" : " · laut Stromleiste"}</span><span>${fmt(cap / 1000, 1)} kW</span></div>
-      ${ups ? `<button class="ups-bar" data-id="${selOf(ups)}" aria-label="USV-Akku ${lv} Prozent, ${rt} Minuten Reserve">
+      <div class="en-scale"><span>${TR("n_of_ups_capacity", Math.round(pct * 100))}${powered.length ? "" : " · " + TR("according_to_the_pdu")}</span><span>${fmt(cap / 1000, 1)} kW</span></div>
+      ${ups ? `<button class="ups-bar" data-id="${selOf(ups)}" aria-label="${TR("ups_battery_n_percent_n_minutes_runtime", lv, rt)}">
         <div class="en-bar bat"><i style="width:${lv || 0}%;background:${bc}"></i></div>
-        <div class="en-scale"><span>Akku <b>${fmt(lv)} %</b> · ${fmt(rt)} min</span><span class="ups-ok" style="${ups.flow.source === "Netz" ? "" : "color:var(--red)"}"><i class="dot ${ups.flow.source === "Netz" ? "ok" : ""}" style="${ups.flow.source === "Netz" ? "" : "background:var(--red)"}"></i>${ups.flow.bypass ? "Bypass" : ups.flow.source === "Netz" ? "Netzbetrieb" : "Batteriebetrieb"}</span></div></button>` : ""}
+        <div class="en-scale"><span>${TR("battery")} <b>${fmt(lv)} %</b> · ${fmt(rt)} min</span><span class="ups-ok" style="${ups.flow.source === TR("mains") ? "" : "color:var(--red)"}"><i class="dot ${ups.flow.source === TR("mains") ? "ok" : ""}" style="${ups.flow.source === TR("mains") ? "" : "background:var(--red)"}"></i>${ups.flow.bypass ? "Bypass" : ups.flow.source === TR("mains") ? TR("on_mains") : TR("battery_operation")}</span></div></button>` : ""}
       ${powered.length ? `<div class="en-list">${segs.slice(0, -1).slice(0, 5).map(x => `<button data-id="${x.id}"><i style="background:${x.c}"></i><span>${x.name}</span><b>${fmt(x.w)} W</b></button>`).join("")}
-        <div class="rest"><i style="background:var(--label-3)"></i><span>Übrige</span><b>${fmt(segs.slice(5).reduce((a, x) => a + x.w, 0))} W</b></div></div>` : ""}
-      <div class="ov-chart"><div class="ov-leg"><span><i style="background:var(--blue)"></i>Leistung 24 Std.</span><span>Ø ${fmt(Math.round(powerVals.reduce((a, b) => a + b, 0) / powerVals.length))} W · Spitze ${fmt(Math.round(Math.max(...powerVals)))} W</span></div>
+        <div class="rest"><i style="background:var(--label-3)"></i><span>${TR("other")}</span><b>${fmt(segs.slice(5).reduce((a, x) => a + x.w, 0))} W</b></div></div>` : ""}
+      <div class="ov-chart"><div class="ov-leg"><span><i style="background:var(--blue)"></i>${TR("power_24_h")}</span><span>Ø ${fmt(Math.round(powerVals.reduce((a, b) => a + b, 0) / powerVals.length))} W · ${TR("peak")} ${fmt(Math.round(Math.max(...powerVals)))} W</span></div>
         ${lazy((W, H) => { const lo = Math.min(...powerVals) * .9, hi = Math.max(...powerVals) * 1.08 || 1; return chartMulti([{ v: powerVals, color: css("--blue"), fill: true }], { lo, hi, W, H }); })}</div>
     </section>`; }
   function ovTemp(v) { const { active, bc, cap, chipT, eId, eNow, eStart, gw, hot, lv, other, pct, pdu, poeSw, powerVals, powered, rt, segs, temps, today, total, ups, warnMsgs } = v; return `<section class="card en th3">
-      <h2>Temperatur <span class="chip ${chipT}" style="text-transform:none;letter-spacing:0"><i></i>${chipT === "alert" ? "Zu heiß" : chipT === "warn" ? "Warm" : chipT === "off" ? "Keine Werte" : "Normal"}</span></h2>
+      <h2>${TR("temperature")} <span class="chip ${chipT}" style="text-transform:none;letter-spacing:0"><i></i>${chipT === "alert" ? TR("too_hot") : chipT === "warn" ? "Warm" : chipT === "off" ? TR("no_values") : "Normal"}</span></h2>
       ${hot ? `<div class="en-head">
         <div class="en-big">${fmt(hot.t)}<small>°C</small></div>
-        <div class="en-today"><b>${hot.d.name}</b><span>wärmstes Gerät</span></div>
+        <div class="en-today"><b>${hot.d.name}</b><span>${TR("warmest_device")}</span></div>
       </div>
-      <div class="tscale" role="img" aria-label="Wärmstes Gerät ${hot.t} Grad">
+      <div class="tscale" role="img" aria-label="${TR("warmest_device_n_degrees", hot.t)}">
         <i class="tz ok" style="width:${tpd(TEMP_WARN)}%"></i><i class="tz warn" style="width:${tpd(TEMP_ALERT) - tpd(TEMP_WARN)}%"></i><i class="tz alert" style="width:${100 - tpd(TEMP_ALERT)}%"></i>
         <em class="tmark out" style="left:${tpd(hot.t)}%"></em>
       </div>
-      <div class="en-scale"><span>Gerätetemperaturen · keine Rack-Sensoren</span><span>Grenze ${TEMP_WARN} °C</span></div>
+      <div class="en-scale"><span>${TR("device_temperatures_no_rack_sensors")}</span><span>${TR("limit_n", `${TEMP_WARN} °C`)}</span></div>
       <div class="ztab dev">
-        <span class="zh">Gerät</span><span class="zh">Temperatur</span>
+        <span class="zh">${TR("device")}</span><span class="zh">${TR("temperature")}</span>
         ${temps.slice(0, 6).map(({ d, t }) => `<button class="zn ${d.name.length > 16 ? "long" : ""}" data-id="${selOf(d)}" title="${d.name}">${d.name}</button><b style="color:${t >= TEMP_ALERT ? "var(--red)" : t >= TEMP_WARN ? "var(--warn-ink)" : "var(--label)"}">${fmt(t)} °C</b>`).join("")}
-      </div>` : `<p class="note">Keine Temperaturwerte vorhanden.</p>`}
+      </div>` : `<p class="note">${TR("no_temperature_values_available")}</p>`}
     </section>`; }
-  function ovHints(v) { const { active, bc, cap, chipT, eId, eNow, eStart, gw, hot, lv, other, pct, pdu, poeSw, powerVals, powered, rt, segs, temps, today, total, ups, warnMsgs } = v; return `${warnMsgs.length ? `<section class="card wide hints"><h2><span>Hinweise <i class="cnt ${warnMsgs.some(x => x.m[0] === "alert") ? "alert" : ""}">${warnMsgs.length}</i></span>${warnMsgs.length > 2 ? `<em>+${warnMsgs.length - 2} weitere</em>` : ""}</h2><div class="hint-grid">
+  function ovHints(v) { const { active, bc, cap, chipT, eId, eNow, eStart, gw, hot, lv, other, pct, pdu, poeSw, powerVals, powered, rt, segs, temps, today, total, ups, warnMsgs } = v; return `${warnMsgs.length ? `<section class="card wide hints"><h2><span>${TR("notices")} <i class="cnt ${warnMsgs.some(x => x.m[0] === "alert") ? "alert" : ""}">${warnMsgs.length}</i></span>${warnMsgs.length > 2 ? `<em>${TR("n_more_2", warnMsgs.length - 2)}</em>` : ""}</h2><div class="hint-grid">
       ${warnMsgs.slice(0, 2).map(({ d, m }) => `<button class="hint ${m[0]}" data-id="${selOf(d)}">
         <span class="hic">${ICONS.warn}</span>
         <span class="ht"><b>${m[1]}</b><span><i>${d.name}</i>${m[2]}</span></span><span class="chev">›</span></button>`).join("")}
     </div></section>` : ""}`; }
   function ovStats(v) { const { active, bc, cap, chipT, eId, eNow, eStart, gw, hot, lv, other, pct, pdu, poeSw, powerVals, powered, rt, segs, temps, today, total, ups, warnMsgs } = v; return `<div class="stats wide">
-      ${gw ? `<button data-id="${gw.id}"><span>Internet</span><b>${gw.facts.find(f => f[0] === "Antwortzeit")[1].replace(" ms", "")}<small>ms</small></b><em>Antwortzeit</em></button>` : ""}
-      ${poeSw ? `<button data-id="${poeSw.id}"><span>PoE</span><b>${fmt(poeSw.poe.used)}<small>W</small></b><em>${poeSw.poe.budget ? `von ${poeSw.poe.budget} W` : poeSw.name}</em></button>` : ""}
-      ${pdu ? `<button data-id="${pdu.id}"><span>Stromleiste</span><b>${fmt(num(pdu.R?.current), 1)}<small>A</small></b><em>${pdu.facts[2][1]}</em></button>` : ""}
-      ${ups ? `<button data-id="${selOf(ups)}"><span>USV</span><b>${fmt(ups.flow.loadPct)}<small>%</small></b><em>Last · ${fmt(ups.flow.runtime)} min</em></button>` : ""}
+      ${gw ? `<button data-id="${gw.id}"><span>Internet</span><b>${gw.facts.find(f => f[0] === TR("latency"))[1].replace(" ms", "")}<small>ms</small></b><em>${TR("latency")}</em></button>` : ""}
+      ${poeSw ? `<button data-id="${poeSw.id}"><span>PoE</span><b>${fmt(poeSw.poe.used)}<small>W</small></b><em>${poeSw.poe.budget ? TR("of_n", `${poeSw.poe.budget} W`) : poeSw.name}</em></button>` : ""}
+      ${pdu ? `<button data-id="${pdu.id}"><span>${TR("pdu")}</span><b>${fmt(num(pdu.R?.current), 1)}<small>A</small></b><em>${pdu.facts[2][1]}</em></button>` : ""}
+      ${ups ? `<button data-id="${selOf(ups)}"><span>${TR("ups")}</span><b>${fmt(ups.flow.loadPct)}<small>%</small></b><em>${TR("load_2")} · ${fmt(ups.flow.runtime)} min</em></button>` : ""}
     </div>`; }
   // Pseudo-Gerät für die eigene Übersicht (Module mit beliebigen Entitäten)
   function ovModel() { return { id: "__ov", name: RACK.name, model: "", R: {}, msgs: [], blocks: RAW?.overview?.blocks || [], options: { grid: true } }; }
@@ -582,7 +584,7 @@ function createApp(ROOT, WRAP) {
       const f = BLOCK_RENDER[b.type]; if (!f) return "";
       const html = f(d, b), l = b.layout || {}, w = Math.max(1, Math.min(12, l.w || 12)), h = Math.max(1, l.h || 3), fixed = Number.isInteger(l.x) && Number.isInteger(l.y);
       const st = fixed ? `grid-column:${l.x + 1} / span ${Math.min(w, 12 - l.x)} !important;grid-row:${l.y + 1} / span ${h} !important` : `grid-column:span ${w} !important;grid-row:span ${h} !important`;
-      if (!html) return EDIT_HOOK ? `<section data-bi="${bi}" style="${st}" class="gcell card empty-mod"><h2>${RD_CATALOG.blocks[b.type]?.name || b.type}</h2>${rdSkeleton(b.type)}</section>` : "";
+      if (!html) return EDIT_HOOK ? `<section data-bi="${bi}" style="${st}" class="gcell card empty-mod"><h2>${rdCatalog().blocks[b.type]?.name || b.type}</h2>${rdSkeleton(b.type)}</section>` : "";
       return html.replace(/<(section|div) class="/, `<$1 data-bi="${bi}" style="${st}" class="gcell card `);
     }).join("");
     return `<div class="dgrid gm ovg" style="--gc:12;--gr:${G.frows || 15}">${cells}</div>`;
@@ -620,7 +622,7 @@ function createApp(ROOT, WRAP) {
   // series: [{ label, id, cur, unit, color, dec, warn }]
   // Kennzahl-Kacheln: großer Wert, Pegel auf fester Skala (mit Warngrenze), darunter eine flache 24-Std.-Kurve.
   // Die Kurve skaliert auf ihren eigenen Bereich, aber mit Mindestspanne – Form sichtbar, ohne Rauschen aufzublasen.
-  function trendCard(title, series, sub = "24 Std.") {
+  function trendCard(title, series, sub = TR("24_h")) {
     const tiles = series.filter(s => s.id || s.cur != null).map(s => {
       const v = HS(s.id, s.cur ?? 0), dec = s.dec ?? 0, cur = s.cur ?? v.at(-1), col = css(s.color || "--blue");
       const [flo, fhi] = trendRange(v, s.unit, s.warn), lo = Math.min(...v), hi = Math.max(...v), span = Math.max(hi - lo, (fhi - flo) * .15);
@@ -639,33 +641,33 @@ function createApp(ROOT, WRAP) {
   function sysCard(d) {
     const s = d.sys;
     return trendCard("System", [
-      s.cpu != null && { label: "Prozessor", id: s.ids.cpu, cur: s.cpu, unit: "%", color: "--blue" },
-      s.ram != null && { label: "Arbeitsspeicher", id: s.ids.ram, cur: s.ram, unit: "%", color: "--indigo" },
-      { label: "Temperatur", id: s.ids.temp, cur: s.temp, unit: "°C", color: "--orange", warn: TEMP_WARN },
+      s.cpu != null && { label: TR("processor"), id: s.ids.cpu, cur: s.cpu, unit: "%", color: "--blue" },
+      s.ram != null && { label: TR("memory"), id: s.ids.ram, cur: s.ram, unit: "%", color: "--indigo" },
+      { label: TR("temperature"), id: s.ids.temp, cur: s.temp, unit: "°C", color: "--orange", warn: TEMP_WARN },
     ].filter(Boolean));
   }
   function sysCardOld(d) {
     const s = d.sys, cpu = HS(s.ids.cpu, s.cpu), ram = HS(s.ids.ram, s.ram), tmp = HS(s.ids.temp, s.temp);
-    return `<section class="card grow"><h2>System <em>24 Std.</em></h2>
+    return `<section class="card grow"><h2>System <em>${TR("24_h")}</em></h2>
       <div class="serleg">${s.cpu != null ? `<span><i style="background:var(--blue)"></i>CPU <b>${fmt(s.cpu)} %</b></span>` : ""}${s.ram != null ? `<span><i style="background:var(--indigo)"></i>RAM <b>${fmt(s.ram)} %</b></span>` : ""}<span><i style="background:var(--orange)"></i>Temp. <b>${fmt(s.temp)} °C</b></span></div>
       ${lazy((W, H) => chartMulti([s.cpu != null && { v: cpu, color: css("--blue"), fill: true }, s.ram != null && { v: ram, color: css("--indigo") }, { v: tmp, color: css("--orange") }].filter(Boolean), { lo: 0, hi: 100, W, H }))}
-      <div class="mini" style="margin-top:10px"><span>Spitze ${s.cpu != null ? `<b>${Math.round(Math.max(...cpu))} %</b> · ` : ""}<b>${Math.round(Math.max(...tmp))} °C</b></span>${s.ram != null ? `<span>Ø RAM <b>${Math.round(ram.reduce((a, b) => a + b) / ram.length)} %</b></span>` : ""}</div>
+      <div class="mini" style="margin-top:10px"><span>${TR("peak")} ${s.cpu != null ? `<b>${Math.round(Math.max(...cpu))} %</b> · ` : ""}<b>${Math.round(Math.max(...tmp))} °C</b></span>${s.ram != null ? `<span>Ø RAM <b>${Math.round(ram.reduce((a, b) => a + b) / ram.length)} %</b></span>` : ""}</div>
     </section>`;
   }
   function voltCard(d) {
     const f = d.flow;
-    return trendCard("Spannung", [
-      { label: "Eingang", id: f.ids.in, cur: f.inV, unit: "V", color: "--orange" },
-      { label: "Ausgang", id: f.ids.out, cur: f.outV, unit: "V", color: "--green" },
+    return trendCard(TR("voltage"), [
+      { label: TR("input"), id: f.ids.in, cur: f.inV, unit: "V", color: "--orange" },
+      { label: TR("output"), id: f.ids.out, cur: f.outV, unit: "V", color: "--green" },
     ]);
   }
   function voltCardOld(d) {
     const f = d.flow, vin = HS(f.ids.in, f.inV), vout = HS(f.ids.out, f.outV);
     const lo = Math.min(...vin, ...vout) - 3, hi = Math.max(...vin, ...vout) + 3;
-    return `<section class="card grow"><h2>Spannung <em>24 Std.</em></h2>
-      <div class="serleg"><span><i style="background:var(--orange)"></i>Eingang <b>${fmt(f.inV)} V</b></span><span><i style="background:var(--green)"></i>Ausgang <b>${fmt(f.outV)} V</b></span></div>
+    return `<section class="card grow"><h2>${TR("voltage")} <em>${TR("24_h")}</em></h2>
+      <div class="serleg"><span><i style="background:var(--orange)"></i>${TR("input")} <b>${fmt(f.inV)} V</b></span><span><i style="background:var(--green)"></i>${TR("output")} <b>${fmt(f.outV)} V</b></span></div>
       ${lazy((W, H) => chartMulti([{ v: vin, color: css("--orange") }, { v: vout, color: css("--green") }], { lo, hi, W, H }))}
-      <div class="mini" style="margin-top:10px"><span>Eingang min <b>${Math.round(Math.min(...vin))} V</b> · max <b>${Math.round(Math.max(...vin))} V</b></span><span>${f.hz != null ? `${fmt(f.hz, 1)} Hz` : ""}</span></div>
+      <div class="mini" style="margin-top:10px"><span>${TR("input_min")} <b>${Math.round(Math.min(...vin))} V</b> · max <b>${Math.round(Math.max(...vin))} V</b></span><span>${f.hz != null ? `${fmt(f.hz, 1)} Hz` : ""}</span></div>
     </section>`;
   }
   // Speicher wie im UNVR: Status, Belegungsbalken (belegt/frei/Schutz), Laufwerksliste
@@ -682,23 +684,23 @@ function createApp(ROOT, WRAP) {
     const lens = raw.map(x => x < MIN ? MIN : x * (C - MIN * small.length) / (big || 1)); let off = 0;
     const arcs = segs.map(([, c], i) => { const len = Math.max(0.5, lens[i] - gap), el = `<circle cx="56" cy="56" r="${RR}" fill="none" stroke="var(${c})" stroke-width="12" stroke-dasharray="${len.toFixed(1)} ${C.toFixed(1)}" stroke-dashoffset="${(-off).toFixed(1)}"/>`; off += lens[i]; return el; }).join("");
     const pct = r.used != null ? r.used : used != null && cap ? used / cap * 100 : null;
-    const rows = tot ? [["Belegt", tb(used), "--blue"], ["Frei", tb(cap - used), "--label-3"], prot && ["Schutz", tb(prot), "--purple"]].filter(Boolean) : pct != null ? [["Belegt", `${fmt(pct)} %`, "--blue"]] : [];
-    const ring = segs.length ? `<div class="sring"><div class="ring"><svg viewBox="0 0 112 112">${arcs}</svg><div class="c"><b>${fmt(pct)}<small>%</small></b><span>belegt</span></div></div>
-        <div class="srows"><div class="sstat ${allOk ? "ok" : "warn"}"><i></i>${allOk ? "Voll funktionsfähig" : `${d.disks.length - okN} Laufwerk${d.disks.length - okN === 1 ? "" : "e"} prüfen`}</div>
+    const rows = tot ? [[TR("used_2"), tb(used), "--blue"], [TR("free_2"), tb(cap - used), "--label-3"], prot && [TR("protection"), tb(prot), "--purple"]].filter(Boolean) : pct != null ? [[TR("used_2"), `${fmt(pct)} %`, "--blue"]] : [];
+    const ring = segs.length ? `<div class="sring"><div class="ring"><svg viewBox="0 0 112 112">${arcs}</svg><div class="c"><b>${fmt(pct)}<small>%</small></b><span>${TR("used")}</span></div></div>
+        <div class="srows"><div class="sstat ${allOk ? "ok" : "warn"}"><i></i>${allOk ? TR("fully_functional") : TR(d.disks.length - okN === 1 ? "check_n_drive" : "check_n_drives", d.disks.length - okN)}</div>
           ${rows.map(([k, v, c]) => `<div class="srow"><span><i style="background:var(${c})"></i>${k}</span><b>${v}</b></div>`).join("")}
-          ${tot ? `<div class="srow tot"><span>Gesamt</span><b>${tb(tot)}</b></div>` : ""}</div></div>` : `<div class="sstat ${allOk ? "ok" : "warn"}"><i></i>${allOk ? "Voll funktionsfähig" : "Laufwerke prüfen"}</div>`;
+          ${tot ? `<div class="srow tot"><span>${TR("total")}</span><b>${tb(tot)}</b></div>` : ""}</div></div>` : `<div class="sstat ${allOk ? "ok" : "warn"}"><i></i>${allOk ? TR("fully_functional") : TR("check_drives")}</div>`;
     // Schächte als Kacheln nebeneinander (wie die Laufwerksansicht der UNVR)
-    const bays = `<div class="dbays" style="grid-template-columns:repeat(${Math.min(4, d.disks.length)},minmax(0,1fr))">${d.disks.map(x => { const k = info(x.n); return `<div class="dbay ${x.state}" title="${k.model || ""}"><div class="bt"><i></i><b>${x.label} ${x.n}</b></div><span>${x.state === "ok" ? "Optimal" : x.state === "warn" ? "Prüfen" : "Keine Daten"}</span><em>${k.size || ""}${k.model ? ` · ${k.model}` : ""}</em></div>`; }).join("")}</div>`;
-    return `<section class="card"><h2>Speicher <em>${[r.raid, `${d.disks.length} ${r.disk_label || "Laufwerke"}`, cap && `${fmt(cap, 2)} TB`].filter(Boolean).join(" · ")}</em></h2>
+    const bays = `<div class="dbays" style="grid-template-columns:repeat(${Math.min(4, d.disks.length)},minmax(0,1fr))">${d.disks.map(x => { const k = info(x.n); return `<div class="dbay ${x.state}" title="${k.model || ""}"><div class="bt"><i></i><b>${x.label} ${x.n}</b></div><span>${x.state === "ok" ? "Optimal" : x.state === "warn" ? TR("check") : TR("no_data")}</span><em>${k.size || ""}${k.model ? ` ${TR("bullet_n", k.model)}` : ""}</em></div>`; }).join("")}</div>`;
+    return `<section class="card"><h2>${TR("storage")} <em>${[r.raid, `${d.disks.length} ${r.disk_label || TR("drives")}`, cap && `${fmt(cap, 2)} TB`].filter(Boolean).join(" · ")}</em></h2>
       ${ring}${bays}
     </section>`;
   }
   // USV-Karte: großer Akku-Ring mit Reserve, Betriebsart in Klartext, schmaler Stromweg Netz → USV → Last, Kennwerte als Kacheln
   function upsFlow(d) {
-    const f = d.flow, u = d.ups || {}, onBatt = f.source !== "Netz", bypass = !!f.bypass, charging = !onBatt && !bypass && f.batt != null && f.batt < 99.5;
+    const f = d.flow, u = d.ups || {}, onBatt = f.source !== TR("mains"), bypass = !!f.bypass, charging = !onBatt && !bypass && f.batt != null && f.batt < 99.5;
     const bp = Math.max(0, Math.min(100, f.batt ?? 0)), lp = Math.max(0, Math.min(100, f.loadPct ?? 0));
     const bcol = bp < 20 ? "--red" : bp < 50 ? "--orange" : "--green", mcol = bypass ? "--yellow" : onBatt ? "--orange" : "--green";
-    const mode = bypass ? ["Bypass", "warn", "Last hängt direkt am Netz"] : onBatt ? ["Akkubetrieb", "alert", "Netz ausgefallen – Akku versorgt"] : ["Netzbetrieb", "ok", charging ? "Akku wird geladen" : "Alles versorgt"];
+    const mode = bypass ? ["Bypass", "warn", TR("load_runs_directly_on_mains")] : onBatt ? [TR("battery_mode"), "alert", TR("mains_failed_battery_supplies")] : [TR("on_mains"), "ok", charging ? TR("battery_charging") : TR("everything_powered")];
     const RR = 52, C = 2 * Math.PI * RR;
     const ring = `<svg viewBox="0 0 124 124" class="ug-svg"><circle cx="62" cy="62" r="${RR}" class="ug-tr"/>
       <circle cx="62" cy="62" r="${RR}" class="ug-v" style="--c:var(${bcol})" stroke-dasharray="${(C * bp / 100).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 62 62)"/></svg>`;
@@ -727,38 +729,38 @@ function createApp(ROOT, WRAP) {
     const bfill = (34 * bp / 100).toFixed(1);
     const path = `<svg viewBox="0 0 400 120" class="upath" data-v="${(40 + lp * 0.8).toFixed(0)}">
       <rect x="${J1 - 14}" y="12" width="${J2 - J1 + 28}" height="${BYB + 5}" rx="6" class="uenc"/>
-      <g class="ubl"><rect x="${BX - 52}" y="4" width="104" height="16" rx="8"/><text x="${BX}" y="15.5" text-anchor="middle">${online ? "Online-USV" : "Line-Interactive"}</text></g>
+      <g class="ubl"><rect x="${BX - 52}" y="4" width="104" height="16" rx="8"/><text x="${BX}" y="15.5" text-anchor="middle">${online ? TR("online_ups") : "Line-Interactive"}</text></g>
       ${wire(`M${NX + S},${Y} L${RX - BW / 2},${Y}`, mains || bypass, bypass ? "--yellow" : "--green")}
       ${wire(`M${J1},${Y} L${J1},${YB} L${BX - 12},${YB} M${BX + 12},${YB} L${J2},${YB} L${J2},${Y}`, bypass, "--yellow").replace('class="ul ', 'class="ul byp ')}
       ${sw}<circle cx="${BX - 12}" cy="${YB}" r="2.2" class="ujn"/><circle cx="${BX + 12}" cy="${YB}" r="2.2" class="ujn"/>
-      <text x="${J1 + 8}" y="${YB - 5}" class="ulb">${bypass ? "Bypass aktiv" : "Bypass"}</text>
+      <text x="${J1 + 8}" y="${YB - 5}" class="ulb">${bypass ? TR("bypass_active") : "Bypass"}</text>
       ${wire(`M${RX + BW / 2},${Y} L${IX - BW / 2},${Y}`, !bypass, onBatt ? "--orange" : "--green")}
       ${wire(`M${BX},${Y} L${BX},${BYB - 11}`, onBatt || charging, onBatt ? "--orange" : "--green")}
       ${wire(`M${IX + BW / 2},${Y} L${LX - S},${Y}`, true, mcol)}
       
-      ${box(RX, "AC → DC", "Gleichrichter", mains, "--green")}${box(IX, "DC → AC", "Wechselrichter", !bypass, onBatt ? "--orange" : "--green")}
+      ${box(RX, "AC → DC", TR("rectifier"), mains, "--green")}${box(IX, "DC → AC", TR("inverter"), !bypass, onBatt ? "--orange" : "--green")}
       <rect x="${BX - 21}" y="${BYB - 11}" width="40" height="22" rx="5" class="ubat"/><rect x="${BX + 20}" y="${BYB - 4}" width="3" height="8" rx="1.5" class="ubatk"/>
       <rect x="${BX - 18}" y="${BYB - 8}" width="${bfill}" height="16" rx="3" style="fill:var(${bcol})"/>
       
-      ${node(NX, !onBatt, "--green", P.plug, onBatt ? "Netz aus" : f.hz ? `${fmt(f.hz, 1)} Hz` : "Netz", onBatt ? "–" : `${fmt(f.inV)} V`)}
-      ${node(LX, true, mcol, P.rack, "Last", f.load != null ? `${fmt(f.load)} W` : `${fmt(lp)} %`)}
+      ${node(NX, !onBatt, "--green", P.plug, onBatt ? TR("mains_off") : f.hz ? `${fmt(f.hz, 1)} Hz` : TR("mains"), onBatt ? "–" : `${fmt(f.inV)} V`)}
+      ${node(LX, true, mcol, P.rack, TR("load_2"), f.load != null ? `${fmt(f.load)} W` : `${fmt(lp)} %`)}
       ${mp.join("")}${dts}</svg>`;
     const cell = (k, v, s, c) => `<div class="ukc"><span>${k}</span><b${c ? ` style="color:var(${c})"` : ""}>${v}</b>${s ? `<em>${s}</em>` : ""}</div>`;
-    const age = (() => { const m = (u.bdate || "").match(/^(\d{2})\/(\d{4})$/); if (!m) return ""; const mo = (new Date().getFullYear() - +m[2]) * 12 + new Date().getMonth() + 1 - +m[1]; return mo >= 12 ? `seit ${Math.floor(mo / 12)} J. ${mo % 12} Mon.` : `seit ${mo} Mon.`; })();
+    const age = (() => { const m = (u.bdate || "").match(/^(\d{2})\/(\d{4})$/); if (!m) return ""; const mo = (new Date().getFullYear() - +m[2]) * 12 + new Date().getMonth() + 1 - +m[1]; return mo >= 12 ? TR("since_n", TR("n_years_n_months", Math.floor(mo / 12), mo % 12)) : TR("since_n", TR("n_months", mo)); })();
     // Kacheln nur mit dem, was der Stromweg nicht schon zeigt: Akku-Zustand und Wartung
     const cells = [
-      cell("Temperatur", u.bt != null ? `${fmt(u.bt)} °C` : "–", u.bt != null ? (u.bt >= 40 ? "Akku · zu warm" : "Akku · normal") : "Akku", u.bt >= 40 ? "--orange" : ""),
-      cell("Spannung", u.bv != null ? `${fmt(u.bv, 1)} V` : "–", "Akku"),
-      cell("Eingebaut", u.bdate || "–", age ? age.replace("seit", "vor") : "Akku"),
-      cell("Selbsttest", u.selftest === "bestanden" ? "✓ OK" : u.selftest || "–", u.selftest === "bestanden" ? "bestanden" : "", u.selftest && u.selftest !== "bestanden" ? "--orange" : ""),
+      cell(TR("temperature"), u.bt != null ? `${fmt(u.bt)} °C` : "–", u.bt != null ? (u.bt >= 40 ? `${TR("battery")} · ${TR("too_warm")}` : `${TR("battery")} · normal`) : TR("battery"), u.bt >= 40 ? "--orange" : ""),
+      cell(TR("voltage"), u.bv != null ? `${fmt(u.bv, 1)} V` : "–", TR("battery")),
+      cell(TR("installed"), u.bdate || "–", age ? age.replace("seit", "vor") : TR("battery")),
+      cell(TR("self_test"), u.selftest === TR("passed") ? "✓ OK" : u.selftest || "–", u.selftest === TR("passed") ? TR("passed") : "", u.selftest && u.selftest !== TR("passed") ? "--orange" : ""),
     ].join("");
     return `<section class="card wide ups2" style="--uc:var(${mcol})">
       <div class="uh">
-        <div class="ug">${ring}<div class="ugc"><b>${fmt(bp)}<small>%</small></b><span>${charging ? "lädt" : onBatt ? "entlädt" : "Akku"}</span></div></div>
+        <div class="ug">${ring}<div class="ugc"><b>${fmt(bp)}<small>%</small></b><span>${charging ? TR("charging") : onBatt ? TR("discharging") : TR("battery")}</span></div></div>
         <div class="ui">
           <span class="umode ${mode[1]}"><i></i>${mode[0]}</span>
           <b class="ut">${mode[2]}</b>
-          <span class="us">${fmt(lp)} % Last${f.runtime != null ? ` · <b>${fmt(f.runtime)} min</b> Reserve` : ""}</span>
+          <span class="us">${fmt(lp)} % ${TR("load_lower")}${f.runtime != null ? ` · <b>${fmt(f.runtime)} min</b> ${TR("runtime")}` : ""}</span>
         </div>
       </div>
       ${path}
@@ -790,11 +792,11 @@ function createApp(ROOT, WRAP) {
   function recCard(d) {
     const r = d.rec, R = 52, C = 2 * Math.PI * R; let off = 0;
     const arcs = r.types.map(([n, v, c]) => { const a = `<circle cx="62" cy="62" r="${R}" fill="none" stroke="var(${c})" stroke-width="14" stroke-dasharray="${Math.max(0.5, C * v / 100)} ${C}" stroke-dashoffset="${-off}"/>`; off += C * v / 100; return a; }).join("");
-    return `<section class="card grow"><h2>Aufnahme <em>${r.cams ? `${r.camsOn} von ${r.cams} Kameras` : "Speicherdauer"}</em></h2>
+    return `<section class="card grow"><h2>${TR("recording_2")} <em>${r.cams ? TR("n_of_n_cameras", r.camsOn, r.cams) : TR("retention")}</em></h2>
       <div class="rec">
-        <div class="ring"><svg viewBox="0 0 124 124"><circle cx="62" cy="62" r="${R}" fill="none" stroke="var(--fill-2)" stroke-width="14"/>${arcs}</svg><div class="c"><b>${r.days}</b><span>Tage</span></div></div>
+        <div class="ring"><svg viewBox="0 0 124 124"><circle cx="62" cy="62" r="${R}" fill="none" stroke="var(--fill-2)" stroke-width="14"/>${arcs}</svg><div class="c"><b>${r.days}</b><span>${TR("days")}</span></div></div>
         <div class="rows">${r.types.map(([n, v, c]) => `<div class="row"><span><i style="background:var(${c})"></i>${n}</span><b>${fmt(v, v < 1 ? 1 : 0)} %</b></div>`).join("")}
-          ${r.events != null ? `<div class="row" style="padding-top:8px;border-top:1px solid var(--sep)"><span>Erkennungen heute</span><b>${fmt(r.events)}</b></div>` : ""}</div>
+          ${r.events != null ? `<div class="row" style="padding-top:8px;border-top:1px solid var(--sep)"><span>${TR("detections_today")}</span><b>${fmt(r.events)}</b></div>` : ""}</div>
       </div>
     </section>`;
   }
@@ -833,11 +835,11 @@ function createApp(ROOT, WRAP) {
     const W = HIST_BINS * 10, H = 100, mid = H / 2, bw = 7;
     const bar = (v, i, dir, col) => v == null ? "" : `<rect x="${i * 10 + 1.5}" y="${dir > 0 ? mid - 1 - Math.max(.8, v / mx * (mid - 2)) : mid + 1}" width="${bw}" height="${Math.max(.8, v / mx * (mid - 2))}" fill="var(${col})" opacity="${i === HIST_BINS - 1 ? 1 : .75}"/>`;
     const first = (LIVE[p.ids.rx] || [])[0]?.[0], mins = first ? Math.min(60, Math.max(1, Math.round((now - first) / 60e3))) : 0;
-    return `<div class="phist-ax"><span>↓ ${rateK(mx / 1.1)}</span><span>${mins >= 60 ? "letzte Stunde" : mins ? `seit ${mins} Min.` : ""}</span></div>
+    return `<div class="phist-ax"><span>↓ ${rateK(mx / 1.1)}</span><span>${mins >= 60 ? TR("last_hour") : mins ? TR("since_n", TR("n_min", mins)) : ""}</span></div>
       <svg class="plive" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
       ${rx.map((v, i) => bar(v, i, 1, "--rx")).join("")}${tx.map((v, i) => bar(v, i, -1, "--tx")).join("")}
       <line x1="0" x2="${W}" y1="${mid}" y2="${mid}" stroke="var(--sep)" stroke-width="1" vector-effect="non-scaling-stroke"/></svg>
-      <div class="phist-ax"><span>↑ ${rateK(mx / 1.1)}</span><span>jetzt</span></div>`;
+      <div class="phist-ax"><span>↑ ${rateK(mx / 1.1)}</span><span>${TR("now")}</span></div>`;
   }
   // Nachbarn: Uplink (Gerät weiter oben in der Kette: Gateway > Aggregation > Switch) und Bündel (mehrere Ports zum selben Gerät)
   const portRange = l => { const n = l.map(Number).sort((x, y) => x - y); return n.length > 2 && n.at(-1) - n[0] === n.length - 1 ? `${n[0]}–${n.at(-1)}` : n.join(", "); };
@@ -875,12 +877,12 @@ function createApp(ROOT, WRAP) {
       return `<button class="port ${kind} ${p.speed ? "up s" + p.speed.replace(".", "_") : ""} ${S.port === n ? "sel" : ""}" style="grid-area:${top ? 1 : 2}/${c}" data-port="${n}" aria-label="Port ${p.label}${p.peer ? ", " + p.peer : ""}">${icon(p)}</button>`;
     }).join("")}</div>`; };
     const tr = d.traffic;
-    const head = `<h2>Ports <em>${up} von ${d.ports.length} verbunden${tr && (tr[0] || tr[1]) ? ` · ↓ ${rateK(tr[0])} ↑ ${rateK(tr[1])}` : ""}</em></h2>`;
-    const upl = R.up ? `<div class="conn">Verbunden mit <button data-id="${R.up.o.id}">${R.up.o.name}</button>${R.remote.length ? `<span>Port ${portRange(R.remote)}</span>` : ""}</div>`
+    const head = `<h2>Ports <em>${TR("n_of_n_connected", up, d.ports.length)}${tr && (tr[0] || tr[1]) ? ` · ↓ ${rateK(tr[0])} ↑ ${rateK(tr[1])}` : ""}</em></h2>`;
+    const upl = R.up ? `<div class="conn">${TR("connected_to")} <button data-id="${R.up.o.id}">${R.up.o.name}</button>${R.remote.length ? `<span>Port ${portRange(R.remote)}</span>` : ""}</div>`
       : d.wan && d.wan.isp ? `<div class="conn">Internet <span>${d.wan.isp}</span></div>` : "";
-    const peerDev = devNamed(sel.peer), role = R.isUp(sel) ? "Uplink" : R.lag(sel.peer) ? "Bündel" : "";
+    const peerDev = devNamed(sel.peer), role = R.isUp(sel) ? "Uplink" : R.lag(sel.peer) ? TR("bundle") : "";
     const info = `<div class="pinfo"><span class="pn">${sel.label}</span>
-        <span class="pd">${sel.peer ? peerDev ? `<button class="peer" data-id="${peerDev.id}">${sel.peer} ›</button>` : `<b>${sel.peer}</b>` : `<b>Port ${sel.label}${sel.speed ? "" : " · frei"}</b>`}
+        <span class="pd">${sel.peer ? peerDev ? `<button class="peer" data-id="${peerDev.id}">${sel.peer} ›</button>` : `<b>${sel.peer}</b>` : `<b>Port ${sel.label}${sel.speed ? "" : (" " + TR("bullet_n", TR("free")))}</b>`}
           <span>${sel.peer ? `Port ${sel.label} · ` : ""}${KIND_TXT[sel.kind] || sel.kind}${sel.speed ? " · " + SPEED_TXT[sel.speed] : ""}${role ? " · " + role : ""}${sel.poe ? ` · ${sel.poePP ? "PoE++" : "PoE+"} ${fmt(sel.poe, 1)} W` : ""}</span></span>
         ${sel.speed ? `<span class="tr"><span><i class="dl"></i>↓ <b>${rate(sel.rx)}</b></span><span><i class="ul"></i>↑ <b>${rate(sel.tx)}</b></span></span>` : ""}</div>`;
     const live = sel.ids?.rx && sel.speed ? `<div class="plive-wrap">${liveSvg(sel)}</div>` : "";
@@ -888,15 +890,15 @@ function createApp(ROOT, WRAP) {
     if (d.ports.length <= 8) {
       const tiles = d.ports.map(p => `<button class="if2 ${p.speed ? "up s" + p.speed.replace(".", "_") : "down"} ${S.port === p.n ? "sel" : ""}" data-port="${p.n}" aria-label="Port ${p.label}">
         <span class="ifg">${IF_GLYPH[p.kind === "rj45" ? "rj45" : "sfp"]}</span><b>Port ${p.label}</b>
-        <span class="ifs-sp">${p.speed ? p.peer || SPEED_TXT[p.speed] : "frei"}</span>
+        <span class="ifs-sp">${p.speed ? p.peer || SPEED_TXT[p.speed] : TR("free")}</span>
         <span class="ifrates">${p.speed && (p.rx != null || p.tx != null) ? `<span><i></i>${rateK(p.rx)}</span><span><i class="ul"></i>${rateK(p.tx)}</span>` : `<span>${p.peer && p.speed ? SPEED_TXT[p.speed] : KIND_TXT[p.kind] || p.kind}</span>`}</span></button>`).join("");
       return `<section class="card${live ? " pgrow" : ""}">${head}${upl}<div class="ifs" style="grid-template-columns:repeat(${Math.min(4, d.ports.length)},minmax(0,1fr))">${tiles}</div>${info}${live}</section>`;
     }
     const has = f => d.ports.some(f), sw = c => `<i class="sw" style="background:var(${c})"></i>`;
     const legend = [...["100M", "1G", "2.5G", "10G", "25G"].filter(x => has(p => p.speed === x)).map(x => `<span>${sw(SPD_COL[x])}${SPD_SHORT[x]}</span>`),
-      `<span>${sw("--fill-2")}Nicht verbunden</span>`,
+      `<span>${sw("--fill-2")}${TR("not_connected")}</span>`,
       has(p => p.poeCap && !p.poePP) && `<span>${PORT_ICON.poe}PoE+</span>`, has(p => p.poeCap && p.poePP) && `<span>${PORT_ICON.poe2}PoE++</span>`,
-      has(R.isUp) && `<span>${PORT_ICON.up}Uplink</span>`, has(p => !R.isUp(p) && R.lag(p.peer)) && `<span>${PORT_ICON.lag}Bündel</span>`].filter(Boolean).join("");
+      has(R.isUp) && `<span>${PORT_ICON.up}Uplink</span>`, has(p => !R.isUp(p) && R.lag(p.peer)) && `<span>${PORT_ICON.lag}${TR("bundle")}</span>`].filter(Boolean).join("");
     return `<section class="card${live ? " pgrow" : ""}">${head}${upl}
       <div class="ports pp">${d.portLayout.map(grp).join("")}</div>
       <div class="plegend pl3">${legend}</div>${info}${live}
@@ -909,14 +911,14 @@ function createApp(ROOT, WRAP) {
       { label: "Download", id: w.ids.down, cur: w.down, unit: "Mbit/s", color: "--rx", dec: 1 },
       { label: "Upload", id: w.ids.up, cur: w.up, unit: "Mbit/s", color: "--tx", dec: 1 },
     ]);
-    const foot = [w.avail != null && `Verfügbar <b>${fmt(w.avail, 1)} %</b>`, w.loss != null && `Verlust <b>${fmt(w.loss, 1)} %</b>`, w.drops != null && `Abbrüche <b>${fmt(w.drops)}</b>`].filter(Boolean).join(" · ");
+    const foot = [w.avail != null && `${TR("available")} <b>${fmt(w.avail, 1)} %</b>`, w.loss != null && `${TR("loss")} <b>${fmt(w.loss, 1)} %</b>`, w.drops != null && `${TR("drops")} <b>${fmt(w.drops)}</b>`].filter(Boolean).join(" · ");
     return card.replace(/<\/section>$/, `${foot || w.isp ? `<div class="wanfoot"><span>${foot}</span></div>` : ""}</section>`);
   }
   function poeCard(d) {
     const top = d.ports.filter(p => p.poe).sort((a, b) => b.poe - a.poe), max = top[0]?.poe || 1;
     const pct = d.poe.budget ? Math.round(d.poe.used / d.poe.budget * 100) : null;
-    return `<section class="card grow"><h2>PoE <em>${top.length} ${top.length === 1 ? "Gerät" : "Geräte"} versorgt</em></h2>
-      <div class="mini" style="border-top:0;padding-top:0"><span><b style="font:700 26px var(--font-display)">${fmt(d.poe.used)} W</b>${d.poe.budget ? ` von ${d.poe.budget} W` : ""}</span>${pct != null ? `<b>${pct} %</b>` : ""}</div>
+    return `<section class="card grow"><h2>PoE <em>${TR(top.length === 1 ? "n_device_powered" : "n_devices_powered", top.length)}</em></h2>
+      <div class="mini" style="border-top:0;padding-top:0"><span><b style="font:700 26px var(--font-display)">${fmt(d.poe.used)} W</b>${d.poe.budget ? ` ${TR("of_n", `${d.poe.budget} W`)}` : ""}</span>${pct != null ? `<b>${pct} %</b>` : ""}</div>
       ${pct != null ? `<div class="meter"><b style="width:${pct}%;background:var(--orange)"></b></div>` : ""}
       <div class="poelist">${top.slice(0, 8).map(p => `<div><span>Port ${p.label}</span><i><b style="width:${p.poe / max * 100}%"></b></i><em>${fmt(p.poe, 1)} W</em></div>`).join("")}</div>
     </section>`;
@@ -928,13 +930,13 @@ function createApp(ROOT, WRAP) {
     const groups = []; for (let i = 0; i < os.length; i += 8) groups.push(os.slice(i, i + 8));
     const named = os.filter(x => x.name).length;
     // Noch nichts benannt: kompakte Leiste wie am Gerät statt 24 Zeilen „frei“
-    if (!named) return `<section class="card"><h2>Ausgänge <em>${os.length} Ausgänge${unk ? "" : ` · ${on} an`}</em></h2>
+    if (!named) return `<section class="card"><h2>${TR("outlets")} <em>${TR("n_outlets", os.length)}${unk ? "" : ` · ${TR("n_on", on)}`}</em></h2>
       <div class="ostrip">${groups.map(g => `<div class="og"><span class="ogl">${g[0].n}–${g.at(-1).n}</span>${g.map(x => `<span class="sock ${x.kind} ${x.on && !unk ? "on" : ""}">${x.n}</span>`).join("")}</div>`).join("")}</div>
-      <p class="note" style="margin:8px 0 0;font-size:12px">Welches Gerät an welchem Ausgang hängt, lässt sich im Rack-Editor beim Gerät „${d.name}“ eintragen.</p></section>`;
-    return `<section class="card ocard"><h2>Ausgänge <em>${unk ? `${named} von ${os.length} belegt` : `${on} von ${os.length} an`}</em></h2>
+      <p class="note" style="margin:8px 0 0;font-size:12px">${TR("which_device_is_plugged_into_which_outlet_can", d.name)}</p></section>`;
+    return `<section class="card ocard"><h2>${TR("outlets")} <em>${unk ? TR("n_of_n_used", named, os.length) : TR("n_of_n_on", on, os.length)}</em></h2>
       <div class="ovlist">${groups.map(g => `<div class="obank"><span class="obh">${g[0].n}–${g.at(-1).n}</span>${g.map(x => `
-        <div class="orow"><span class="onum ${x.on && !unk ? "on" : ""}">${x.n}</span><span class="onm ${x.name ? "" : "empty"}">${x.name || "frei"}</span><i class="okind">${x.kind}</i>${unk ? "" : `<i class="ost ${x.on ? "on" : ""}">${x.on ? "an" : "aus"}</i>`}</div>`).join("")}</div>`).join("")}</div>
-      ${unk ? `<span class="note onote">Schaltzustand wird von der Stromleiste derzeit nicht korrekt gemeldet.</span>` : ""}
+        <div class="orow"><span class="onum ${x.on && !unk ? "on" : ""}">${x.n}</span><span class="onm ${x.name ? "" : "empty"}">${x.name || TR("free")}</span><i class="okind">${x.kind}</i>${unk ? "" : `<i class="ost ${x.on ? "on" : ""}">${x.on ? "an" : "aus"}</i>`}</div>`).join("")}</div>`).join("")}</div>
+      ${unk ? `<span class="note onote">${TR("the_pdu_currently_does_not_report_the_switching")}</span>` : ""}
     </section>`;
   }
 
@@ -1021,24 +1023,24 @@ function createApp(ROOT, WRAP) {
     const used = runs.filter(x => x.m && x.m.status !== "planned").reduce((a, x) => a + x.w, 0), plan = mods.filter(m => m.status === "planned").length;
     const tile = ({ n: i, m, w }) => {
       const pos = w > 1 ? `${i}–${i + w - 1}` : `${i}`;
-      if (!m) return `<div class="slt free"><span class="sn">${pos}</span><b>frei</b></div>`;
+      if (!m) return `<div class="slt free"><span class="sn">${pos}</span><b>${TR("free")}</b></div>`;
       const k = kidOf(d, m), s = m.entity && st(m.entity), trk = s && m.entity.startsWith("device_tracker.");
       const state = k ? (k.passive ? "off" : k.state) : s ? ({ alert: "alert", warn: "warn", off: "off" }[lamp(m.entity)] || "ok") : m.status === "planned" ? "off" : "";
-      const txt = k ? STATE_TXT[state] : trk ? (s.state === "home" ? "Online" : "Offline") : m.status === "planned" ? "geplant" : s ? "" : "";
-      const facts = k ? factsOf(k).slice(0, 3) : s && !trk ? [["Wert", (v => `${v.v}${v.u ? " " + v.u : ""}`)(valueOf(m.entity))]] : trk && s.attributes.ip ? [["IP", s.attributes.ip]] : [];
+      const txt = k ? STATE_TXT()[state] : trk ? (s.state === "home" ? "Online" : "Offline") : m.status === "planned" ? TR("planned") : s ? "" : "";
+      const facts = k ? factsOf(k).slice(0, 3) : s && !trk ? [[TR("value"), (v => `${v.v}${v.u ? " " + v.u : ""}`)(valueOf(m.entity))]] : trk && s.attributes.ip ? [["IP", s.attributes.ip]] : [];
       const tag = k ? "button" : "div";
       return `<${tag} class="slt ${m.status === "planned" ? "planned" : ""} ${k ? "link" : ""}" ${k ? `data-id="${k.id}"` : ""} style="--w:${w}">
         <span class="slf">${m.status !== "planned" ? `<span class="slot mod ${m.kind || ""}">${slotFace(m, k || d)}</span>` : ""}</span>
         <span class="slm"><span class="slh"><b>${m.name}</b>${txt ? `<span class="chip ${state}"><i></i>${txt}</span>` : ""}</span>
-          <em>Platz ${pos}${m.desc ? ` · ${m.desc}` : ""}</em>
+          <em>${TR("slot")} ${pos}${m.desc ? ` ${TR("bullet_n", m.desc)}` : ""}</em>
           ${facts.length ? `<span class="slx">${facts.map(([a, b]) => `<span><small>${a}</small><b>${b}</b></span>`).join("")}</span>` : ""}</span>${k ? '<i class="chev">›</i>' : ""}</${tag}>`; };
-    return `<section class="card slotc"><h2>Steckplätze <em>${used} von ${n} belegt${plan ? ` · ${plan} geplant` : ""}</em></h2>
+    return `<section class="card slotc"><h2>${TR("slots")} <em>${TR("n_of_n_used", used, n)}${plan ? ` · ${plan} ${TR("planned")}` : ""}</em></h2>
       <div class="sltl">${runs.map(tile).join("")}</div></section>`;
   }
   // Einschalten (z. B. IPMI): erst beim zweiten Tippen innerhalb von 4 s
   function powerOnBtn(d) {
     const id = d.options.power_on, arm = ARMED?.id === id && Date.now() - ARMED.t < 4000;
-    return `<button class="pwrchip ${arm ? "armed" : ""}" data-press="${id}" data-confirm="Nochmal tippen">${arm ? "Nochmal tippen" : "⏻ Einschalten"}</button>`;
+    return `<button class="pwrchip ${arm ? "armed" : ""}" data-press="${id}" data-confirm="${TR("tap_again")}">${arm ? TR("tap_again") : TR("power_on")}</button>`;
   }
   // Module, die bei ausgeschaltetem Gerät als graues Gerüst (ohne Werte) stehen bleiben; alle anderen werden zum Platzhalter
   const OFF_SKELETON = ["bays", "array"];
@@ -1048,17 +1050,17 @@ function createApp(ROOT, WRAP) {
     const hb = d.blocks.find(b => b.type === "header");
     if (hb?.items?.length && !d.off) d.facts = hb.items.slice(0, 4).map(ref => [ref, entOf(ref, d.R)]).filter(x => x[1]).map(([ref, id]) => { const v = valueOf(id); return [nameOf(hb, ref, id), `${v.v}${v.u ? " " + v.u : ""}`]; });
     const mm = members(d.id), lo = Math.min(...mm.map(x => x.u)), hi = Math.max(...mm.map(x => x.u + x.h - 1));
-    const where = d.parent ? `${d.frameName || "Modulrahmen"} · ${d.mod?.w > 1 ? `Platz ${d.mod.slot}–${d.mod.slot + d.mod.w - 1}` : `Platz ${d.mod?.slot ?? "–"}`}` : d.u ? `${d.type === "shelf" ? "auf Fachboden " : ""}HE ${lo}${hi > lo ? "–" + hi : ""}` : "Rückseite, 0 HE";
+    const where = d.parent ? `${d.frameName || TR("module_frame")} · ${d.mod?.w > 1 ? TR("slots_nn", d.mod.slot, d.mod.slot + d.mod.w - 1) : TR("slot_n", d.mod?.slot ?? "–")}` : d.u ? `${d.type === "shelf" ? TR("on_shelf") + " " : ""}${TR("u_n", `${lo}${hi > lo ? "–" + hi : ""}`)}` : `${TR("rear")}, ${TR("n_u", 0)}`;
     return `<section class="card"><div class="dhero">
       <div class="top"><div style="min-width:0"><h1 data-ed-name style="font:700 24px/1.1 var(--font-display);margin:0 0 4px">${d.name}</h1><div class="sub" style="color:var(--label-2);font-size:13px">${d.model} · ${where}</div></div>
-        ${d.off && d.options?.power_on && st(d.options.power_on) ? powerOnBtn(d) : `<span class="chip ${d.passive ? "off" : d.state}"><i></i>${d.off ? "Aus" : STATE_TXT[d.passive ? "off" : d.state]}</span>`}</div>
+        ${d.off && d.options?.power_on && st(d.options.power_on) ? powerOnBtn(d) : `<span class="chip ${d.passive ? "off" : d.state}"><i></i>${d.off ? TR("off") : STATE_TXT()[d.passive ? "off" : d.state]}</span>`}</div>
       ${headThumb(d)}
       ${d.facts ? `<div class="facts4">${d.facts.map(([k, v]) => `<div><span>${k}</span><b>${v}</b></div>`).join("")}</div>` : ""}
       ${warnMsgsOf(d).slice(0, 2).map(m => `<div class="hmsg ${m[0]}"><i></i><b>${m[1]}</b><span>${m[2] || ""}</span></div>`).join("")}
     </div></section>`;
   }
   function tilesCard(d) {
-    return `<section class="card"><h2>Aktuell</h2><div class="grid t3">${d.tiles.slice(0, 6).map(([k, v, unit, meter, stt, hint]) => `
+    return `<section class="card"><h2>${TR("current")}</h2><div class="grid t3">${d.tiles.slice(0, 6).map(([k, v, unit, meter, stt, hint]) => `
       <div class="tile ${stt || ""}"><span class="k">${k}</span><span class="v">${v}<small>${unit}</small></span>
       ${meter != null ? `<div class="meter"><b style="width:${meter}%;${meter > 85 && !hint ? "background:var(--orange)" : ""}"></b></div>` : ""}
       ${hint ? `<span class="h">${hint}</span>` : ""}</div>`).join("")}</div></section>`;
@@ -1081,21 +1083,21 @@ function createApp(ROOT, WRAP) {
     const src = st(b.source)?.attributes, ports = b.ifaces || [];
     if (!ports.length || !src) return "";                       // ohne Link-Daten lieber nichts als falschen Zustand
     const spd = m => m >= 25000 ? "25G" : m >= 10000 ? "10G" : m >= 2500 ? "2.5G" : m >= 1000 ? "1G" : m > 0 ? "100M" : null;
-    const spdTxt = s => ({ "25G": "25 Gbit/s", "10G": "10 Gbit/s", "2.5G": "2,5 Gbit/s", "1G": "1 Gbit/s", "100M": "100 Mbit/s" })[s] || "verbunden";
+    const spdTxt = s => ({ "25G": "25 Gbit/s", "10G": "10 Gbit/s", "2.5G": "2,5 Gbit/s", "1G": "1 Gbit/s", "100M": "100 Mbit/s" })[s] || TR("connected");
     const tile = p => {
       const a = src[p.key] || {}, up = a.state === "up", sp = up ? spd(a.speed) : null, rx = up ? mbit(p.rx) : null, tx = up ? mbit(p.tx) : null;
       return `<div class="if2 ${up ? "up" : "down"} ${sp ? "s" + sp.replace(".", "_") : ""}">
         <span class="ifg">${IF_GLYPH[p.kind] || IF_GLYPH.rj45}</span>
-        <b>${p.name}</b><span class="ifs-sp">${up ? spdTxt(sp) : a.state === "missing" ? "fehlt" : "frei"}</span>
+        <b>${p.name}</b><span class="ifs-sp">${up ? spdTxt(sp) : a.state === "missing" ? "fehlt" : TR("free")}</span>
         <span class="ifrates">${up ? `<span><i></i>${rateK(rx)}</span><span><i class="ul"></i>${rateK(tx)}</span>` : "&nbsp;"}</span></div>`;
     };
     const bondKeys = new Set(b.bond?.members || ports.filter(p => p.kind === "sfp").map(p => p.key));
     const bd = b.bond && src[b.bond.key], inBond = ports.filter(p => bd && bondKeys.has(p.key)), rest = ports.filter(p => !inBond.includes(p));
     const bond = inBond.length ? `<div class="ifgrp ${bd.state === "up" ? "up" : ""}" style="grid-column:span ${inBond.length}">
-        <div class="ifbr"><span>${b.bond.name || "Bündel"}${bd.state === "up" ? ` · ${fmt(bd.speed / 1000)}G` : " · getrennt"}</span>${bd.state === "up" ? `<em>↓ ${rateK(mbit(b.bond.rx))} · ↑ ${rateK(mbit(b.bond.tx))}</em>` : ""}</div>
+        <div class="ifbr"><span>${b.bond.name || TR("bundle")}${bd.state === "up" ? ` · ${fmt(bd.speed / 1000)}G` : " · " + TR("disconnected_lower")}</span>${bd.state === "up" ? `<em>↓ ${rateK(mbit(b.bond.rx))} · ↑ ${rateK(mbit(b.bond.tx))}</em>` : ""}</div>
         <div class="ifrow" style="grid-template-columns:repeat(${inBond.length},minmax(0,1fr))">${inBond.map(tile).join("")}</div></div>` : "";
     const upN = ports.filter(p => src[p.key]?.state === "up").length;
-    return `<section class="card"><h2>${b.label || "Schnittstellen"} <em>${upN} von ${ports.length} verbunden</em></h2>
+    return `<section class="card"><h2>${b.label || TR("interfaces")} <em>${TR("n_of_n_connected", upN, ports.length)}</em></h2>
       <div class="ifs" style="grid-template-columns:repeat(${ports.length},minmax(0,1fr))">${bond}${rest.map(tile).join("")}</div></section>`;
   }
   // Ringe: Auslastung auf einen Blick (Prozent, sonst Bereich min–max)
@@ -1104,12 +1106,12 @@ function createApp(ROOT, WRAP) {
     const COL = ["--blue", "--indigo", "--teal", "--green", "--orange"];
     const items = b.items.map(ref => [ref, entOf(ref, d.R)]).filter(x => x[1] && st(x[1]));
     items.forEach(([, id]) => HIST.want.add(id));
-    return trendCard(b.label || "Auslastung", items.map(([ref, id], i) => ({ label: nameOf(b, ref, id), id, cur: num(id), unit: st(id).attributes.unit_of_measurement || "%", color: b.colors?.[i] || COL[i % COL.length], dec: 0 })));
+    return trendCard(b.label || TR("load"), items.map(([ref, id], i) => ({ label: nameOf(b, ref, id), id, cur: num(id), unit: st(id).attributes.unit_of_measurement || "%", color: b.colors?.[i] || COL[i % COL.length], dec: 0 })));
   }
   // Laufwerksschächte (z. B. Unraid): je Platte Gesundheits- und/oder Belegungssensor, Attribute liefern Typ, Größe, Temperatur, Ruhezustand
   const sizeTB = s => { const m = String(s ?? "").match(/([\d.,]+)\s*([KMGTP]?)i?B/i); if (!m) return null; const x = parseFloat(m[1].replace(",", ".")); return x * ({ "": 1e-12, K: 1e-9, M: 1e-6, G: 1e-3, T: 1, P: 1e3 }[m[2].toUpperCase()] ?? 0); };
   const tbTxt = x => x >= 1 ? `${fmt(x, x >= 10 || Math.abs(x - Math.round(x)) < .05 ? 0 : 1)} TB` : `${fmt(x * 1000)} GB`;
-  const DISK_ST = { DISK_OK: "OK", DISK_NEW: "Neu, nicht zugewiesen", DISK_NP: "Fehlt", DISK_NP_DSBL: "Fehlt", DISK_DSBL: "Deaktiviert", DISK_DSBL_NEW: "Deaktiviert", DISK_INVALID: "Ungültig", DISK_WRONG: "Falsche Platte", DISK_EMULATED: "Emuliert" };
+  const DISK_ST = rdPerLang(() => ({ DISK_OK: "OK", DISK_NEW: TR("new_unassigned"), DISK_NP: TR("missing"), DISK_NP_DSBL: TR("missing"), DISK_DSBL: TR("disabled"), DISK_DSBL_NEW: TR("disabled"), DISK_INVALID: TR("invalid"), DISK_WRONG: TR("wrong_disk"), DISK_EMULATED: TR("emulated") }));
   function bayDisks(d, b) {
     const ROLE = { PARITY: "parity", DATA: "data", CACHE: "cache", FLASH: "flash" };
     const seen = new Set();
@@ -1123,11 +1125,11 @@ function createApp(ROOT, WRAP) {
       const role = ROLE[String(A.type || "").toUpperCase()] || (/parity/.test(key) ? "parity" : /cache/.test(key) ? "cache" : /flash/.test(key) ? "flash" : "data");
       const nr = (key.match(/\d+$/) || [""])[0];
       const short = role === "parity" ? "P" + (nr || "") : role === "cache" ? "C" + (nr || "1") : nr || key.slice(0, 3);
-      const name = b.names?.[id] || b.names?.[h] || b.names?.[u] || (role === "parity" ? "Parität" + (nr ? " " + nr : "") : role === "cache" ? "Cache" + (nr ? " " + nr : "") : "Platte " + (nr || key));
+      const name = b.names?.[id] || b.names?.[h] || b.names?.[u] || (role === "parity" ? TR("parity") + (nr ? " " + nr : "") : role === "cache" ? "Cache" + (nr ? " " + nr : "") : TR("disk") + " " + (nr || key));
       const spun = A.spin_state ? A.spin_state === "active" : A.standby != null ? !A.standby : A.spinning !== false;
       const used = num(u), tb = sizeTB(A.total);
       return { id: hs ? h : u, key, dev: A.device || null, serial: A.serial || A.serial_number || null, role, short, name, tb: tb > 0 ? tb : null, temp: A.temperature_celsius ?? A.temperature ?? null, used: used != null ? Math.round(used) : null, spun,
-        bad: hs?.state === "on" || (A.num_errors > 0), status: A.status ? (DISK_ST[A.status] || A.status) : hs ? (hs.state === "on" ? "Problem" : "OK") : null, errors: A.num_errors || 0 };
+        bad: hs?.state === "on" || (A.num_errors > 0), status: A.status ? (DISK_ST()[A.status] || A.status) : hs ? (hs.state === "on" ? "Problem" : "OK") : null, errors: A.num_errors || 0 };
     }).filter(x => x && x.role !== "flash");
   }
   function baysCard(d, b) {
@@ -1145,7 +1147,7 @@ function createApp(ROOT, WRAP) {
     list.forEach(x => { const n = slotOf(x); if (n >= 1 && n <= slots && !at[n - 1]) at[n - 1] = x; });
     list.filter(x => !at.includes(x)).forEach(x => { const k = at.indexOf(null); if (k >= 0) at[k] = x; });
     const bays = at.map((x, i) => x ? { ...x, n: i + 1 } : { n: i + 1, role: "empty" });
-    internal.forEach((x, i) => { x.n = null; x.slot = `Intern ${i + 1}`; });
+    internal.forEach((x, i) => { x.n = null; x.slot = TR("internal_n", i + 1); });
     const all = [...bays, ...internal];
     const sel = (S.bay && all.find(x => x.key === S.bay)) || all.find(x => x.bad) || all.find(x => x.role !== "empty");
     // Temperatur: HDD ab 45/55 °C, SSD ab 55/65 °C gelb/rot (warn/alert im Modul überschreibbar)
@@ -1154,21 +1156,21 @@ function createApp(ROOT, WRAP) {
     // Stehend: Einschübe senkrecht wie in einem Storage-Gehäuse (Griff in Rollenfarbe, LEDs, Füllstand = Belegung)
     const vtile = x => `<button class="bv ${x.role} ${x.spun ? "" : "down"} ${x.bad ? "bad" : ""} ${sel === x && !d.off ? "sel" : ""}" data-bay="${x.key}" aria-label="${x.name}"><i class="bv-h"></i><i class="bv-led ${x.bad ? "alert" : x.spun ? "ok" : "off"}"></i>${x.used != null ? `<b style="height:${x.used}%"></b>` : ""}<em class="${tcol(x)}">${x.spun ? (x.temp != null ? fmt(x.temp) + "°" : "") : "zz"}</em><span>${x.short}</span></button>`;
     const tile = x => vert ? vtile(x) : `<button class="bay24 ${x.role} ${x.spun ? "" : "down"} ${x.bad ? "bad" : ""} ${sel === x && !d.off ? "sel" : ""}" data-bay="${x.key}" aria-label="${x.name}"><i></i><span>${x.short}</span><em class="${tcol(x)}">${x.spun ? (x.temp != null ? fmt(x.temp) + "°" : "") : "zz"}</em>${x.used != null ? `<b style="width:${x.used}%"></b>` : ""}</button>`;
-    const roleTxt = { parity: "Parität", data: "Daten", cache: "Cache" };
+    const roleTxt = { parity: TR("parity"), data: TR("data"), cache: "Cache" };
     const bad = disks.filter(x => x.bad).length, hot = disks.filter(x => tcol(x)).length;
     const temps = disks.filter(x => x.spun && x.temp != null).map(x => x.temp), tmax = temps.length ? Math.max(...temps) : null;
-    return `<section class="card bayc"><h2>${b.label || "Schächte"} <em>${bad ? `<b class="hv" style="color:var(--red)">${bad} mit Problem</b> · ` : ""}${hot ? `<b class="hv" style="color:var(--warn-ink)">${hot} warm</b> · ` : ""}${list.length} von ${slots} belegt${tmax != null ? ` · max. ${fmt(tmax)} °C` : ""}</em></h2>
+    return `<section class="card bayc"><h2>${b.label || TR("bays")} <em>${bad ? `<b class="hv" style="color:var(--red)">${TR("n_with_problems", bad)}</b> · ` : ""}${hot ? `<b class="hv" style="color:var(--warn-ink)">${TR("n_warm", hot)}</b> · ` : ""}${TR("n_of_n_used", list.length, slots)}${tmax != null ? ` · max. ${fmt(tmax)} °C` : ""}</em></h2>
       <div class="${vert ? `baysv ${slots > 14 ? "dense" : ""}` : "bays24"} ${b.order === "cols" && !vert ? "bycol" : ""}" style="--bc:${cols};--br:${Math.ceil(slots / cols)}">${bays.map(x => x.role === "empty" ? (vert ? `<div class="bv empty"><i class="bv-h"></i><span>${x.n}</span></div>` : `<div class="bay24"><span>${x.n}</span></div>`) : tile(x)).join("")}</div>
-      ${internal.length ? `<div class="bayint"><span class="lbl">Intern</span><div class="${vert ? "baysv int" : "bays24"}" style="--bc:${vert ? Math.max(internal.length, Math.min(slots, 12)) : cols}">${internal.map(tile).join("")}</div></div>` : ""}
-      <div class="plegend blg"><span><i style="background:var(--indigo)"></i>Parität</span><span><i style="background:var(--blue)"></i>Daten</span><span><i style="background:var(--teal)"></i>Cache</span><span><i style="background:var(--fill-2)"></i>leer</span><span class="hint-sleep">blass = schläft</span></div>
-      ${d.off ? "" : `<div class="pinfo"><span class="pn" ${sel.bad ? `style="color:var(--red)"` : ""}>${sel.short}</span><span class="pd"><b>${sel.name}${sel.tb ? " · " + tbTxt(sel.tb) : ""}</b><span>${sel.n ? `Schacht ${sel.n}` : sel.slot} · ${roleTxt[sel.role]}${sel.used != null ? ` · ${sel.used} % belegt` : ""}${sel.status ? ` · <em style="font-style:normal;${sel.bad ? "color:var(--red)" : ""}">${sel.status}</em>` : ""}${sel.errors ? ` · ${sel.errors} Fehler` : ""}</span></span>
-        <span class="tr ${tcol(sel)}">${sel.spun ? (sel.temp != null ? `<b>${fmt(sel.temp)} °C</b>` : "") : "schläft"}</span></div>`}
+      ${internal.length ? `<div class="bayint"><span class="lbl">${TR("internal")}</span><div class="${vert ? "baysv int" : "bays24"}" style="--bc:${vert ? Math.max(internal.length, Math.min(slots, 12)) : cols}">${internal.map(tile).join("")}</div></div>` : ""}
+      <div class="plegend blg"><span><i style="background:var(--indigo)"></i>${TR("parity")}</span><span><i style="background:var(--blue)"></i>${TR("data")}</span><span><i style="background:var(--teal)"></i>Cache</span><span><i style="background:var(--fill-2)"></i>${TR("empty")}</span><span class="hint-sleep">${TR("faded_spun_down")}</span></div>
+      ${d.off ? "" : `<div class="pinfo"><span class="pn" ${sel.bad ? `style="color:var(--red)"` : ""}>${sel.short}</span><span class="pd"><b>${sel.name}${sel.tb ? " · " + tbTxt(sel.tb) : ""}</b><span>${sel.n ? TR("bay_n", sel.n) : sel.slot} · ${roleTxt[sel.role]}${sel.used != null ? ` · ${sel.used} % ${TR("used")}` : ""}${sel.status ? ` · <em style="font-style:normal;${sel.bad ? "color:var(--red)" : ""}">${sel.status}</em>` : ""}${sel.errors ? ` · ${TR("n_errors", sel.errors)}` : ""}</span></span>
+        <span class="tr ${tcol(sel)}">${sel.spun ? (sel.temp != null ? `<b>${fmt(sel.temp)} °C</b>` : "") : TR("spun_down")}</span></div>`}
     </section>`;
   }
   // Array (z. B. Unraid): Belegung aus dem Belegungssensor (Attribute total/used/free), Zustand, Cache-Pools, Parität
   function arrayCard(d, b) {
     const ids = (b.items || []).map(ref => entOf(ref, d.R)).filter(id => id && st(id)); if (!ids.length) return "";
-    if (d.off) return `<section class="card grow arrc"><h2>${b.label || "Array"}</h2><div class="arr2"><div class="arroff off"><b>Server aus</b><span>Belegung, Cache und Parität erscheinen nach dem Einschalten.</span></div>
+    if (d.off) return `<section class="card grow arrc"><h2>${b.label || "Array"}</h2><div class="arr2"><div class="arroff off"><b>${TR("server_off")}</b><span>${TR("usage_cache_and_parity_appear_after_power_on")}</span></div>
       ${ids.filter(id => /_disk_cache\d*_usage$/.test(id)).map(id => { const nr = (id.match(/cache(\d*)_usage$/) || [])[1]; return `<div class="crow"><span>${b.names?.[id] || "Cache" + (nr ? " " + nr : "")}</span><div class="meter"><b style="width:0"></b></div><b>–</b></div>`; }).join("")}</div></section>`;
     const find = re => ids.find(id => re.test(id));
     const uid = find(/_array_usage$/) || ids.find(id => st(id).attributes.unit_of_measurement === "%" && st(id).attributes.total != null);
@@ -1177,17 +1179,17 @@ function createApp(ROOT, WRAP) {
     const state = sid && st(sid).state, running = !state || state === "started" || state === "STARTED";
     const stTxt = sid ? valueOf(sid).v : "";
     const P = pid ? st(pid) : null, pst = P?.attributes?.status;
-    const PST = { completed: "abgeschlossen", cancelled: "abgebrochen", running: "läuft", paused: "pausiert", failed: "fehlgeschlagen", never_run: "nie ausgeführt" };
-    const parTxt = P ? [P.state === "on" ? "Problem" : "", pst ? PST[pst] || pst : P.state === "on" ? "" : "OK", P.attributes?.errors ? `${P.attributes.errors} Fehler` : ""].filter(Boolean).join(" · ") : "";
+    const PST = { completed: TR("completed"), cancelled: TR("cancelled"), running: TR("running_2"), paused: TR("paused_2"), failed: TR("failed"), never_run: TR("never_run") };
+    const parTxt = P ? [P.state === "on" ? "Problem" : "", pst ? PST[pst] || pst : P.state === "on" ? "" : "OK", P.attributes?.errors ? TR("n_errors", P.attributes.errors) : ""].filter(Boolean).join(" · ") : "";
     return `<section class="card grow arrc"><h2>${b.label || "Array"} <em ${running ? "" : `style="color:var(--warn-ink)"`}>${stTxt || ""}</em></h2>
       <div class="arr2">
-        ${running && tot ? `<div><div class="big2">${tbTxt(usedTB || 0)}<small>von ${tbTxt(tot)}</small></div>
+        ${running && tot ? `<div><div class="big2">${tbTxt(usedTB || 0)}<small>${TR("of_n", tbTxt(tot))}</small></div>
           <div class="capb"><b style="width:${Math.round(pct ?? 0)}%"></b></div>
-          <div class="mini" style="border-top:0;padding-top:0"><span>${fmt(pct ?? 0)} % belegt</span><span>frei <b>${tbTxt(freeTB || 0)}</b></span></div></div>`
-        : `<div class="arroff"><b>${running ? "Keine Belegung" : "Array gestoppt"}</b><span>${running ? "Der Sensor liefert noch keine Größen." : `${stTxt}. Platten und Freigaben sind erst nach dem Start verfügbar.`}</span></div>`}
+          <div class="mini" style="border-top:0;padding-top:0"><span>${TR("n_used", fmt(pct ?? 0))}</span><span>${TR("free")} <b>${tbTxt(freeTB || 0)}</b></span></div></div>`
+        : `<div class="arroff"><b>${running ? TR("no_usage") : TR("array_stopped")}</b><span>${running ? TR("the_sensor_does_not_report_sizes_yet") : `${stTxt}. ${TR("disks_and_shares_after_start")}`}</span></div>`}
         ${cids.map(id => { const A = st(id).attributes, t = sizeTB(A.total), v = num(id); const nr = (id.match(/cache(\d*)_usage$/) || [])[1];
           return `<div class="crow"><span>${b.names?.[id] || "Cache" + (nr ? " " + nr : "")}${t > 0 ? ` <small>${tbTxt(t)}</small>` : ""}</span><div class="meter"><b style="width:${v ?? 0}%;background:var(--teal)"></b></div><b>${v != null ? fmt(v) + " %" : "–"}</b></div>`; }).join("")}
-        ${P ? `<div class="mini"><span>Paritätsprüfung</span><b ${P.state === "on" ? `style="color:var(--red)"` : ""}>${parTxt}</b></div>` : ""}
+        ${P ? `<div class="mini"><span>${TR("parity_check")}</span><b ${P.state === "on" ? `style="color:var(--red)"` : ""}>${parTxt}</b></div>` : ""}
       </div>
     </section>`;
   }
@@ -1203,7 +1205,7 @@ function createApp(ROOT, WRAP) {
     const fanEl = fans.map(([ref, id]) => { const n = num(id) || 0, bad = !d.off && (lamp(id) === "alert" || n < (b.fan_min ?? 200)), dur = n > 0 ? Math.max(.25, Math.min(4, 900 / n)).toFixed(2) : 0;
       const nm = nameOf(b, ref, id).replace(/^(FAN|Lüfter)\s*/i, "");
       return `<div class="hwf ${bad ? "bad" : ""}" title="${nameOf(b, ref, id)}"><svg viewBox="0 0 24 24" style="${dur ? `--fd:${dur}s` : ""}"><circle class="ring" cx="12" cy="12" r="11"/><g class="${dur && !bad ? "spin" : ""}"><g transform="translate(12 12)">${[0, 120, 240].map(r => `<path transform="rotate(${r})" d="M0-2C1.6-5 3.8-8.4 1.4-9.4-1.4-10.2-2.2-5.8-1.4-2.2Z"/>`).join("")}<circle r="2"/></g></g></svg><b>${n >= 1000 ? fmt(n / 1000, 1) + "k" : fmt(n)}</b><span>${nm}</span></div>`; }).join("");
-    return `<section class="card mod hwc"><h2>${b.label || "Hardware"}${fans.length ? ` <em>Lüfter in U/min</em>` : ""}</h2>${tiles ? `<div class="hwts">${tiles}</div>` : ""}${fanEl ? `<div class="hwfs">${fanEl}</div>` : ""}</section>`;
+    return `<section class="card mod hwc"><h2>${b.label || "Hardware"}${fans.length ? ` <em>${TR("fans_in_rpm")}</em>` : ""}</h2>${tiles ? `<div class="hwts">${tiles}</div>` : ""}${fanEl ? `<div class="hwfs">${fanEl}</div>` : ""}</section>`;
   }
   function compactCard(d, b) {
     const ids = (b.items || []).map(ref => [ref, entOf(ref, d.R)]).filter(x => x[1] && ok(st(x[1]))); if (!ids.length) return "";
@@ -1215,14 +1217,14 @@ function createApp(ROOT, WRAP) {
       ${fans.length ? (() => { const fv = fans.map(([, id]) => { const v = valueOf(id); return { v, c: col(id, v) }; }), bad = fv.filter(x => x.c), ns = fv.map(x => x.v.n).filter(n => n != null);
         // Alle Lüfter in Ordnung: Spanne min–max, sonst die auffälligen einzeln
         const txt = bad.length ? bad.map(x => `<em style="color:var(${x.c})">${x.v.v}</em>`).join(" · ") : ns.length ? (Math.min(...ns) === Math.max(...ns) ? fmt(ns[0]) : `${fmt(Math.min(...ns))}–${fmt(Math.max(...ns))}`) : "–";
-        return pair(`${b.fan_label || "Lüfter"}${fans.length > 1 ? ` (${fans.length})` : ""}`, `${txt} <small>U/min</small>`, ""); })() : ""}</div></section>`;
+        return pair(`${b.fan_label || TR("fans")}${fans.length > 1 ? ` (${fans.length})` : ""}`, `${txt} <small>${TR("rpm")}</small>`, ""); })() : ""}</div></section>`;
   }
   // Thermometer: Temperaturen als Balken mit Ampelfarbe (Grenzen warn/alert, Standard 80/90 °C)
   function thermoCard(d, b) {
     const warn = b.warn ?? 80, alert = b.alert ?? 90, lo = b.min ?? 20, hi = b.max ?? 100;
     const rows = b.items.map(ref => entOf(ref, d.R)).filter(Boolean).map(id => ({ id, v: valueOf(id) })).filter(x => x.v.n != null).sort((x, y) => y.v.n - x.v.n);
     const hot = rows.reduce((m, x) => Math.max(m, x.v.n), -Infinity), wp = ((warn - lo) / (hi - lo) * 100).toFixed(1);
-    return `<section class="card grow"><h2>${b.label || "Temperaturen"} <em>max. <b class="hv">${fmt(hot)} °C</b></em></h2><div class="thermo2">${rows.map(({ id, v }) => {
+    return `<section class="card grow"><h2>${b.label || TR("temperatures")} <em>max. <b class="hv">${fmt(hot)} °C</b></em></h2><div class="thermo2">${rows.map(({ id, v }) => {
       const p = Math.max(3, Math.min(100, (v.n - lo) / (hi - lo) * 100)), col = v.n >= alert ? "--red" : v.n >= warn ? "--yellow" : v.n >= 60 ? "--green" : "--teal";
       const name = shortName(id).replace(/[- ]?Temperatur$/i, "").replace(/^CPU-Chiplet/, "Chiplet") || shortName(id);
       return `<div class="t2"><span>${name}</span><i style="--w:${wp}%"><b style="width:${p}%;background:var(${col})"></b></i><em style="${v.n >= warn ? `color:var(${v.n >= alert ? "--red" : "--warn-ink"})` : ""}">${fmt(v.n)}°</em></div>`; }).join("")}</div></section>`;
@@ -1259,7 +1261,7 @@ function createApp(ROOT, WRAP) {
     const soft = v => { const f = v.map(x => x ?? null); if (f.some(x => x == null)) return f; return smooth(smooth(f)); };  // leicht glätten, Messrauschen raus
     const series = c.series.map(s => ({ ...s, v: soft(fineSeries(s.id)), color: css(s.color) }));
     const warn = c.series.find(s => s.warn != null)?.warn ?? c.warn;
-    return `<section class="card grow trace"><h2>${c.label} <em class="tread" data-k="${key}">24 Std.</em></h2>
+    return `<section class="card grow trace"><h2>${c.label} <em class="tread" data-k="${key}">${TR("24_h")}</em></h2>
       <div class="serleg">${c.series.map(s => `<span><i style="background:var(${s.color})"></i>${s.label} <b data-s="${s.id}">${valueOf(s.id).v} ${s.unit}</b></span>`).join("")}</div>
       ${lazy((W, H) => traceSvg(key, series, W, H, warn, unit))}</section>`;
   }
@@ -1272,13 +1274,13 @@ function createApp(ROOT, WRAP) {
     g.querySelector("line").setAttribute("x1", T.X(i)); g.querySelector("line").setAttribute("x2", T.X(i));
     g.querySelectorAll("circle").forEach((c, k) => { const v = T.series[k].v[i]; c.style.display = v == null ? "none" : ""; c.setAttribute("cx", T.X(i)); if (v != null) c.setAttribute("cy", T.Y(v)); });
     const card = svg.closest(".card"), t = new Date(Date.now() - (T.n - 1 - i) * 300e3);
-    card.querySelector(".tread").textContent = i === T.n - 1 ? "jetzt" : t.toLocaleTimeString(rdLoc(), { hour: "2-digit", minute: "2-digit" }) + " Uhr";
+    card.querySelector(".tread").textContent = i === T.n - 1 ? TR("now") : t.toLocaleTimeString(rdLoc(), { hour: "2-digit", minute: "2-digit" }) + (" " + TR("clock"));
     T.series.forEach(s => { const b = card.querySelector(`b[data-s="${s.id}"]`); if (b) b.textContent = `${fmt(s.v[i], s.dec ?? 0)} ${unescH(s.unit)}`; });
   }
   function traceLeave(e) {
     const card = e.target.closest?.(".trace"); if (!card) return;
     const svg = card.querySelector(".trace-svg"), T = svg && TRACE[svg.dataset.k]; if (!T) return;
-    svg.querySelector(".tguide").style.display = "none"; card.querySelector(".tread").textContent = "24 Std.";
+    svg.querySelector(".tguide").style.display = "none"; card.querySelector(".tread").textContent = TR("24_h");
     T.series.forEach(s => { const b = card.querySelector(`b[data-s="${s.id}"]`); if (b) b.textContent = unescH(`${valueOf(s.id).v} ${s.unit}`); });
   }
   function chartCard(c) {
@@ -1287,12 +1289,12 @@ function createApp(ROOT, WRAP) {
     if (false) {
       const COL = ["--blue", "--orange", "--green"], vals = c.series.map(x => HS(x.id, num(x.id) || 0));
       const all = vals.flat(), lo = Math.min(...all), hi = Math.max(...all), pad = (hi - lo) * .1 || 1;
-      return `<section class="card grow"><h2>${c.label} <em>24 Std.</em></h2>
+      return `<section class="card grow"><h2>${c.label} <em>${TR("24_h")}</em></h2>
         <div class="serleg">${c.series.map((x, i) => `<span><i style="background:var(${COL[i]})"></i>${x.label} <b>${valueOf(x.id).v} ${x.unit}</b></span>`).join("")}</div>
         ${lazy((W, H) => chartMulti(c.series.map((x, i) => ({ v: vals[i], color: css(COL[i]), fill: i === 0 })), { lo: lo - pad, hi: hi + pad, W, H }))}</section>`;
     }
     const now = HS(c.entity, c.base).at(-1);
-    return `<section class="card grow"><h2>${c.label} <em><b class="hv">${fmt(now, c.dec)} ${c.unit}</b> · ${c.warn != null ? `Grenze ${fmt(c.warn)} ${c.unit}` : "24 Std."}</em></h2>${lazy((W, H) => chartSVG(c, 0, W, H))}</section>`;
+    return `<section class="card grow"><h2>${c.label} <em><b class="hv">${fmt(now, c.dec)} ${c.unit}</b> ${TR("bullet_n", c.warn != null ? TR("limit_n", `${fmt(c.warn)} ${c.unit}`) : TR("24_h"))}</em></h2>${lazy((W, H) => chartSVG(c, 0, W, H))}</section>`;
   }
   // Warnungen/Störungen stehen im Gerätekopf; die Karte „Meldungen“ zeigt die übrigen Infos
   const warnMsgsOf = d => (d.msgs || []).filter(m => m[0] !== "ok");
@@ -1314,12 +1316,12 @@ function createApp(ROOT, WRAP) {
     // Letzter Start mit Firmware-Stand (wie „has updated to …“ im Controller); Zeitpunkt aus der Laufzeit
     const up = st(d.R?.uptime), fw = st(d.R?.firmware)?.attributes.installed_version;
     if (up && ok(up)) { const x = parseFloat(up.state), t = up.attributes.unit_of_measurement === "s" ? Date.now() - x * 1000 : Date.parse(up.state);
-      if (!isNaN(t) && !log.some(r => Math.abs(r[1] - t) < 30 * 60e3)) log.push([fw ? `Gestartet mit Firmware ${fw.split(".").slice(0, 3).join(".")}` : "Neu gestartet", t]); }
+      if (!isNaN(t) && !log.some(r => Math.abs(r[1] - t) < 30 * 60e3)) log.push([fw ? TR("started_with_firmware_n", fw.split(".").slice(0, 3).join(".")) : TR("restarted"), t]); }
     log.sort((p, q) => q[1] - p[1]);
     if (!rest.length && !log.length) return "";
     const ms = rest.slice(0, 2);
     const hist = log.length ? `<div class="dlog"><h2>History</h2>${log.slice(0, rest.length ? 2 : 3).map(([t, w]) => `<div class="dl"><span>${t}</span><time>${whenTxt(w)}</time></div>`).join("")}</div>` : "";
-    return `<section class="card wide msgs${hist ? " hasl" : ""}">${ms.length ? `<h2>Meldungen${d.msgs.length > 2 ? ` <em>+${d.msgs.length - 2} weitere</em>` : ""}</h2>${ms.map(m => `<div class="msg ${m[0]}"><i></i><div>${m[1]}<time>${m[2]}</time></div></div>`).join("")}` : ""}${hist}</section>`;
+    return `<section class="card wide msgs${hist ? " hasl" : ""}">${ms.length ? `<h2>${TR("messages")}${d.msgs.length > 2 ? ` <em>${TR("n_more_2", d.msgs.length - 2)}</em>` : ""}</h2>${ms.map(m => `<div class="msg ${m[0]}"><i></i><div>${m[1]}<time>${m[2]}</time></div></div>`).join("")}` : ""}${hist}</section>`;
   }
   // Jeder Block liefert eine Karte oder nichts (keine Daten). half = darf neben einem zweiten halben Block stehen.
   const BLOCK_RENDER = {
@@ -1335,10 +1337,10 @@ function createApp(ROOT, WRAP) {
     disks: d => d.disks && diskCard(d),
     recording: d => d.rec && recCard(d),
     messages: d => msgsCard(d),
-    values: (d, b) => b.style === "hw" ? hwCard(d, b) : b.style === "compact" ? compactCard(d, b) : b.style === "ifaces" ? ifacesCard(d, b) : b.items?.length && (b.style === "rings" ? ringsCard(d, b) : `<section class="card"><h2>${b.label || "Werte"}</h2><div class="grid t3">${b.items.map(ref => [ref, entOf(ref, d.R)]).filter(x => x[1]).map(([ref, id]) => { const v = valueOf(id);
+    values: (d, b) => b.style === "hw" ? hwCard(d, b) : b.style === "compact" ? compactCard(d, b) : b.style === "ifaces" ? ifacesCard(d, b) : b.items?.length && (b.style === "rings" ? ringsCard(d, b) : `<section class="card"><h2>${b.label || TR("values")}</h2><div class="grid t3">${b.items.map(ref => [ref, entOf(ref, d.R)]).filter(x => x[1]).map(([ref, id]) => { const v = valueOf(id);
       const txt = v.n == null && String(v.v).length > 9;   // Text statt Zahl (z. B. Client-Name): kleiner, höchstens zwei Zeilen
       return `<div class="tile"><span class="k">${nameOf(b, ref, id)}</span><span class="v ${txt ? "txt" : ""}" ${txt ? `title="${String(v.v).replace(/"/g, "&quot;")}"` : ""}>${v.v}<small>${v.u}</small></span>${v.u === "%" && v.n != null ? `<div class="meter"><b style="width:${Math.max(0, Math.min(100, v.n))}%"></b></div>` : ""}</div>`; }).join("")}</div></section>`),
-    bars: (d, b) => b.items?.length && (b.style === "thermo" ? thermoCard(d, b) : `<section class="card grow"><h2>${b.label || "Auslastung"}</h2><div class="bars2 ${b.items.length > 5 && b.size === "full" ? "two" : ""}">${b.items.map(ref => [ref, entOf(ref, d.R)]).filter(x => x[1]).map(([ref, id]) => { const v = valueOf(id), lo = b.min ?? 0, hi = b.max ?? 100;
+    bars: (d, b) => b.items?.length && (b.style === "thermo" ? thermoCard(d, b) : `<section class="card grow"><h2>${b.label || TR("load")}</h2><div class="bars2 ${b.items.length > 5 && b.size === "full" ? "two" : ""}">${b.items.map(ref => [ref, entOf(ref, d.R)]).filter(x => x[1]).map(([ref, id]) => { const v = valueOf(id), lo = b.min ?? 0, hi = b.max ?? 100;
       const p = v.n == null ? 0 : Math.max(0, Math.min(100, (v.n - lo) / ((hi - lo) || 1) * 100));
       return `<div class="b2"><span>${nameOf(b, ref, id)}</span><b>${v.v} ${v.u}</b><div class="meter"><b style="width:${p}%;${p > 85 ? "background:var(--orange)" : ""}"></b></div></div>`; }).join("")}</div></section>`),
     // Einzelwert: eine Entität als eigene Kachel, wahlweise mit 24-Std.-Kurve (wie eine Kachel aus „Auslastung“)
@@ -1363,7 +1365,7 @@ function createApp(ROOT, WRAP) {
       return `<section class="card mod ringm"><div class="rw"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" class="gtr"/><circle cx="50" cy="50" r="42" class="gv" style="stroke:var(${thrCol(b, o.v.n)})" stroke-dasharray="${(C * p).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 50 50)"/></svg>
         <b class="gval">${o.v.v}<small>${o.v.u}</small></b></div><span class="k">${o.label}</span></section>`; },
     stat: (d, b) => { const o = oneEnt(d, b); if (!o) return ""; HIST.want.add(o.id); const h = HIST.data[o.id], d0 = h ? h[0] : null, dv = o.v.n != null && d0 != null ? o.v.n - d0 : null;
-      const tr = dv == null || Math.abs(dv) < 1e-9 ? "" : `<span class="trd ${dv > 0 ? "up" : "dn"}">${dv > 0 ? "▲" : "▼"} ${fmt(Math.abs(dv), Math.abs(dv) < 10 ? 1 : 0)} ${o.v.u} <em>ggü. gestern</em></span>`;
+      const tr = dv == null || Math.abs(dv) < 1e-9 ? "" : `<span class="trd ${dv > 0 ? "up" : "dn"}">${dv > 0 ? "▲" : "▼"} ${fmt(Math.abs(dv), Math.abs(dv) < 10 ? 1 : 0)} ${o.v.u} <em>${TR("vs_yesterday")}</em></span>`;
       return `<section class="card mod statm"><span class="k">${o.label}</span><b class="sv" style="color:var(${b.warn != null || b.alert != null ? thrCol(b, o.v.n) : "--label"})">${o.v.v}<small>${o.v.u}</small></b>${tr}</section>`; },
     progress: (d, b) => { const o = oneEnt(d, b); if (!o) return ""; const lo = b.min ?? 0, hi = b.max ?? autoMax(o.v), p = frac(o.v.n, lo, hi);
       return `<section class="card mod prog"><div class="ph"><span class="k">${o.label}</span><b>${o.v.v}<small>${o.v.u}</small></b></div><div class="pbar"><i style="width:${(p * 100).toFixed(1)}%;background:var(${thrCol(b, o.v.n)})"></i></div><span class="gmm"><i>${fmt(lo)}</i><i>${fmt(hi)}</i></span></section>`; },
@@ -1372,11 +1374,11 @@ function createApp(ROOT, WRAP) {
       const mx = Math.max(...bars, 1e-9), col = b.colors?.[0] || "--blue", now = new Date().getHours();
       return `<section class="card mod histo"><div class="ph"><span class="k">${o.label}</span><b>${o.v.v}<small>${o.v.u}</small></b></div>
         <div class="hb">${bars.map((v, i) => `<i style="height:${Math.max(3, v / mx * 100).toFixed(0)}%;background:var(${col});opacity:${i === 23 ? 1 : .55}" title="${fmt(v, 1)} ${o.v.u}"></i>`).join("")}</div>
-        <span class="gmm"><i>${String((now + 1) % 24).padStart(2, "0")}:00</i><i>jetzt</i></span></section>`; },
+        <span class="gmm"><i>${String((now + 1) % 24).padStart(2, "0")}:00</i><i>${TR("now")}</i></span></section>`; },
     chips: (d, b) => { const ids = (b.items || []).map(ref => [ref, entOf(ref, d.R)]).filter(x => x[1] && st(x[1])); if (!ids.length) return "";
       if (b.style === "list") { const ICON = { ok: "✓", alert: "!", warn: "!", off: "–" };
         return `<section class="card mod stlist">${b.label ? `<h2>${b.label}</h2>` : ""}<div class="sts">${ids.map(x => [...x, lamp(x[1])]).sort((x, y) => ({ alert: 0, warn: 1 }[x[2]] ?? 2) - ({ alert: 0, warn: 1 }[y[2]] ?? 2)).map(([ref, id, l]) => { const v = valueOf(id);
-          return `<div class="st ${l}"><i>${ICON[l] || "✓"}</i><span>${nameOf(b, ref, id)}</span><b>${v.v}${v.u ? " " + v.u : ""}</b></div>`; }).join("")}${(() => { const okn = ids.filter(x => !["alert", "warn"].includes(lamp(x[1]))); return okn.length ? `<div class="st ok sum"><i>✓</i><span>${okn.length === ids.length ? "Alles in Ordnung" : `${okn.length} weitere`}</span><b>ohne Problem</b></div>` : ""; })()}</div></section>`; }
+          return `<div class="st ${l}"><i>${ICON[l] || "✓"}</i><span>${nameOf(b, ref, id)}</span><b>${v.v}${v.u ? " " + v.u : ""}</b></div>`; }).join("")}${(() => { const okn = ids.filter(x => !["alert", "warn"].includes(lamp(x[1]))); return okn.length ? `<div class="st ok sum"><i>✓</i><span>${okn.length === ids.length ? TR("all_good") : TR("n_more", okn.length)}</span><b>${TR("no_problem")}</b></div>` : ""; })()}</div></section>`; }
       return `<section class="card mod chipsm">${b.label ? `<h2>${b.label}</h2>` : ""}<div class="chs">${ids.map(x => [...x, { alert: 0, warn: 1 }[lamp(x[1])] ?? 2]).sort((x, y) => x[2] - y[2]).map(([ref, id]) => { const v = valueOf(id); return `<span class="ch ${lamp(id)}"><i></i>${nameOf(b, ref, id)}<b>${v.v}${v.u ? " " + v.u : ""}</b></span>`; }).join("")}</div></section>`; },
     switch: (d, b) => { const ids = (b.items || []).map(ref => [ref, entOf(ref, d.R)]).filter(x => x[1] && st(x[1])); if (!ids.length) return "";
       return `<section class="card mod swm">${b.label ? `<h2>${b.label}</h2>` : ""}${ids.map(([ref, id]) => { const on = ["on", "open", "playing", "home"].includes(st(id).state);
@@ -1387,12 +1389,12 @@ function createApp(ROOT, WRAP) {
       return `<section class="card mod camm"><img src="${pic}${pic.includes("?") ? "&" : "?"}t=${Math.floor(Date.now() / 10000)}" alt="${o.label}" loading="lazy"><span class="camn">${o.label}</span></section>`; },
     heading: (d, b) => (b.label || b.text) && `<section class="card mod headm"><b>${b.label || ""}</b>${b.text ? `<span>${b.text}</span>` : ""}</section>`,
     clock: () => { const n = new Date(); return `<section class="card mod clockm"><b class="clk">${n.toLocaleTimeString(rdLoc(), { hour: "2-digit", minute: "2-digit" })}</b><span class="clkd">${n.toLocaleDateString(rdLoc(), { weekday: "long", day: "numeric", month: "long" })}</span></section>`; },
-    note: (d, b) => d.slots ? slotsCard(d) : (b.text || d.passive) && `<section class="card"><p class="note" style="margin:0">${b.text || "Passives Element ohne Sensoren. Im Editor der Integration lässt sich hier eine Belegung oder Notiz hinterlegen."}</p></section>`,
+    note: (d, b) => d.slots ? slotsCard(d) : (b.text || d.passive) && `<section class="card"><p class="note" style="margin:0">${b.text || TR("passive_element_without_sensors_assignments_or")}</p></section>`,
   };
   // Community-Module (modules/<typ>/render.js): bekommen nur ctx mit fertig aufbereiteten Werten und liefern HTML
   for (const [type, mod] of Object.entries(RD_MODULES)) {
     const render = mod.render, tr = s => rdIsDe() ? (mod.de?.[s] ?? s) : s;   // Module schreiben Englisch, „de“ übersetzt
-    const meta = RD_CATALOG.blocks[type] || {};
+    const meta = rdCatalog().blocks[type] || {};
     BLOCK_RENDER[type] = (d, b) => {
       const items = (b.items || (b.source ? [b.source] : [])).map(ref => [ref, entOf(ref, d.R)]).filter(x => x[1] && st(x[1])).map(([ref, id]) => { const s = st(id), v = valueOf(id);
         return { id, name: nameOf(b, ref, id), state: s.state, value: v.v, unit: v.u, number: v.n ?? null, status: lamp(id), available: ok(s), attributes: { ...s.attributes } }; });
@@ -1400,7 +1402,7 @@ function createApp(ROOT, WRAP) {
       const opt = k => b[k] ?? (meta.options || []).find(o => o.key === k)?.default;
       const ctx = { device: unescDeep({ id: d.id, name: d.name, model: d.model, state: d.state, off: !!d.off }), items: unescDeep(items), option: k => unescDeep(opt(k)), fmt, esc: escH, t: tr, lang: () => RD_LANG };
       let html = "";
-      try { html = render(ctx, unescDeep(b)) || ""; } catch (err) { console.warn(`Rack Display: Modul ${type}:`, err); html = `<p class="note">${rdIsDe() ? "Fehler im Modul" : "Module error"} ${escH(type)}</p>`; }
+      try { html = render(ctx, unescDeep(b)) || ""; } catch (err) { console.warn(`Rack Display: Modul ${type}:`, err); html = `<p class="note">${TR("module_error")} ${escH(type)}</p>`; }
       return html && `<section class="card mod mod-${type}">${b.label !== "" ? `<h2>${b.label || escH(meta.name || type)}</h2>` : ""}${html}</section>`;
     };
   }
@@ -1417,8 +1419,8 @@ function createApp(ROOT, WRAP) {
         // Module ohne Daten: im Editor als leeres Feld sichtbar (damit man es anordnen kann), in der Anzeige ausgeblendet
         // Gerät aus: Module ohne erreichbare Werte grau (Platzhalter mit Titel, damit das Layout stehen bleibt)
         const dim = d.off && b.type !== "header" && !blockEnts(d, b).some(id => ok(st(id)));
-        if (!html || (dim && !OFF_SKELETON.includes(b.type))) return dim ? `<section data-bi="${bi}" style="${stl}" class="gcell card offdim offph"><h2>${b.label || RD_CATALOG.blocks[b.type]?.name || b.type}</h2><p class="note">⏻ Aus</p></section>`
-          : EDIT_HOOK ? `<section data-bi="${bi}" style="${stl}" class="gcell card empty-mod"><h2>${RD_CATALOG.blocks[b.type]?.name || b.type}</h2>${rdSkeleton(b.type)}</section>` : "";
+        if (!html || (dim && !OFF_SKELETON.includes(b.type))) return dim ? `<section data-bi="${bi}" style="${stl}" class="gcell card offdim offph"><h2>${b.label || rdCatalog().blocks[b.type]?.name || b.type}</h2><p class="note">${TR("off_2")}</p></section>`
+          : EDIT_HOOK ? `<section data-bi="${bi}" style="${stl}" class="gcell card empty-mod"><h2>${rdCatalog().blocks[b.type]?.name || b.type}</h2>${rdSkeleton(b.type)}</section>` : "";
         return html.replace(/<section class="/, `<section data-bi="${bi}" style="${stl}" class="gcell ${dim ? "offdim " : ""}`);
       }).join("");
       return `<div class="dgrid gm" style="--gc:12;--gr:${G.frows}">${cells}</div>`;
@@ -1427,7 +1429,7 @@ function createApp(ROOT, WRAP) {
     for (const b of d.blocks) {
       if (b.type === "header" || !BLOCK_RENDER[b.type]) continue;
       const html = BLOCK_RENDER[b.type](d, b);
-      if (html) items.push({ html, half: (b.size || RD_CATALOG.blocks[b.type]?.size) === "half" });
+      if (html) items.push({ html, half: (b.size || rdCatalog().blocks[b.type]?.size) === "half" });
     }
     // Halbe Blöcke paarweise nebeneinander; ein halber Block ohne Partner geht über die volle Breite
     const wide = h => h.replace(/class="card(?![^"]*\bwide\b)/, 'class="card wide'), isWide = h => /class="card[^"]*\bwide\b/.test(h), grows = h => /class="card[^"]*\bgrow\b/.test(h);
@@ -1455,15 +1457,15 @@ function createApp(ROOT, WRAP) {
 
   function showDetail(d) {
     if (d.off && d.options?.grid && d.blocks?.length) return renderBlocks(d);
-    if (d.off) return `<div class="dgrid nodata">${headCard(d)}<section class="card wide offc"><span class="offi">⏻</span><b>Ausgeschaltet</b><span>${d.offSince ? `seit ${new Date(d.offSince).toLocaleString(rdLoc(), { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}.` : "Das Gerät läuft nicht dauerhaft."} Sobald es eingeschaltet wird, erscheinen die Werte hier automatisch.</span>${d.options?.power_on && st(d.options.power_on) ? (() => { const arm = ARMED?.id === d.options.power_on && Date.now() - ARMED.t < 4000;
-      return `<button class="actb pwron ${arm ? "armed" : ""}" data-press="${d.options.power_on}" data-confirm="Nochmal tippen zum Einschalten">${arm ? "Nochmal tippen zum Einschalten" : "⏻ Einschalten"}</button>`; })() : ""}</section></div>`;
+    if (d.off) return `<div class="dgrid nodata">${headCard(d)}<section class="card wide offc"><span class="offi">⏻</span><b>${TR("switched_off")}</b><span>${d.offSince ? TR("since_n", `${new Date(d.offSince).toLocaleString(rdLoc(), { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}.`) : TR("the_device_does_not_run_permanently")} ${TR("values_appear_here_automatically_once_it_is")}</span>${d.options?.power_on && st(d.options.power_on) ? (() => { const arm = ARMED?.id === d.options.power_on && Date.now() - ARMED.t < 4000;
+      return `<button class="actb pwron ${arm ? "armed" : ""}" data-press="${d.options.power_on}" data-confirm="${TR("tap_again_to_power_on")}">${arm ? TR("tap_again_to_power_on") : TR("power_on")}</button>`; })() : ""}</section></div>`;
     if (!d.noData) return renderBlocks(d);
     const mm = members(d.id), lo = Math.min(...mm.map(x => x.u)), hi = Math.max(...mm.map(x => x.u + x.h - 1));
     return `<div class="dgrid nodata"><section class="card wide"><div class="dhero">
-      <div class="top"><div style="min-width:0"><h1 style="font:700 24px/1.1 var(--font-display);margin:0 0 4px">${d.name}</h1><div class="sub" style="color:var(--label-2);font-size:13px">${d.model} · HE ${lo}${hi > lo ? "–" + hi : ""}</div></div>
-        <span class="chip warn"><i></i>Keine Daten</span></div>
+      <div class="top"><div style="min-width:0"><h1 style="font:700 24px/1.1 var(--font-display);margin:0 0 4px">${d.name}</h1><div class="sub" style="color:var(--label-2);font-size:13px">${d.model} · ${TR("u_n", `${lo}${hi > lo ? "–" + hi : ""}`)}</div></div>
+        <span class="chip warn"><i></i>${TR("no_data")}</span></div>
       ${headThumb(d)}
-      <p class="note" style="margin:6px 0 0">Mit diesem Gerät ist noch kein Home-Assistant-Gerät verknüpft. Sobald es eine Integration gibt (z. B. Unraid), lässt es sich im Editor verknüpfen; Temperaturen, Auslastung und Festplatten erscheinen dann hier.</p>
+      <p class="note" style="margin:6px 0 0">${TR("no_ha_device_linked")}</p>
     </div></section></div>`;
   }
 
@@ -1471,7 +1473,7 @@ function createApp(ROOT, WRAP) {
   function heatPaint() {
     const temps = DEVICES.filter(d => d.temp != null), can = !!RACK.heatmap && temps.length >= 2, seg = ROOT.querySelector(".rack-meta .seg");
     let btn = $("sideHeat");
-    if (can && !btn && seg) { seg.insertAdjacentHTML("beforeend", `<button id="sideHeat" aria-pressed="false">Wärme</button>`); btn = $("sideHeat"); }
+    if (can && !btn && seg) { seg.insertAdjacentHTML("beforeend", `<button id="sideHeat" aria-pressed="false">${TR("heat")}</button>`); btn = $("sideHeat"); }
     if (!can) { btn?.remove(); if (S.heat) { S.heat = false; } }
     const rack = $("rack"); rack?.classList.toggle("heat", !!S.heat);
     btn?.setAttribute("aria-pressed", String(!!S.heat));
@@ -1585,8 +1587,11 @@ function createApp(ROOT, WRAP) {
     seen = [];
   }
   let lastRender = 0, pending = null;
+  // Sprachwechsel (HA-Benutzer oder Rack → Anzeige → Sprache): feste Texte und Anzeige neu zeichnen
+  rdFill(ROOT);
+  const offLang = rdOnLang(() => { if (DEAD) return; rdFill(ROOT); if (RAW) { buildModel(RAW); render(true); } });
   return {
-    setRack(rack) { RAW = escDeep(rack); rack = RAW; rdForceLang(rack?.display?.lang); setTimeout(nightCheck, 0); HIST.want.clear(); DISC.clear(); buildModel(rack); computeWatch(); render(true); loadHistory(true); loadEvents(); },
+    setRack(rack) { rdForceLang(rack?.display?.lang); RAW = escDeep(rack); rack = RAW; setTimeout(nightCheck, 0); HIST.want.clear(); DISC.clear(); buildModel(rack); computeWatch(); render(true); loadHistory(true); loadEvents(); },
     setHass(h) {
       HASS = h; rdSetLang(h);
       if (!RAW) return;
@@ -1612,7 +1617,7 @@ function createApp(ROOT, WRAP) {
       CHARTS.length = start; return true;
     },
     hold(v) { HOLD = !!v; },
-    destroy() { DEAD = true; clearInterval(timer); clearInterval(idleTimer); clearInterval(liveTimer); clearInterval(histTimer); clearTimeout(pending); ro.disconnect(); },
+    destroy() { DEAD = true; offLang(); clearInterval(timer); clearInterval(idleTimer); clearInterval(liveTimer); clearInterval(histTimer); clearTimeout(pending); ro.disconnect(); },
   };
 }
 
@@ -1620,7 +1625,7 @@ function createApp(ROOT, WRAP) {
 // Anzeige-Geometrie: Auflösung + Diagonale → Skalierung (gleiche Schriftgröße in mm wie auf dem 7"-Pi) und Raster der Detailansicht
 const RD_INCH = { "pi-portrait": 7, "pi-landscape": 7, hd: 10.1, "hd-portrait": 10.1, fhd: 23.8, tablet: 9.7, custom: 15.6 };
 function rdGeometry(disp = {}) {
-  const D = RD_CATALOG.displays, p = D.find(x => x.key === (disp.preset || "pi-portrait")) || D[0];
+  const D = rdCatalog().displays, p = D.find(x => x.key === (disp.preset || "pi-portrait")) || D[0];
   if (p.key === "fill") return { fill: true, key: "fill", frows: 14 };
   const w = p.key === "custom" ? Math.max(320, +disp.w || 480) : p.w || 480, h = p.key === "custom" ? Math.max(320, +disp.h || 800) : p.h || 800;
   const inch = +disp.inch || p.inch || RD_INCH[p.key] || 7, dpi = Math.hypot(w, h) / inch;
@@ -1661,7 +1666,7 @@ class RackDisplayElement extends HTMLElement {
   getCardSize() { return 12; }
   set narrow(v) {} set route(v) {} set panel(v) {}
   set hass(h) {
-    this._hass = h;
+    this._hass = h; rdSetLang(h);
     if (!this._started) { this._started = true; this._start(); }
     else if (this._app) this._app.setHass(h);
     if (this._wrap) { this._applyDark(); }
@@ -1701,7 +1706,7 @@ class RackDisplayElement extends HTMLElement {
     if (rack) { this._rackId = rack.id; rdFrame(this._stage, this._wrap, rack, (this._config?.layout === "fill" || this._config?.view === "rack")); this._app.setRack(rack);
       // /rack?sel=<Gerät> öffnet direkt das Popup (z. B. aus einer Rack-Karte im Dashboard)
       const sel = !this._selDone && new URLSearchParams(location.search).get("sel"); this._selDone = true; if (sel) setTimeout(() => this._app?.select(sel), 300); }
-    else this._wrap.innerHTML = `<p style="padding:24px">Noch kein Rack angelegt.${this._hass.user?.is_admin ? ` <a href="/rack-editor" style="color:var(--primary-color)">Rack-Editor öffnen</a>` : ""}</p>`;
+    else this._wrap.innerHTML = `<p style="padding:24px">${TR("no_rack_created_yet")}${this._hass.user?.is_admin ? ` <a href="/rack-editor" style="color:var(--primary-color)">${TR("open_the_rack_editor")}</a>` : ""}</p>`;
   }
   disconnectedCallback() {
     this._app?.destroy(); this._unsub?.(); this._stage?._ro?.disconnect(); clearInterval(this._vt); clearInterval(this._rt);
@@ -1714,10 +1719,8 @@ class RackDisplayCard extends RackDisplayElement {
   static getStubConfig() { return {}; }
   static getConfigForm() {
     // Sprache des HA-Benutzers (das Formular kann erscheinen, bevor eine Karte Daten bekommen hat)
-    const lang = document.querySelector("home-assistant")?.hass?.locale?.language || RD_USER;
-    const de = String(lang).toLowerCase().startsWith("de"), L = de
-      ? { rack_id: "Rack-ID (leer = erstes Rack)", view: "Ansicht", height: "Höhe in Pixel", full: "Rack mit Detailansicht", rack: "Nur Rack mit Status" }
-      : { rack_id: "Rack ID (empty = first rack)", view: "View", height: "Height in pixels", full: "Rack with detail view", rack: "Rack with status only" };
+    rdSetLang(document.querySelector("home-assistant")?.hass || { language: RD_USER });
+    const L = { rack_id: TR("card_rack_id"), view: TR("card_view"), height: TR("card_height"), full: TR("card_view_full"), rack: TR("card_view_rack") };
     return {
       schema: [
         { name: "rack_id", selector: { text: {} } },
@@ -1732,8 +1735,8 @@ if (!customElements.get("rack-display-panel")) customElements.define("rack-displ
 if (!customElements.get("rack-display-card")) customElements.define("rack-display-card", RackDisplayCard);
 window.customCards = window.customCards || [];
 if (!window.customCards.find(c => c.type === "rack-display-card")) {
-  window.customCards.push({ type: "rack-display-card", name: "Rack Display", description: "Server-Rack mit Live-Werten" });
+  window.customCards.push({ type: "rack-display-card", name: "Rack Display", description: "Server rack with live values" });
 }
 
 // Für den Editor: Anzeige-Kern als Vorschau wiederverwenden
-window.__rackDisplay = { rdSkeleton, rdT, rdObserve, rdSetLang, rdForceLang, rdLoc, createApp, RD_HTML, RD_BASE, RD_VERSION, RD_CATALOG, rdNewVersion, rdFrame, rdGeometry };
+window.__rackDisplay = { rdSkeleton, rdT, rdObserve, rdSetLang, rdForceLang, rdLoc, createApp, RD_HTML, RD_BASE, RD_VERSION, get RD_CATALOG() { return rdCatalog(); }, TR, rdOnLang, rdNewVersion, rdFrame, rdGeometry };

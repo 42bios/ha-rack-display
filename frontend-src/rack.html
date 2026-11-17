@@ -26,13 +26,13 @@
       </div>
       <canvas class="wled-glow" id="wledCanvas" aria-hidden="true"></canvas>
       <div class="hits" id="hits"></div>
-      <button class="pdu-hit" id="pduHit" data-id="pdu" aria-label="Stromleiste, Rückseite" hidden></button>
+      <button class="pdu-hit" id="pduHit" data-id="pdu" data-i18n-label="pdu_rear_label" hidden></button>
     </div>
     <div class="rack-meta">
-      <div class="seg" role="group" aria-label="Tür">
-        <button id="doorClosed" aria-pressed="true">Tür zu</button>
-        <button id="doorOpen" aria-pressed="false">Tür offen</button>
-        <button id="sideRear" aria-pressed="false">Rückseite</button>
+      <div class="seg" role="group" data-i18n-label="door">
+        <button id="doorClosed" aria-pressed="true" data-i18n="door_closed"></button>
+        <button id="doorOpen" aria-pressed="false" data-i18n="door_open"></button>
+        <button id="sideRear" aria-pressed="false" data-i18n="rear"></button>
       </div>
     </div>
   </div>

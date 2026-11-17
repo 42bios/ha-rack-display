@@ -1,8 +1,8 @@
 {
   "blocks": {
     "batteries": {
-      "name": "Akkus",
-      "desc": "Akkustände mehrerer Geräte als Liste, schwache zuerst",
+      "name": "Batteries",
+      "desc": "Battery levels of several devices as a list, weakest first",
       "group": "zustand",
       "items": true,
       "size": "half",
@@ -21,29 +21,29 @@
       "options": [
         {
           "key": "warn",
-          "label": "Warnung unter (%)",
+          "label": "Warning below (%)",
           "type": "number",
           "default": 25
         },
         {
           "key": "alert",
-          "label": "Kritisch unter (%)",
+          "label": "Critical below (%)",
           "type": "number",
           "default": 10
         },
         {
           "key": "sort",
-          "label": "Sortierung",
+          "label": "Sort order",
           "type": "select",
           "default": "low",
           "choices": [
             [
               "low",
-              "Schwache zuerst"
+              "Weakest first"
             ],
             [
               "name",
-              "Nach Name"
+              "By name"
             ]
           ]
         }

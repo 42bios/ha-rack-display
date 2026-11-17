@@ -1,10 +1,12 @@
 /* Rack Display – Oberfläche für Panel, Karte und Kiosk.
    Dieser Teil ist neu geschrieben (Daten aus Home Assistant). Die Darstellungsfunktionen
-   (Rack, Fronten, Kacheln, Diagramme) stehen in render.js und werden beim Build eingesetzt: 
+   (Rack, Fronten, Kacheln, Diagramme) stehen in render.js und werden beim Build eingesetzt:
 */
 const RD_BASE = "/rack_display/frontend";
-const RD_VERSION = "1794921387";
-const RD_CATALOG = {"version": 1, "blocks": {"header": {"name": "Kopf", "size": "full", "desc": "Name, Modell, Position, Frontbild, bis zu 4 Kennzahlen", "items": true, "group": "kopf"}, "tiles": {"name": "Aktuelle Werte", "size": "full", "desc": "Kacheln mit den wichtigsten Messwerten", "group": "werte"}, "values": {"name": "Werte", "size": "full", "desc": "Beliebige Entitäten als Kacheln", "items": true, "group": "werte"}, "entity": {"name": "Einzelwert", "size": "half", "desc": "Ein Wert als eigene Kachel – wahlweise mit 24-Std.-Kurve", "items": true, "group": "werte"}, "bars": {"name": "Balken", "size": "half", "desc": "Auslastung als Balken (0–100 % oder eigener Bereich)", "items": true, "group": "werte"}, "status": {"name": "Status", "size": "half", "desc": "Zustände als Liste mit Ampel", "items": true, "group": "zustand"}, "ports": {"name": "Ports", "size": "full", "desc": "Alle Ports mit Geschwindigkeit, PoE und Live-Durchsatz", "group": "netzwerk"}, "poe": {"name": "PoE", "size": "half", "desc": "PoE-Leistung gesamt und je Port", "group": "netzwerk"}, "system": {"name": "System", "size": "half", "desc": "CPU, RAM und Temperatur über 24 Std.", "slots": ["cpu", "ram", "cpu_temp"], "group": "system"}, "internet": {"name": "Internet", "size": "half", "desc": "Download und Upload über 24 Std.", "slots": ["wan_down", "wan_up"], "group": "netzwerk"}, "flow": {"name": "Energiefluss", "size": "full", "desc": "Online-USV: Netz, Akku, Last", "group": "strom"}, "voltage": {"name": "Spannung", "size": "half", "desc": "Ein- und Ausgangsspannung über 24 Std.", "slots": ["input_voltage", "output_voltage"], "group": "strom"}, "chart": {"name": "Verlauf", "size": "half", "desc": "Ein bis drei Messwerte über 24 Std.", "slots": ["source"], "items": true, "group": "diagramme"}, "outlets": {"name": "Ausgänge", "size": "full", "desc": "Ausgänge einer Stromleiste mit Belegung", "group": "strom"}, "disks": {"name": "Festplatten", "size": "full", "desc": "Schächte, Zustand und Belegung", "group": "speicher"}, "recording": {"name": "Aufnahme", "size": "half", "desc": "Speicherdauer, Aufnahmearten, Kameras", "group": "speicher"}, "messages": {"name": "Meldungen", "size": "full", "desc": "Störungen, Hinweise und Infos des Geräts", "group": "sonstiges"}, "note": {"name": "Notiz", "size": "full", "desc": "Freier Text, z. B. Belegung eines Patchfelds", "group": "sonstiges"}, "gauge": {"name": "Tacho", "size": "half", "desc": "Ein Wert als Halbkreis-Anzeige mit Min/Max und Warnfarben", "items": true, "group": "werte"}, "ring": {"name": "Ring", "size": "half", "desc": "Ein Wert als Ring (z. B. Auslastung in %)", "items": true, "group": "werte"}, "stat": {"name": "Kennzahl", "size": "half", "desc": "Große Zahl mit Veränderung gegenüber gestern", "items": true, "group": "werte"}, "progress": {"name": "Fortschritt", "size": "half", "desc": "Ein Wert als Balken mit Min/Max", "items": true, "group": "werte"}, "histogram": {"name": "Balkendiagramm", "size": "half", "desc": "Stundenwerte der letzten 24 Std. als Balken", "items": true, "group": "diagramme"}, "chips": {"name": "Status-Chips", "size": "full", "desc": "Mehrere Zustände kompakt als Chips mit Ampel", "items": true, "group": "zustand"}, "switch": {"name": "Schalter", "size": "half", "desc": "Schalter, Lichter, Lüfter direkt bedienen", "items": true, "group": "steuerung"}, "button": {"name": "Aktionen", "size": "half", "desc": "Skripte, Szenen und Tasten auslösen", "items": true, "group": "steuerung"}, "camera": {"name": "Kamera", "size": "half", "desc": "Standbild einer Kamera (aktualisiert sich laufend)", "items": true, "group": "speicher"}, "heading": {"name": "Überschrift", "size": "full", "desc": "Titel mit Untertitel zum Gliedern", "group": "sonstiges"}, "clock": {"name": "Uhr", "size": "half", "desc": "Uhrzeit und Datum", "group": "sonstiges"}, "ov_power": {"name": "Strom (Übersicht)", "size": "full", "desc": "Leistung des Racks, USV-Akku, Verbraucher und 24-Std.-Verlauf", "group": "uebersicht"}, "ov_temp": {"name": "Temperatur (Übersicht)", "size": "full", "desc": "Wärmstes Gerät und Temperaturen aller Geräte", "group": "uebersicht"}, "ov_hints": {"name": "Hinweise (Übersicht)", "size": "full", "desc": "Warnungen und Störungen aller Geräte", "group": "uebersicht"}, "ov_stats": {"name": "Kennzahlen-Leiste", "size": "full", "desc": "Internet, PoE, Stromleiste, USV auf einen Blick", "group": "uebersicht"}, "bays": {"name": "Laufwerksschächte", "size": "full", "desc": "Schächte mit Parität, Daten und Cache, Temperatur, Belegung und Ruhezustand", "items": true, "group": "speicher"}, "array": {"name": "Array", "size": "half", "desc": "Belegung, Zustand, Cache-Pools und Parität eines Arrays", "items": true, "group": "speicher"}, "batteries": {"name": "Akkus", "desc": "Akkustände mehrerer Geräte als Liste, schwache zuerst", "group": "zustand", "items": true, "size": "half", "layout": {"w": 6, "h": 3}, "min_layout": {"w": 3, "h": 2}, "suggest": {"domain": "sensor", "device_class": "battery"}, "options": [{"key": "warn", "label": "Warnung unter (%)", "type": "number", "default": 25}, {"key": "alert", "label": "Kritisch unter (%)", "type": "number", "default": 10}, {"key": "sort", "label": "Sortierung", "type": "select", "default": "low", "choices": [["low", "Schwache zuerst"], ["name", "Nach Name"]]}], "author": "@42bios", "community": true}}, "templates": {"gw": ["header", "ports", "internet", "system", "messages"], "switch": ["header", "ports", "poe", "system", "messages"], "sfp": ["header", "ports", "poe", "system", "messages"], "nvr": ["header", "disks", "recording", "system", "messages"], "fanpanel": ["header", "tiles", "system", "messages"], "server": ["header", "tiles", "system", "messages"], "ups": ["header", "flow", {"type": "chart", "source": "load", "label": "Last"}, "voltage", "messages"], "pdu": ["header", "outlets", {"type": "chart", "source": "power", "label": "Gesamtleistung"}, {"type": "chart", "source": "current", "label": "Strom", "color": "--teal", "dec": 1, "warn": 13}, "messages"], "generic": ["header", "tiles", "messages"], "passive": ["header", "note"]}, "passive_templates": ["patch", "ks", "lwl", "cm", "bl", "blank", "frame"], "displays": [{"key": "pi-portrait", "name": "7\" Pi-Display hochkant", "w": 480, "h": 800, "inch": 7}, {"key": "pi-landscape", "name": "7\" Pi-Display quer", "w": 800, "h": 480, "inch": 7}, {"key": "hd", "name": "HD 1280 × 720", "w": 1280, "h": 720, "inch": 10.1}, {"key": "hd-portrait", "name": "HD hochkant 720 × 1280", "w": 720, "h": 1280, "inch": 10.1}, {"key": "fhd", "name": "Full HD 1920 × 1080", "w": 1920, "h": 1080, "inch": 23.8}, {"key": "tablet", "name": "Tablet 1024 × 768", "w": 1024, "h": 768, "inch": 9.7}, {"key": "custom", "name": "Eigene Größe"}, {"key": "fill", "name": "Nur Dashboard – ganze Fläche nutzen"}], "groups": {"uebersicht": "Übersicht", "kopf": "Kopf", "werte": "Werte & Anzeigen", "diagramme": "Diagramme", "zustand": "Zustand", "steuerung": "Steuerung", "netzwerk": "Netzwerk", "system": "System", "strom": "Strom & USV", "speicher": "Speicher & Video", "sonstiges": "Text & Sonstiges"}};
+const RD_VERSION = "1794923008";
+// Katalog aus blocks.json; Texte sind beim Build markiert und werden je Sprache aufgelöst (rdCatalog())
+const RD_CATALOG_RAW = {"version": 1, "blocks": {"header": {"name": "\u0001header", "size": "full", "desc": "\u0001name_model_position_front_image_up_to_4_key", "items": true, "group": "kopf"}, "tiles": {"name": "\u0001current_values", "size": "full", "desc": "\u0001tiles_with_the_key_measurements", "group": "werte"}, "values": {"name": "\u0001values", "size": "full", "desc": "\u0001any_entities_as_tiles", "items": true, "group": "werte"}, "entity": {"name": "\u0001single_value", "size": "half", "desc": "\u0001one_value_as_its_own_tile_optionally_with_a_24", "items": true, "group": "werte"}, "bars": {"name": "\u0001bars", "size": "half", "desc": "\u0001load_as_bars_0100_or_custom_range", "items": true, "group": "werte"}, "status": {"name": "Status", "size": "half", "desc": "\u0001states_as_a_list_with_traffic_lights", "items": true, "group": "zustand"}, "ports": {"name": "Ports", "size": "full", "desc": "\u0001all_ports_with_speed_poe_and_live_throughput", "group": "netzwerk"}, "poe": {"name": "PoE", "size": "half", "desc": "\u0001poe_power_in_total_and_per_port", "group": "netzwerk"}, "system": {"name": "System", "size": "half", "desc": "\u0001cpu_ram_and_temperature_over_24_h", "slots": ["cpu", "ram", "cpu_temp"], "group": "system"}, "internet": {"name": "Internet", "size": "half", "desc": "\u0001download_and_upload_over_24_h", "slots": ["wan_down", "wan_up"], "group": "netzwerk"}, "flow": {"name": "\u0001energy_flow", "size": "full", "desc": "\u0001online_ups_mains_battery_load", "group": "strom"}, "voltage": {"name": "\u0001voltage", "size": "half", "desc": "\u0001input_and_output_voltage_over_24_h", "slots": ["input_voltage", "output_voltage"], "group": "strom"}, "chart": {"name": "\u0001history_2", "size": "half", "desc": "\u0001one_to_three_measurements_over_24_h", "slots": ["source"], "items": true, "group": "diagramme"}, "outlets": {"name": "\u0001outlets", "size": "full", "desc": "\u0001outlets_of_a_pdu_with_assignments", "group": "strom"}, "disks": {"name": "\u0001disks", "size": "full", "desc": "\u0001bays_state_and_usage", "group": "speicher"}, "recording": {"name": "\u0001recording_2", "size": "half", "desc": "\u0001retention_recording_types_cameras", "group": "speicher"}, "messages": {"name": "\u0001messages", "size": "full", "desc": "\u0001faults_notices_and_info_of_the_device", "group": "sonstiges"}, "note": {"name": "\u0001note", "size": "full", "desc": "\u0001free_text_e_g_patch_panel_assignments", "group": "sonstiges"}, "gauge": {"name": "\u0001gauge", "size": "half", "desc": "\u0001one_value_as_a_semicircle_gauge_with_min_max", "items": true, "group": "werte"}, "ring": {"name": "Ring", "size": "half", "desc": "\u0001one_value_as_a_ring_e_g_load_in", "items": true, "group": "werte"}, "stat": {"name": "\u0001key_figure_2", "size": "half", "desc": "\u0001big_number_with_change_vs_yesterday", "items": true, "group": "werte"}, "progress": {"name": "\u0001progress", "size": "half", "desc": "\u0001one_value_as_a_bar_with_min_max", "items": true, "group": "werte"}, "histogram": {"name": "\u0001bar_chart", "size": "half", "desc": "\u0001hourly_values_of_the_last_24_h_as_bars", "items": true, "group": "diagramme"}, "chips": {"name": "\u0001status_chips", "size": "full", "desc": "\u0001several_states_as_compact_chips_with_traffic", "items": true, "group": "zustand"}, "switch": {"name": "\u0001switches_2", "size": "half", "desc": "\u0001control_switches_lights_and_fans_directly", "items": true, "group": "steuerung"}, "button": {"name": "\u0001actions", "size": "half", "desc": "\u0001run_scripts_scenes_and_buttons", "items": true, "group": "steuerung"}, "camera": {"name": "\u0001camera", "size": "half", "desc": "\u0001camera_still_image_refreshes_continuously", "items": true, "group": "speicher"}, "heading": {"name": "\u0001heading", "size": "full", "desc": "\u0001title_with_subtitle_for_structure", "group": "sonstiges"}, "clock": {"name": "\u0001clock", "size": "half", "desc": "\u0001time_and_date", "group": "sonstiges"}, "ov_power": {"name": "\u0001power_overview", "size": "full", "desc": "\u0001rack_power_ups_battery_consumers_and_24_h", "group": "uebersicht"}, "ov_temp": {"name": "\u0001temperature_overview", "size": "full", "desc": "\u0001warmest_device_and_temperatures_of_all_devices", "group": "uebersicht"}, "ov_hints": {"name": "\u0001notices_overview", "size": "full", "desc": "\u0001warnings_and_faults_of_all_devices", "group": "uebersicht"}, "ov_stats": {"name": "\u0001key_figure_bar", "size": "full", "desc": "\u0001internet_poe_pdu_ups_at_a_glance", "group": "uebersicht"}, "bays": {"name": "\u0001drive_bays", "size": "full", "desc": "\u0001bays_with_parity_data_and_cache_temperature", "items": true, "group": "speicher"}, "array": {"name": "Array", "size": "half", "desc": "\u0001usage_state_cache_pools_and_parity_of_an_array", "items": true, "group": "speicher"}, "batteries": {"name": "\u0001mod.batteries.0", "desc": "\u0001mod.batteries.1", "group": "zustand", "items": true, "size": "half", "layout": {"w": 6, "h": 3}, "min_layout": {"w": 3, "h": 2}, "suggest": {"domain": "sensor", "device_class": "battery"}, "options": [{"key": "warn", "label": "\u0001mod.batteries.2", "type": "number", "default": 25}, {"key": "alert", "label": "\u0001mod.batteries.3", "type": "number", "default": 10}, {"key": "sort", "label": "\u0001mod.batteries.4", "type": "select", "default": "low", "choices": [["low", "\u0001mod.batteries.5"], ["name", "\u0001mod.batteries.6"]]}], "author": "@42bios", "community": true}}, "templates": {"gw": ["header", "ports", "internet", "system", "messages"], "switch": ["header", "ports", "poe", "system", "messages"], "sfp": ["header", "ports", "poe", "system", "messages"], "nvr": ["header", "disks", "recording", "system", "messages"], "fanpanel": ["header", "tiles", "system", "messages"], "server": ["header", "tiles", "system", "messages"], "ups": ["header", "flow", {"type": "chart", "source": "load", "label": "\u0001load_2"}, "voltage", "messages"], "pdu": ["header", "outlets", {"type": "chart", "source": "power", "label": "\u0001total_power"}, {"type": "chart", "source": "current", "label": "\u0001power", "color": "--teal", "dec": 1, "warn": 13}, "messages"], "generic": ["header", "tiles", "messages"], "passive": ["header", "note"]}, "passive_templates": ["patch", "ks", "lwl", "cm", "bl", "blank", "frame"], "displays": [{"key": "pi-portrait", "name": "\u00017_pi_display_portrait", "w": 480, "h": 800, "inch": 7}, {"key": "pi-landscape", "name": "\u00017_pi_display_landscape", "w": 800, "h": 480, "inch": 7}, {"key": "hd", "name": "HD 1280 × 720", "w": 1280, "h": 720, "inch": 10.1}, {"key": "hd-portrait", "name": "\u0001hd_portrait_720_1280", "w": 720, "h": 1280, "inch": 10.1}, {"key": "fhd", "name": "Full HD 1920 × 1080", "w": 1920, "h": 1080, "inch": 23.8}, {"key": "tablet", "name": "Tablet 1024 × 768", "w": 1024, "h": 768, "inch": 9.7}, {"key": "custom", "name": "\u0001custom_size"}, {"key": "fill", "name": "\u0001dashboard_only_use_the_whole_area"}], "groups": {"uebersicht": "\u0001overview", "kopf": "\u0001header", "werte": "\u0001values_gauges", "diagramme": "\u0001charts", "zustand": "\u0001state", "steuerung": "\u0001controls", "netzwerk": "\u0001network", "system": "System", "strom": "\u0001power_ups", "speicher": "\u0001storage_video", "sonstiges": "\u0001text_other"}};
+const rdCatalog = rdPerLang(() => rdResolve(RD_CATALOG_RAW));
 // Community-Module: werden beim Bauen aus modules/<typ>/render.js eingesetzt
 const RD_MODULES = {};
 RD_MODULES["batteries"] = { de: {"Batteries": "Akkus", "Battery levels of several devices as a list, weakest first": "Akkustände mehrerer Geräte als Liste, schwache zuerst", "Warning below (%)": "Warnung unter (%)", "Critical below (%)": "Kritisch unter (%)", "Sort order": "Sortierung", "Weakest first": "Schwache zuerst", "By name": "Nach Name"}, render: (() => {
@@ -25,15 +27,60 @@ function render(ctx, block) {
 return render;
 })() };
 /* ---------- Sprache ----------
-   Deutsch ist die Quellsprache der Oberfläche. Für andere Sprachen übersetzt ein Beobachter jeden neu
-   gezeichneten Text (und title/aria-label/placeholder) über ein Wörterbuch; Texte mit Zahlen über Muster.
-   Fehlende Einträge bleiben deutsch. Bei Deutsch läuft nichts davon (keine Kosten auf dem Pi). */
-let RD_LANG = "de";
-const rdIsDe = () => RD_LANG.startsWith("de");
-const rdLoc = () => rdIsDe() ? "de-DE" : RD_LANG.startsWith("en") ? "en-GB" : RD_LANG;
+   Alle Texte der Oberfläche stehen unter Schlüsseln in i18n/<sprache>.json (Englisch ist die Quellsprache).
+   TR("schluessel", wert0, wert1 …) liefert den Text der aktuellen Sprache und setzt die Werte für {0}, {1} … ein;
+   fehlt ein Schlüssel in einer Sprache, gilt der englische Text. Eine weitere Sprache ist eine weitere Datei. */
+const RD_TEXT = {"de": {"door_closed": "Tür zu", "door_open": "Tür offen", "rear": "Rückseite", "door": "Tür", "server_rack": "Serverrack", "back_to_overview": "Zurück zur Übersicht", "back": "Zurück", "power": "Strom", "today": "heute", "battery": "Akku", "on_mains": "Netzbetrieb", "power_24_h": "Leistung 24 Std.", "temperature": "Temperatur", "warmest_device": "wärmstes Gerät", "warmest_device_2": "Wärmstes Gerät", "device_temperatures_no_rack_sensors": "Gerätetemperaturen · keine Rack-Sensoren", "device_temperatures": "Gerätetemperaturen", "device": "Gerät", "notices": "Hinweise", "notice": "Hinweis", "1_notice": "1 Hinweis", "no_data": "Keine Daten", "no_values": "Keine Werte", "no_home_assistant_device_linked_yet": "Noch kein Home-Assistant-Gerät verknüpft", "latency": "Antwortzeit", "pdu": "Stromleiste", "ups": "USV", "now": "jetzt", "too_hot": "Zu heiß", "ok": "In Ordnung", "fault": "Störung", "faults": "Störungen", "1_fault": "1 Störung", "warning": "Warnung", "passive": "Passiv", "off": "Aus", "running": "Läuft", "running_2": "läuft", "stopped": "Gestoppt", "inactive": "Inaktiv", "active": "Aktiv", "active_2": "aktiv", "switched_off": "Ausgeschaltet", "off_since": "Aus seit", "state": "Zustand", "no_problem": "ohne Problem", "all_good": "Alles in Ordnung", "reports_a_problem": "meldet ein Problem", "all_sensors_are_unavailable": "Alle Sensoren sind nicht verfügbar", "no_rack_created_yet": "Noch kein Rack angelegt.", "open_the_rack_editor": "Rack-Editor öffnen", "the_device_does_not_run_permanently": "Das Gerät läuft nicht dauerhaft.", "values_appear_here_automatically_once_it_is": "Sobald es eingeschaltet wird, erscheinen die Werte hier automatisch.", "the_device_does_not_run_permanently_values": "Das Gerät läuft nicht dauerhaft. Sobald es eingeschaltet wird, erscheinen die Werte hier automatisch.", "power_on": "⏻ Einschalten", "tap_again": "Nochmal tippen", "tap_again_to_power_on": "Nochmal tippen zum Einschalten", "off_2": "⏻ Aus", "server_off": "Server aus", "usage_cache_and_parity_appear_after_power_on": "Belegung, Cache und Parität erscheinen nach dem Einschalten.", "passive_element_without_sensors_assignments_or": "Passives Element ohne Sensoren. Im Editor der Integration lässt sich hier eine Belegung oder Notiz hinterlegen.", "history_2": "Verlauf", "messages": "Meldungen", "load": "Auslastung", "processor": "Prozessor", "memory": "Arbeitsspeicher", "cpu_temp": "CPU-Temp.", "temperatures": "Temperaturen", "temperature_history": "Temperaturverlauf", "storage": "Speicher", "network": "Netzwerk", "throughput": "Durchsatz", "active_ports": "Aktive Ports", "bundle": "Bündel", "connected_to": "Verbunden mit", "not_connected": "Nicht verbunden", "connected": "verbunden", "free": "frei", "free_2": "Frei", "used": "belegt", "used_2": "Belegt", "empty": "leer", "total": "Gesamt", "available": "Verfügbar", "unavailable": "Nicht verfügbar", "unknown": "Unbekannt", "on": "An", "home": "Zuhause", "away": "Abwesend", "open": "Offen", "closed": "Geschlossen", "connected_2": "Verbunden", "disconnected": "Getrennt", "ready": "Bereit", "recording": "Nimmt auf", "streaming": "Streamt", "playing": "Spielt", "paused": "Pausiert", "started": "Gestartet", "disks_missing": "Platten fehlen", "invalid_expansion": "Ungültige Erweiterung", "parity_check": "Paritätsprüfung", "rebuilding": "Wird neu aufgebaut", "maintenance": "Wartung", "safe": "Sicher", "unsafe": "Unsicher", "new_unassigned": "Neu, nicht zugewiesen", "missing": "Fehlt", "disabled": "Deaktiviert", "invalid": "Ungültig", "wrong_disk": "Falsche Platte", "emulated": "Emuliert", "completed": "abgeschlossen", "cancelled": "abgebrochen", "paused_2": "pausiert", "failed": "fehlgeschlagen", "never_run": "nie ausgeführt", "bays": "Schächte", "internal": "Intern", "parity": "Parität", "data": "Daten", "faded_spun_down": "blass = schläft", "spun_down": "schläft", "array_stopped": "Array gestoppt", "no_usage": "Keine Belegung", "the_sensor_does_not_report_sizes_yet": "Der Sensor liefert noch keine Größen.", "disks_missing_disks_and_shares_are_available": "Platten fehlen. Platten und Freigaben sind erst nach dem Start verfügbar.", "missing_disks": "Fehlende Platten", "invalid_disks": "Ungültige Platten", "disabled_disks": "Deaktivierte Platten", "configuration": "Konfiguration", "peripheral": "Peripherie", "fans_in_rpm": "Lüfter in U/min", "fans": "Lüfter", "rpm": "U/min", "recording_2": "Aufnahme", "continuous": "Dauer", "motion": "Bewegung", "detections": "Erkennungen", "detections_today": "Erkennungen heute", "timelapse": "Zeitraffer", "cameras": "Kameras", "camera": "Kamera", "camera_offline": "Kamera offline", "disks": "Festplatten", "drive": "Laufwerk", "satisfaction": "Zufriedenheit", "guests": "Gäste", "top_client": "Top-Client", "wi_fi_channel_utilisation": "WLAN-Kanalauslastung", "connection": "Anbindung", "interfaces": "Schnittstellen", "containers": "Container", "slots": "Steckplätze", "installed": "Eingebaut", "runtime": "Reserve", "load_2": "Last", "input": "Eingang", "output": "Ausgang", "voltage": "Spannung", "rectifier": "Gleichrichter", "inverter": "Wechselrichter", "bypass_active": "Bypass aktiv", "online_ups": "Online-USV", "mains": "Netz", "mains_2": "Netz ↓", "mains_off": "Netz aus", "protection": "Schutz", "self_test": "Selbsttest", "self_test_passed": "Selbsttest bestanden", "passed": "bestanden", "fully_functional": "Voll funktionsfähig", "battery_charging": "Akku wird geladen", "charging": "lädt", "discharging": "entlädt", "load_runs_directly_on_mains": "Last hängt direkt am Netz", "mains_failed_load_runs_on_battery": "Netz ausgefallen, Last läuft aus dem Akku", "mains_failed_the_load_runs_on_battery": "Netz ausgefallen: Die Last läuft aus dem Akku.", "power_always_flows_through_battery_and_inverter": "Der Strom läuft immer über Akku und Wechselrichter. Fällt das Netz aus, gibt es keine Umschaltzeit.", "everything_powered": "Alles versorgt", "outlets": "Ausgänge", "current": "Aktuell", "current_values": "Aktuelle Werte", "peak": "Spitze", "month": "Monat", "last_hour": "letzte Stunde", "restarted": "Neu gestartet", "unreachable": "Nicht erreichbar", "device_is_not_on_the_network": "Gerät ist nicht im Netzwerk", "installing_firmware": "Firmware wird installiert", "firmware_update_available": "Firmware-Update verfügbar", "setting_up": "Wird eingerichtet", "adopting": "Wird übernommen", "overheating_reported": "Überhitzung gemeldet", "overheating": "Überhitzung", "the_pdu_currently_does_not_report_the_switching": "Schaltzustand wird von der Stromleiste derzeit nicht korrekt gemeldet.", "rack_thermal_sensor": "Rack-Thermosensor", "days": "Tage", "day": "Tag", "h": "Std.", "24_h": "24 Std.", "other": "Übrige", "vs_yesterday": "ggü. gestern", "overview": "Übersicht", "retention": "Speicherdauer", "no_temperature_values_available": "Keine Temperaturwerte vorhanden.", "rear_0_u": "Rückseite (0 HE)", "on_2": "Ein", "high_temperature": "Hohe Temperatur", "rack_editor": "Rack-Editor", "loading": "Wird geladen …", "choose_rack": "Rack wählen", "edit_device": "Gerät bearbeiten", "choose_device": "Gerät wählen …", "overview_home_page": "▦ Übersicht (Startseite)", "new_version_reload": "Neue Version · neu laden", "the_editor_was_updated": "Der Editor wurde aktualisiert", "undo_z": "Rückgängig (⌘Z)", "redo_z": "Wiederholen (⇧⌘Z)", "undo": "Rückgängig", "unsaved_changes": "Ungespeicherte Änderungen", "saved": "Gespeichert", "discard": "Verwerfen", "save": "Speichern", "up_one_level_esc": "Eine Ebene zurück (Esc)", "devices": "Geräte", "home_page_next_to_the_rack": "Startseite neben dem Rack", "passive_elements": "Passive Elemente", "tap_to_edit_in_the_rack_on_the_right_drag_to": "Antippen zum Bearbeiten. Im Rack rechts: ziehen zum Verschieben, ＋ zum Einsetzen.", "rack_units": "Höheneinheiten", "ups_capacity_w": "USV-Kapazität (W)", "door_labels": "Tür & Beschriftung", "badge": "Schild", "e_g_company_name": "z. B. Firmenname", "type_plate": "Typenschild", "top_label": "Beschriftung oben", "bottom_label": "Beschriftung unten", "appearance": "Aussehen", "cabinet_colour": "Gehäusefarbe", "light_grey_default": "Hellgrau (Standard)", "white": "Weiß", "graphite": "Graphit", "black": "Schwarz", "custom_colour": "Eigene Farbe …", "custom_colour_2": "Eigene Farbe", "perforated": "Lochgitter", "glass": "Glas", "solid": "Blech", "no_door": "Ohne Tür", "label_colour": "Farbe Beschriftung", "display": "Anzeige", "show_on": "Darstellen auf", "back_to_overview_after": "Zurück zur Übersicht nach", "never": "nie", "after_30_seconds": "nach 30 Sekunden", "after_1_minute": "nach 1 Minute", "after_2_minutes": "nach 2 Minuten", "after_5_minutes": "nach 5 Minuten", "width_px": "Breite (px)", "height_px": "Höhe (px)", "diagonal_inch": "Diagonale (Zoll)", "scaling": "Skalierung", "cells": "Felder", "the_view_is_built_for_this_area_and_scaled": "Die Ansicht wird für diese Fläche gebaut und überall (Seite „Rack“, Karten, Pi) passend skaliert. „Nur Dashboard“ nutzt immer die ganze verfügbare Fläche.", "7_pi_display_portrait": "7\" Pi-Display hochkant", "7_pi_display_landscape": "7\" Pi-Display quer", "hd_portrait_720_1280": "HD hochkant 720 × 1280", "custom_size": "Eigene Größe", "dashboard_only_use_the_whole_area": "Nur Dashboard – ganze Fläche nutzen", "insert_device": "Gerät einsetzen", "first_free_slot_from_the_top": "erste freie Stelle von oben", "tip_tap_in_the_rack_to_choose_the_position_or": "Tipp: ＋ im Rack antippen, um die Höhe vorzugeben, oder eine Vorlage ins Rack ziehen.", "servers_storage": "Server & Speicher", "accessories": "Zubehör", "sfp_switch": "SFP-Switch", "patch_panel": "Patchfeld", "fibre_patch_panel": "LWL-Patchfeld", "server_1_u": "Server 1 HE", "server_2_u": "Server 2 HE", "server_4_u": "Server 4 HE", "recorder": "Rekorder", "generic_device": "Gerät allgemein", "battery_pack": "Zusatzbatterie", "pdu_rear": "Stromleiste (hinten)", "shelf": "Fachboden", "module_frame": "Modulrahmen", "cable_management": "Kabelführung", "blanking_panel": "Blende", "server_with_fan_panel": "Server mit Lüfterblende", "ups_battery": "USV / Batterie", "general": "Allgemein", "model": "Modell", "template": "Vorlage", "height_u": "Höhe (HE)", "front_in_u": "Vorne in HE", "passive_no_sensors": "Passiv (ohne Sensoren)", "not_always_on": "Nicht immer eingeschaltet", "off_grey_no_warnings": "Aus = grau, keine Warnungen", "detect_off_via": "„Aus“ erkennen über", "automatic_all_values_gone": "automatisch (alle Werte weg)", "power_on_button": "Einschalt-Taste", "none": "– keine –", "belongs_to_e_g_battery_pack_ups": "Gehört zu (z. B. Zusatzbatterie → USV)", "standalone": "– eigenständig –", "linked": "verknüpft", "not_linked": "nicht verknüpft", "not_linked_yet": "Noch nicht verknüpft", "not_linked_2": "Nicht verknüpft", "linked_to_home_assistant": "Mit Home Assistant verknüpft", "detected_automatically": "Automatisch erkannt:", "link_another_device": "Weiteres Gerät verknüpfen", "search_device": "Gerät suchen", "name_model_or_manufacturer": "Name, Modell oder Hersteller", "no_match": "Kein Treffer", "name_outlets": "Ausgänge benennen", "modules": "Module", "photos": "Fotos", "photo_available": "Foto vorhanden", "front": "Vorderseite", "no_photo": "Kein Foto", "upload_2": "Hochladen", "remove": "Entfernen", "vertical_image_rear_view": "Senkrechtes Bild (in der Rückansicht)", "remove_2": "🗑 Entfernen", "remove_device": "🗑 Gerät entfernen", "copy_to_another_rack": "In anderes Rack übernehmen …", "copy_device_with_its_popup_to_another_rack": "Gerät samt Popup in ein anderes Rack übernehmen", "grid_used": "Raster belegt", "tap_new_modules_in_the_library_in_the_middle_or": "Neue Module aus der Bibliothek in der Mitte antippen oder ins Popup ziehen. Im Popup: ⋮⋮ verschieben, Ecke ziehen = Größe.", "the_home_page_next_to_the_rack_is_a_grid_like": "Die Startseite neben dem Rack ist ein Raster wie die Popups: Karten aus der Bibliothek hinzufügen, ⋮⋮ verschieben, an der Ecke skalieren, antippen für Einstellungen und Entitäten.", "restore_default": "Standard wiederherstellen", "remove_custom_overview": "Eigene Übersicht entfernen", "back_to_the_fixed_default_overview": "Zurück zur festen Standard-Übersicht", "search_modules": "Module suchen …", "tap_or_drag_into_the_popup": "antippen oder ins Popup ziehen", "all": "Alle", "recently_used": "Zuletzt benutzt", "no_data_for_this_device": "Für dieses Gerät keine Daten", "choose_entities_after_adding": "Entitäten nach dem Hinzufügen wählen", "resize": "Größe ändern", "move": "Verschieben", "type_a_name": "Name eintippen", "upload_front_photo": "Foto der Vorderseite hochladen", "photo": "📷 Foto", "size_width": "Größe · Breite", "display_style": "Darstellung", "title": "Titel", "subtitle": "Untertitel", "e_g_network": "z. B. Netzwerk", "warning_from": "Warnung ab", "critical_from": "Kritisch ab", "entity": "+ Entität", "key_figure": "+ Kennzahl", "search_entity": "Entität suchen", "name_or_entity_id": "Name oder entity_id", "display_name": "Anzeigename", "no_entity_yet": "Noch keine Entität", "automatic": "Automatisch", "key_figures_at_the_top_up_to_4_empty_automatic": "Kennzahlen oben (bis zu 4). Leer = automatisch (z. B. Uptime, Clients, Ports, Durchsatz).", "suggestions_from_this_device": "Vorschläge von diesem Gerät", "type_to_search_all_entities": "Tippe, um alle Entitäten zu durchsuchen", "this_device": "dieses Gerät", "always_on_top": "immer oben", "tiles": "Kacheln", "tiles_with_24_h_curve": "Kacheln mit 24-Std.-Kurve", "compact_rows": "Kompakt (Zeilen)", "hardware_temperatures_fans": "Hardware (Temperaturen + Lüfter)", "bars": "Balken", "thermometer_temperatures": "Thermometer (Temperaturen)", "curve_tiles": "Kurven-Kacheln", "trackable_history": "Verfolgbarer Verlauf", "value": "Wert", "value_with_24_h_curve": "Wert mit 24-Std.-Kurve", "list_problems_first": "Liste (Probleme zuerst)", "front_bays": "Schächte vorne", "columns": "Spalten", "cache_drives_sit_in_bays_otherwise_internal": "Cache-Laufwerke stecken in Schächten (sonst „Intern“)", "done": "Fertig", "remove_module": "🗑 Modul entfernen", "module_moved": "Modul verschoben", "no_room_there_reverted": "Dort ist kein Platz – zurückgesetzt", "no_free_space": "Kein freier Platz", "no_free_space_at_the_front": "Vorne ist kein Platz frei", "uploading_image": "Bild wird hochgeladen …", "up": "Nach oben", "down": "Nach unten", "my_rack": "Mein Rack", "close_esc": "Schließen (Esc)", "discard_all_unsaved_changes": "Alle ungespeicherten Änderungen verwerfen?", "unsaved_changes_will_be_lost_switch_anyway": "Ungespeicherte Änderungen gehen verloren. Trotzdem wechseln?", "unsaved_changes_will_be_lost_when_reloading": "Ungespeicherte Änderungen gehen beim Neuladen verloren. Trotzdem neu laden?", "remove_the_custom_overview_and_return_to_the": "Eigene Übersicht entfernen und zur Standard-Übersicht zurückkehren?", "tap_a_free_rack_unit_to_insert_a_device_or_a": "Tippe auf eine freie Höheneinheit, um ein Gerät einzusetzen, oder auf ein Gerät, um es zu bearbeiten.", "values_as_tiles": "Werte als Kacheln", "values_with_curves": "Werte mit Kurven", "single_value": "Einzelwert", "single_value_with_curve": "Einzelwert mit Kurve", "curves": "Kurven", "gauge": "Tacho", "key_figure_2": "Kennzahl", "progress": "Fortschritt", "bar_chart": "Balkendiagramm", "status_chips": "Status-Chips", "switches_2": "Schalter", "actions": "Aktionen", "heading": "Überschrift", "clock": "Uhr", "note": "Notiz", "note_enter_text_in_the_module_panel": "Notiz – Text im Modulfenster eintragen", "section": "Abschnitt", "header": "Kopf", "server_rack_with_live_values": "Server-Rack mit Live-Werten", "values_gauges": "Werte & Anzeigen", "charts": "Diagramme", "controls": "Steuerung", "power_ups": "Strom & USV", "storage_video": "Speicher & Video", "text_other": "Text & Sonstiges", "values": "Werte", "energy_flow": "Energiefluss", "drive_bays": "Laufwerksschächte", "key_figure_bar": "Kennzahlen-Leiste", "power_overview": "Strom (Übersicht)", "temperature_overview": "Temperatur (Übersicht)", "notices_overview": "Hinweise (Übersicht)", "all_ports_with_speed_poe_and_live_throughput": "Alle Ports mit Geschwindigkeit, PoE und Live-Durchsatz", "outlets_of_a_pdu_with_assignments": "Ausgänge einer Stromleiste mit Belegung", "load_as_bars_0100_or_custom_range": "Auslastung als Balken (0–100 % oder eigener Bereich)", "usage_state_cache_pools_and_parity_of_an_array": "Belegung, Zustand, Cache-Pools und Parität eines Arrays", "any_entities_as_tiles": "Beliebige Entitäten als Kacheln", "cpu_ram_and_temperature_over_24_h": "CPU, RAM und Temperatur über 24 Std.", "download_and_upload_over_24_h": "Download und Upload über 24 Std.", "one_value_as_a_bar_with_min_max": "Ein Wert als Balken mit Min/Max", "one_value_as_a_semicircle_gauge_with_min_max": "Ein Wert als Halbkreis-Anzeige mit Min/Max und Warnfarben", "one_value_as_a_ring_e_g_load_in": "Ein Wert als Ring (z. B. Auslastung in %)", "one_value_as_its_own_tile_optionally_with_a_24": "Ein Wert als eigene Kachel – wahlweise mit 24-Std.-Kurve", "one_to_three_measurements_over_24_h": "Ein bis drei Messwerte über 24 Std.", "input_and_output_voltage_over_24_h": "Ein- und Ausgangsspannung über 24 Std.", "free_text_e_g_patch_panel_assignments": "Freier Text, z. B. Belegung eines Patchfelds", "big_number_with_change_vs_yesterday": "Große Zahl mit Veränderung gegenüber gestern", "internet_poe_pdu_ups_at_a_glance": "Internet, PoE, Stromleiste, USV auf einen Blick", "tiles_with_the_key_measurements": "Kacheln mit den wichtigsten Messwerten", "rack_power_ups_battery_consumers_and_24_h": "Leistung des Racks, USV-Akku, Verbraucher und 24-Std.-Verlauf", "several_states_as_compact_chips_with_traffic": "Mehrere Zustände kompakt als Chips mit Ampel", "name_model_position_front_image_up_to_4_key": "Name, Modell, Position, Frontbild, bis zu 4 Kennzahlen", "online_ups_mains_battery_load": "Online-USV: Netz, Akku, Last", "poe_power_in_total_and_per_port": "PoE-Leistung gesamt und je Port", "control_switches_lights_and_fans_directly": "Schalter, Lichter, Lüfter direkt bedienen", "bays_with_parity_data_and_cache_temperature": "Schächte mit Parität, Daten und Cache, Temperatur, Belegung und Ruhezustand", "bays_state_and_usage": "Schächte, Zustand und Belegung", "run_scripts_scenes_and_buttons": "Skripte, Szenen und Tasten auslösen", "retention_recording_types_cameras": "Speicherdauer, Aufnahmearten, Kameras", "camera_still_image_refreshes_continuously": "Standbild einer Kamera (aktualisiert sich laufend)", "hourly_values_of_the_last_24_h_as_bars": "Stundenwerte der letzten 24 Std. als Balken", "faults_notices_and_info_of_the_device": "Störungen, Hinweise und Infos des Geräts", "title_with_subtitle_for_structure": "Titel mit Untertitel zum Gliedern", "time_and_date": "Uhrzeit und Datum", "warnings_and_faults_of_all_devices": "Warnungen und Störungen aller Geräte", "warmest_device_and_temperatures_of_all_devices": "Wärmstes Gerät und Temperaturen aller Geräte", "states_as_a_list_with_traffic_lights": "Zustände als Liste mit Ampel", "cpu_load": "CPU-Auslastung", "memory_usage": "Speicherauslastung", "disk_usage": "Speicherplatzauslastung", "uptime_2": "Betriebszeit", "cpu_temperature": "CPU-Temperatur", "poe_power": "PoE-Leistung", "recording_capacity": "Aufnahmekapazität", "1_day": "1 Tag", "drops": "Abbrüche", "wan_drops": "WAN-Abbrüche", "width": "Breite", "height": "Höhe", "rows": "Zeilen", "full": "ganz", "row": "Zeile", "lower": "Niedriger", "taller": "Höher", "no_room_for_that_in_the_grid": "Dafür ist im Raster kein Platz", "language": "Sprache", "automatic_ha_user_language": "Automatisch (Sprache des HA-Benutzers)", "loss": "Verlust", "numbering": "Nummerierung", "by_row_1_2_3_to_the_right": "zeilenweise (1 2 3 … nach rechts)", "by_column_1_2_3_downwards": "spaltenweise (1 2 3 … nach unten)", "disk_bay": "Platte → Schacht", "empty_next_free_bay_duplicate_numbers_the_first": "Leer = nächster freier Schacht. Doppelte Nummern: die erste Platte gewinnt.", "number_of_slots": "Anzahl Steckplätze", "installed_2": "eingebaut", "planned": "geplant", "description_e_g_lan_oled": "Beschreibung, z. B. LAN · OLED", "entity_for_live_value_optional": "Entität für Live-Wert (optional)", "entering_a_name_occupies_the_slot_clearing_it": "Name eintragen belegt den Steckplatz; leeren gibt ihn frei. Mit Entität zeigt das Popup den aktuellen Wert.", "create_ha_entities": "HA-Entitäten anlegen", "state_faults_warnings_hottest_device_for": "Zustand, Störungen, Warnungen, wärmstes Gerät – für Automationen und Benachrichtigungen", "electricity_price_kwh": "Strompreis (€/kWh)", "or_price_entity": "oder Preis-Entität", "e_g_0_30": "z. B. 0,30", "export": "⇩ Exportieren", "import": "⇧ Importieren", "save_the_rack_with_devices_popups_and_settings": "Rack mit Geräten, Popups und Einstellungen als Datei sichern", "rack_exported": "Rack exportiert", "night_mode_from": "Nachtmodus von", "until": "bis", "brightness_at_night": "Helligkeit nachts", "100_dark_only": "100 % (nur dunkel)", "heat": "Wärme", "heat_map": "Wärmekarte", "a_heat_button_below_the_rack_colours_devices_by": "Knopf „Wärme“ unter dem Rack färbt die Geräte nach Temperatur (ab zwei Geräten mit Temperaturwert)", "on_the_shelf": "Auf dem Fachboden", "cloud_key_small_controller": "Cloud Key / kleiner Controller", "mini_pc": "Mini-PC", "small_nas": "kleines NAS", "generic_box": "Box allgemein", "access_point": "Access Point", "is_this_device_state_led": "ist dieses Gerät (Zustand, LED)", "device_on_the_shelf": "＋ Gerät auf den Fachboden", "small_devices_lying_on_the_shelf_the_linked_ha": "Kleingeräte, die auf der Ablage liegen. Das verknüpfte HA-Gerät zeigt seinen Zustand an der LED.", "assignment_from_entity_optional": "Zuordnung aus Entität (optional)", "entity_does_not_provide_an_assignment_yet": "Entität liefert (noch) keine Zuordnung – manuelle Werte gelten", "horizontal_tiles": "Liegend (Kacheln)", "vertical_like_the_enclosure": "Stehend (wie im Gehäuse)", "screen_touchkio": "Bildschirm (TouchKio)", "none_2": "– keiner –", "switch_off_after": "Ausschalten nach", "never_always_on": "nie (immer an)", "1_minute": "1 Minute", "2_minutes": "2 Minuten", "5_minutes": "5 Minuten", "10_minutes": "10 Minuten", "30_minutes": "30 Minuten", "without_touch_ha_switches_the_screen_off_a": "Ohne Berührung schaltet HA den Bildschirm aus; eine Berührung schaltet ihn wieder ein.", "vertical_all_in_one_row": "stehend: alle in einer Reihe", "rack_temperature": "Rack-Temperatur", "ntp_time_server": "NTP-Zeitserver", "cloud_key_module": "Cloud-Key-Modul", "width_in_slots": "Breite in Steckplätzen", "slot": "Platz", "slots_2": "Plätze", "edit_own_popup": "Eigenes Popup bearbeiten ›", "own_popup_link_ha_device": "+ Eigenes Popup (HA-Gerät verknüpfen)", "popup_removed": "Popup entfernt", "remove_device_2": "Gerät entfernen", "meter": "Zähler", "today_2": "Heute", "restarted_with_firmware_n": "Neu gestartet mit Firmware {0}", "started_with_firmware_n": "Gestartet mit Firmware {0}", "n_assignments_from_the_entity_manual_values": "{0} Zuordnungen aus der Entität · manuelle Werte gelten nur für Platten ohne Eintrag", "n_devices": "{0} Geräte", "on_shelf_u_n": "auf Fachboden HE {0}", "import_failed_n": "Import fehlgeschlagen: {0}", "create_n_as_a_new_rack": "„{0}“ als neues Rack anlegen?", "n_imported": "„{0}“ importiert", "today_n": "heute · ≈ {0}", "n_month": "≈ {0} / Monat", "n_rows": "{0} Zeilen", "n_of_12_columns": "{0} von 12 Spalten", "n_n_drag_the_corner_in_the_preview_or_use_arrow": "{0} × {1} · in der Vorschau an der Ecke ziehen oder Pfeiltasten (⇧ = Größe)", "bullet_n": "· {0}", "n_days": "{0} Tage", "n_h": "{0} Std.", "n_u": "{0} HE", "from_u_n": "ab HE {0}", "n_u_from_u_n": "{0} HE · ab HE {1}", "n_u_does_not_fit_here": "{0} HE · passt hier nicht", "n_of_n_u": "{0} von {1} HE", "n_of_n_used": "{0} von {1} belegt", "n_of_n_used_n_planned": "{0} von {1} belegt · {2} geplant", "n_of_n_connected": "{0} von {1} verbunden", "n_of_n_cameras": "{0} von {1} Kameras", "n_faults": "{0} Störungen", "n_notices": "{0} Hinweise", "n_with_problems": "{0} mit Problem", "n_warm": "{0} warm", "n_more": "{0} weitere", "n_more_2": "+{0} weitere", "n_devices_powered": "{0} Geräte versorgt", "n_outlets": "{0} Ausgänge", "n_errors": "{0} Fehler", "n_u_n_used_n_active_devices": "{0} HE · {1} belegt · {2} aktive Geräte", "n_n_u_n_used_n_items": "{0} · {1} HE · {2} belegt · {3} Elemente", "n_of_ups_capacity_via_pdu": "{0} % der USV-Kapazität · laut Stromleiste", "n_of_ups_capacity": "{0} % der USV-Kapazität", "ups_load_n": "Auslastung der USV {0} %", "ups_battery_n_percent_n_minutes_runtime": "USV-Akku {0} Prozent, {1} Minuten Reserve", "warmest_device_n_degrees": "Wärmstes Gerät {0} Grad", "currently_n": "aktuell {0}", "limit_n": "Grenze {0}", "temperature_above_n": "Temperatur über {0}", "n_at_n": "{0} um {1}", "since_n_values_appear_here_automatically_once": "seit {0}. Sobald es eingeschaltet wird, erscheinen die Werte hier automatisch.", "since_n": "seit {0}", "battery_n": "Akku {0}", "bay_n": "Schacht {0}", "internal_n": "Intern {0}", "disk_n": "Platte {0}", "parity_n": "Parität {0}", "cache_n": "Cache {0}", "n_used": "{0} % belegt", "fans_n": "Lüfter ({0})", "n_peak_n": "Ø {0} · Spitze {1}", "n_y_n_mo_ago": "vor {0} J. {1} Mon.", "n_ago": "vor {0}", "automatic_n": "automatisch ({0})", "after_n_seconds": "nach {0} Sekunden", "after_n_minutes": "nach {0} Minuten", "size_width_n_of_12_height_n_rows": "Größe · Breite {0} von 12, Höhe {1} Zeilen", "n_n_in_popup": "{0} × {1} · im Popup", "of_n_rows": "von {0} Zeilen", "of_n_rows_too_tall": "von {0} Zeilen – zu hoch", "n_n_px_n_ppi_detail_view_grid": "{0} × {1} px · {2} ppi · Raster der Detailansicht", "n_no_data_for_n_yet_choose_entities_in_the": "{0} · Für „{1}“ noch keine Daten – nach dem Hinzufügen Entitäten im Modul wählen", "n_already_in_the_popup": "{0} · schon im Popup", "sizes_as_in_the_popup_preview_with_data_from_n": "Größen wie im Popup, Vorschau mit den Daten von „{0}“.", "which_device_is_plugged_into_which_outlet_can": "Welches Gerät an welchem Ausgang hängt, lässt sich im Rack-Editor beim Gerät „{0}“ eintragen.", "n_removed": "„{0}“ entfernt", "module_n_removed": "Modul „{0}“ entfernt", "n_added": "„{0}“ hinzugefügt", "n_inserted_at_u_n": "„{0}“ eingesetzt in HE {1}", "n_inserted_rear": "„{0}“ eingesetzt (Rückseite)", "n_moved_to_u_n": "„{0}“ nach HE {1}", "size_n_n": "Größe {0} × {1}", "n_copied_to_n": "„{0}“ in „{1}“ übernommen", "no_room_for_n_u_in_n": "In „{0}“ ist kein Platz für {1} HE", "replace_n_in_n_popup_photos_and_link_are_copied": "„{0}“ in „{1}“ ersetzen? Popup, Fotos und Verknüpfung werden übernommen, die Position dort bleibt.", "copy_n_with_its_popup_to_n": "„{0}“ samt Popup in „{1}“ übernehmen?", "copy_failed_n": "Übernehmen fehlgeschlagen: {0}", "upload_failed_n": "Hochladen fehlgeschlagen: {0}", "not_saved_n": "Nicht gespeichert: {0}", "no_room_for_n_u_here": "Für {0} HE ist an dieser Stelle kein Platz", "n_device_s_do_not_fit_in_n_u": "{0} Gerät(e) passen nicht in {1} HE:", "insert_n": "{0} einsetzen", "u_n_insert_device": "HE {0}: Gerät einsetzen", "n_u_n": "{0}, HE {1}", "n_rear": "{0}, Rückseite", "port_n_n": "Port {0}, {1}", "n_rear_2": "{0} (Rückseite)", "remove_n_from_the_rack": "„{0}“ aus dem Rack entfernen?", "online_ups_n": "Online-USV · {0}", "wled_n": "WLED · {0}", "of_n": "von {0}", "value_n_2": "{0} ·", "part_of_n": "gehört zu {0}", "n_slots": "{0} Plätze", "1_slot": "1 Platz", "popup_for_n_created_now_pick_the_ha_device": "Popup für „{0}“ angelegt – jetzt HA-Gerät wählen", "slots_nn": "Platz {0}–{1}", "slot_n": "Platz {0}", "n_slot_n": "{0} · Platz {1}", "u_n": "HE {0}", "total_power": "Gesamtleistung", "updated_to_n": "Auf {0} aktualisiert", "new_firmware": "neue Firmware", "n_is_back_online": "{0} ist wieder online", "n_was_offline": "{0} war offline", "poe_on_port_n_switched_on": "PoE an Port {0} eingeschaltet", "poe_on_port_n_switched_off": "PoE an Port {0} ausgeschaltet", "switched_on_when_needed": "wird bei Bedarf eingeschaltet", "state_n": "Zustand: {0}", "power_output": "Leistung", "ip_address": "IP-Adresse", "connection_type": "Anschluss", "wifi": "WLAN", "wired": "Kabel", "battery_source": "Batterie", "error": "Fehler", "no_test": "kein Test", "network_card": "Netzwerkkarte", "battery_temp_short": "Akku-Temp.", "battery_date": "Akku-Datum", "battery_operation": "Batteriebetrieb", "n_alarms_at_the_ups": "{0} Alarm(e) an der USV", "self_test_n": "Selbsttest: {0}", "bay_n_reports_a_problem": "Schacht {0} ({1}) meldet ein Problem", "switch_wled_on_or_off": "WLED ein- oder ausschalten", "according_to_the_pdu": "laut Stromleiste", "input_min": "Eingang min", "check_n_drive": "{0} Laufwerk prüfen", "check_n_drives": "{0} Laufwerke prüfen", "check_drives": "Laufwerke prüfen", "check": "Prüfen", "drives": "Laufwerke", "battery_mode": "Akkubetrieb", "mains_failed_battery_supplies": "Netz ausgefallen – Akku versorgt", "n_years_n_months": "{0} J. {1} Mon.", "n_months": "{0} Mon.", "too_warm": "zu warm", "load_lower": "Last", "n_min": "{0} Min.", "on_shelf": "auf Fachboden", "disconnected_lower": "getrennt", "disk": "Platte", "disks_and_shares_after_start": "Platten und Freigaben sind erst nach dem Start verfügbar.", "module_error": "Fehler im Modul", "no_ha_device_linked": "Mit diesem Gerät ist noch kein Home-Assistant-Gerät verknüpft. Sobald es eine Integration gibt (z. B. Unraid), lässt es sich im Editor verknüpfen; Temperaturen, Auslastung und Festplatten erscheinen dann hier.", "card_rack_id": "Rack-ID (leer = erstes Rack)", "card_view": "Ansicht", "card_height": "Höhe in Pixel", "card_view_full": "Rack mit Detailansicht", "card_view_rack": "Nur Rack mit Status", "pdu_rear_label": "Stromleiste, Rückseite", "already_in_the_popup": "schon im Popup", "in_the_popup": "im Popup", "n_devices_do_not_fit": "{0} Gerät(e) passen nicht in {1} HE:", "too_high": "zu hoch", "default_oled_lan": "Standard (OLED + LAN)", "half_or_full_width": "Halbe oder ganze Breite", "entity_word": "Entität", "already_used_by_n": "bereits bei „{0}“", "too_high_lower_modules_cut_off": "zu hoch, untere Module werden abgeschnitten", "module": "Modul", "n_inserted_in_u_n": "„{0}“ eingesetzt in HE {1}", "no_devices": "keine Geräte", "last_24_hours": "letzte 24 Stunden", "double_conversion": "Doppelwandlung", "at_time": "um", "n_of_n_on": "{0} von {1} an", "n_device_powered": "{0} Gerät versorgt", "n_on": "{0} an", "mod.batteries.0": "Akkus", "mod.batteries.1": "Akkustände mehrerer Geräte als Liste, schwache zuerst", "mod.batteries.2": "Warnung unter (%)", "mod.batteries.3": "Kritisch unter (%)", "mod.batteries.4": "Sortierung", "mod.batteries.5": "Schwache zuerst", "mod.batteries.6": "Nach Name"}, "en": {"door_closed": "Door closed", "door_open": "Door open", "rear": "Rear", "door": "Door", "server_rack": "Server rack", "back_to_overview": "Back to overview", "back": "Back", "power": "Power", "today": "today", "battery": "Battery", "on_mains": "On mains", "power_24_h": "Power · 24 h", "temperature": "Temperature", "warmest_device": "warmest device", "warmest_device_2": "Warmest device", "device_temperatures_no_rack_sensors": "Device temperatures · no rack sensors", "device_temperatures": "Device temperatures", "device": "Device", "notices": "Notices", "notice": "Notice", "1_notice": "1 notice", "no_data": "No data", "no_values": "No values", "no_home_assistant_device_linked_yet": "No Home Assistant device linked yet", "latency": "Latency", "pdu": "PDU", "ups": "UPS", "now": "now", "too_hot": "Too hot", "ok": "OK", "fault": "Fault", "faults": "Faults", "1_fault": "1 fault", "warning": "Warning", "passive": "Passive", "off": "Off", "running": "Running", "running_2": "running", "stopped": "Stopped", "inactive": "Inactive", "active": "Active", "active_2": "active", "switched_off": "Switched off", "off_since": "Off since", "state": "State", "no_problem": "no problem", "all_good": "All good", "reports_a_problem": "reports a problem", "all_sensors_are_unavailable": "All sensors are unavailable", "no_rack_created_yet": "No rack created yet.", "open_the_rack_editor": "Open the rack editor", "the_device_does_not_run_permanently": "The device does not run permanently.", "values_appear_here_automatically_once_it_is": "Values appear here automatically once it is switched on.", "the_device_does_not_run_permanently_values": "The device does not run permanently. Values appear here automatically once it is switched on.", "power_on": "⏻ Power on", "tap_again": "Tap again", "tap_again_to_power_on": "Tap again to power on", "off_2": "⏻ Off", "server_off": "Server off", "usage_cache_and_parity_appear_after_power_on": "Usage, cache and parity appear after power-on.", "passive_element_without_sensors_assignments_or": "Passive element without sensors. Assignments or notes can be added in the integration's editor.", "history_2": "History", "messages": "Messages", "load": "Load", "processor": "Processor", "memory": "Memory", "cpu_temp": "CPU temp.", "temperatures": "Temperatures", "temperature_history": "Temperature history", "storage": "Storage", "network": "Network", "throughput": "Throughput", "active_ports": "Active ports", "bundle": "Bundle", "connected_to": "Connected to", "not_connected": "Not connected", "connected": "connected", "free": "free", "free_2": "Free", "used": "used", "used_2": "Used", "empty": "empty", "total": "Total", "available": "Available", "unavailable": "Unavailable", "unknown": "Unknown", "on": "On", "home": "Home", "away": "Away", "open": "Open", "closed": "Closed", "connected_2": "Connected", "disconnected": "Disconnected", "ready": "Ready", "recording": "Recording", "streaming": "Streaming", "playing": "Playing", "paused": "Paused", "started": "Started", "disks_missing": "Disks missing", "invalid_expansion": "Invalid expansion", "parity_check": "Parity check", "rebuilding": "Rebuilding", "maintenance": "Maintenance", "safe": "Safe", "unsafe": "Unsafe", "new_unassigned": "New, unassigned", "missing": "Missing", "disabled": "Disabled", "invalid": "Invalid", "wrong_disk": "Wrong disk", "emulated": "Emulated", "completed": "completed", "cancelled": "cancelled", "paused_2": "paused", "failed": "failed", "never_run": "never run", "bays": "Bays", "internal": "Internal", "parity": "Parity", "data": "Data", "faded_spun_down": "faded = spun down", "spun_down": "spun down", "array_stopped": "Array stopped", "no_usage": "No usage", "the_sensor_does_not_report_sizes_yet": "The sensor does not report sizes yet.", "disks_missing_disks_and_shares_are_available": "Disks missing. Disks and shares are available after the array starts.", "missing_disks": "Missing disks", "invalid_disks": "Invalid disks", "disabled_disks": "Disabled disks", "configuration": "Configuration", "peripheral": "Peripheral", "fans_in_rpm": "Fans in rpm", "fans": "Fans", "rpm": "rpm", "recording_2": "Recording", "continuous": "Continuous", "motion": "Motion", "detections": "Detections", "detections_today": "Detections today", "timelapse": "Timelapse", "cameras": "Cameras", "camera": "Camera", "camera_offline": "Camera offline", "disks": "Disks", "drive": "Drive", "satisfaction": "Satisfaction", "guests": "Guests", "top_client": "Top client", "wi_fi_channel_utilisation": "Wi-Fi channel utilisation", "connection": "Connection", "interfaces": "Interfaces", "containers": "Containers", "slots": "Slots", "installed": "Installed", "runtime": "Runtime", "load_2": "Load", "input": "Input", "output": "Output", "voltage": "Voltage", "rectifier": "Rectifier", "inverter": "Inverter", "bypass_active": "Bypass active", "online_ups": "Online UPS", "mains": "Mains", "mains_2": "Mains ↓", "mains_off": "Mains off", "protection": "Protection", "self_test": "Self-test", "self_test_passed": "Self-test passed", "passed": "passed", "fully_functional": "Fully functional", "battery_charging": "Battery charging", "charging": "charging", "discharging": "discharging", "load_runs_directly_on_mains": "Load runs directly on mains", "mains_failed_load_runs_on_battery": "Mains failed, load runs on battery", "mains_failed_the_load_runs_on_battery": "Mains failed: the load runs on battery.", "power_always_flows_through_battery_and_inverter": "Power always flows through battery and inverter. If mains fails there is no transfer time.", "everything_powered": "Everything powered", "outlets": "Outlets", "current": "Current", "current_values": "Current values", "peak": "Peak", "month": "Month", "last_hour": "last hour", "restarted": "Restarted", "unreachable": "Unreachable", "device_is_not_on_the_network": "Device is not on the network", "installing_firmware": "Installing firmware", "firmware_update_available": "Firmware update available", "setting_up": "Setting up", "adopting": "Adopting", "overheating_reported": "Overheating reported", "overheating": "Overheating", "the_pdu_currently_does_not_report_the_switching": "The PDU currently does not report the switching state correctly.", "rack_thermal_sensor": "Rack thermal sensor", "days": "days", "day": "day", "h": "h", "24_h": "24 h", "other": "Other", "vs_yesterday": "vs. yesterday", "overview": "Overview", "retention": "Retention", "no_temperature_values_available": "No temperature values available.", "rear_0_u": "Rear (0 U)", "on_2": "On", "high_temperature": "High temperature", "rack_editor": "Rack editor", "loading": "Loading …", "choose_rack": "Choose rack", "edit_device": "Edit device", "choose_device": "Choose device …", "overview_home_page": "▦ Overview (home page)", "new_version_reload": "New version · reload", "the_editor_was_updated": "The editor was updated", "undo_z": "Undo (⌘Z)", "redo_z": "Redo (⇧⌘Z)", "undo": "Undo", "unsaved_changes": "Unsaved changes", "saved": "Saved", "discard": "Discard", "save": "Save", "up_one_level_esc": "Up one level (Esc)", "devices": "Devices", "home_page_next_to_the_rack": "Home page next to the rack", "passive_elements": "Passive elements", "tap_to_edit_in_the_rack_on_the_right_drag_to": "Tap to edit. In the rack on the right: drag to move, ＋ to insert.", "rack_units": "Rack units", "ups_capacity_w": "UPS capacity (W)", "door_labels": "Door & labels", "badge": "Badge", "e_g_company_name": "e.g. company name", "type_plate": "Type plate", "top_label": "Top label", "bottom_label": "Bottom label", "appearance": "Appearance", "cabinet_colour": "Cabinet colour", "light_grey_default": "Light grey (default)", "white": "White", "graphite": "Graphite", "black": "Black", "custom_colour": "Custom colour …", "custom_colour_2": "Custom colour", "perforated": "Perforated", "glass": "Glass", "solid": "Solid", "no_door": "No door", "label_colour": "Label colour", "display": "Display", "show_on": "Show on", "back_to_overview_after": "Back to overview after", "never": "never", "after_30_seconds": "after 30 seconds", "after_1_minute": "after 1 minute", "after_2_minutes": "after 2 minutes", "after_5_minutes": "after 5 minutes", "width_px": "Width (px)", "height_px": "Height (px)", "diagonal_inch": "Diagonal (inch)", "scaling": "Scaling", "cells": "cells", "the_view_is_built_for_this_area_and_scaled": "The view is built for this area and scaled everywhere (“Rack” page, cards, Pi). “Dashboard only” always uses the whole available area.", "7_pi_display_portrait": "7\" Pi display portrait", "7_pi_display_landscape": "7\" Pi display landscape", "hd_portrait_720_1280": "HD portrait 720 × 1280", "custom_size": "Custom size", "dashboard_only_use_the_whole_area": "Dashboard only – use the whole area", "insert_device": "Insert device", "first_free_slot_from_the_top": "first free slot from the top", "tip_tap_in_the_rack_to_choose_the_position_or": "Tip: tap ＋ in the rack to choose the position, or drag a template into the rack.", "servers_storage": "Servers & storage", "accessories": "Accessories", "sfp_switch": "SFP switch", "patch_panel": "Patch panel", "fibre_patch_panel": "Fibre patch panel", "server_1_u": "Server 1 U", "server_2_u": "Server 2 U", "server_4_u": "Server 4 U", "recorder": "Recorder", "generic_device": "Generic device", "battery_pack": "Battery pack", "pdu_rear": "PDU (rear)", "shelf": "Shelf", "module_frame": "Module frame", "cable_management": "Cable management", "blanking_panel": "Blanking panel", "server_with_fan_panel": "Server with fan panel", "ups_battery": "UPS / battery", "general": "General", "model": "Model", "template": "Template", "height_u": "Height (U)", "front_in_u": "Front in U", "passive_no_sensors": "Passive (no sensors)", "not_always_on": "Not always on", "off_grey_no_warnings": "Off = grey, no warnings", "detect_off_via": "Detect “off” via", "automatic_all_values_gone": "automatic (all values gone)", "power_on_button": "Power-on button", "none": "– none –", "belongs_to_e_g_battery_pack_ups": "Belongs to (e.g. battery pack → UPS)", "standalone": "– standalone –", "linked": "linked", "not_linked": "not linked", "not_linked_yet": "Not linked yet", "not_linked_2": "Not linked", "linked_to_home_assistant": "Linked to Home Assistant", "detected_automatically": "Detected automatically:", "link_another_device": "Link another device", "search_device": "Search device", "name_model_or_manufacturer": "Name, model or manufacturer", "no_match": "No match", "name_outlets": "Name outlets", "modules": "Modules", "photos": "Photos", "photo_available": "Photo available", "front": "Front", "no_photo": "No photo", "upload_2": "Upload", "remove": "Remove", "vertical_image_rear_view": "Vertical image (rear view)", "remove_2": "🗑 Remove", "remove_device": "🗑 Remove device", "copy_to_another_rack": "Copy to another rack …", "copy_device_with_its_popup_to_another_rack": "Copy device with its popup to another rack", "grid_used": "Grid used", "tap_new_modules_in_the_library_in_the_middle_or": "Tap new modules in the library in the middle or drag them into the popup. In the popup: ⋮⋮ to move, drag the corner to resize.", "the_home_page_next_to_the_rack_is_a_grid_like": "The home page next to the rack is a grid like the popups: add cards from the library, ⋮⋮ to move, drag the corner to resize, tap for settings and entities.", "restore_default": "Restore default", "remove_custom_overview": "Remove custom overview", "back_to_the_fixed_default_overview": "Back to the fixed default overview", "search_modules": "Search modules …", "tap_or_drag_into_the_popup": "tap or drag into the popup", "all": "All", "recently_used": "Recently used", "no_data_for_this_device": "No data for this device", "choose_entities_after_adding": "Choose entities after adding", "resize": "Resize", "move": "Move", "type_a_name": "Type a name", "upload_front_photo": "Upload front photo", "photo": "📷 Photo", "size_width": "Size · width", "display_style": "Display style", "title": "Title", "subtitle": "Subtitle", "e_g_network": "e.g. Network", "warning_from": "Warning from", "critical_from": "Critical from", "entity": "+ Entity", "key_figure": "+ Key figure", "search_entity": "Search entity", "name_or_entity_id": "Name or entity_id", "display_name": "Display name", "no_entity_yet": "No entity yet", "automatic": "Automatic", "key_figures_at_the_top_up_to_4_empty_automatic": "Key figures at the top (up to 4). Empty = automatic (e.g. uptime, clients, ports, throughput).", "suggestions_from_this_device": "Suggestions from this device", "type_to_search_all_entities": "Type to search all entities", "this_device": "this device", "always_on_top": "always on top", "tiles": "Tiles", "tiles_with_24_h_curve": "Tiles with 24 h curve", "compact_rows": "Compact (rows)", "hardware_temperatures_fans": "Hardware (temperatures + fans)", "bars": "Bars", "thermometer_temperatures": "Thermometer (temperatures)", "curve_tiles": "Curve tiles", "trackable_history": "Trackable history", "value": "Value", "value_with_24_h_curve": "Value with 24 h curve", "list_problems_first": "List (problems first)", "front_bays": "Front bays", "columns": "Columns", "cache_drives_sit_in_bays_otherwise_internal": "Cache drives sit in bays (otherwise “Internal”)", "done": "Done", "remove_module": "🗑 Remove module", "module_moved": "Module moved", "no_room_there_reverted": "No room there – reverted", "no_free_space": "No free space", "no_free_space_at_the_front": "No free space at the front", "uploading_image": "Uploading image …", "up": "Up", "down": "Down", "my_rack": "My rack", "close_esc": "Close (Esc)", "discard_all_unsaved_changes": "Discard all unsaved changes?", "unsaved_changes_will_be_lost_switch_anyway": "Unsaved changes will be lost. Switch anyway?", "unsaved_changes_will_be_lost_when_reloading": "Unsaved changes will be lost when reloading. Reload anyway?", "remove_the_custom_overview_and_return_to_the": "Remove the custom overview and return to the default overview?", "tap_a_free_rack_unit_to_insert_a_device_or_a": "Tap a free rack unit to insert a device, or a device to edit it.", "values_as_tiles": "Values as tiles", "values_with_curves": "Values with curves", "single_value": "Single value", "single_value_with_curve": "Single value with curve", "curves": "Curves", "gauge": "Gauge", "key_figure_2": "Key figure", "progress": "Progress", "bar_chart": "Bar chart", "status_chips": "Status chips", "switches_2": "Switches", "actions": "Actions", "heading": "Heading", "clock": "Clock", "note": "Note", "note_enter_text_in_the_module_panel": "Note – enter text in the module panel", "section": "Section", "header": "Header", "server_rack_with_live_values": "Server rack with live values", "values_gauges": "Values & gauges", "charts": "Charts", "controls": "Controls", "power_ups": "Power & UPS", "storage_video": "Storage & video", "text_other": "Text & other", "values": "Values", "energy_flow": "Energy flow", "drive_bays": "Drive bays", "key_figure_bar": "Key figure bar", "power_overview": "Power (overview)", "temperature_overview": "Temperature (overview)", "notices_overview": "Notices (overview)", "all_ports_with_speed_poe_and_live_throughput": "All ports with speed, PoE and live throughput", "outlets_of_a_pdu_with_assignments": "Outlets of a PDU with assignments", "load_as_bars_0100_or_custom_range": "Load as bars (0–100 % or custom range)", "usage_state_cache_pools_and_parity_of_an_array": "Usage, state, cache pools and parity of an array", "any_entities_as_tiles": "Any entities as tiles", "cpu_ram_and_temperature_over_24_h": "CPU, RAM and temperature over 24 h", "download_and_upload_over_24_h": "Download and upload over 24 h", "one_value_as_a_bar_with_min_max": "One value as a bar with min/max", "one_value_as_a_semicircle_gauge_with_min_max": "One value as a semicircle gauge with min/max and warning colours", "one_value_as_a_ring_e_g_load_in": "One value as a ring (e.g. load in %)", "one_value_as_its_own_tile_optionally_with_a_24": "One value as its own tile – optionally with a 24 h curve", "one_to_three_measurements_over_24_h": "One to three measurements over 24 h", "input_and_output_voltage_over_24_h": "Input and output voltage over 24 h", "free_text_e_g_patch_panel_assignments": "Free text, e.g. patch panel assignments", "big_number_with_change_vs_yesterday": "Big number with change vs. yesterday", "internet_poe_pdu_ups_at_a_glance": "Internet, PoE, PDU, UPS at a glance", "tiles_with_the_key_measurements": "Tiles with the key measurements", "rack_power_ups_battery_consumers_and_24_h": "Rack power, UPS battery, consumers and 24 h history", "several_states_as_compact_chips_with_traffic": "Several states as compact chips with traffic lights", "name_model_position_front_image_up_to_4_key": "Name, model, position, front image, up to 4 key figures", "online_ups_mains_battery_load": "Online UPS: mains, battery, load", "poe_power_in_total_and_per_port": "PoE power in total and per port", "control_switches_lights_and_fans_directly": "Control switches, lights and fans directly", "bays_with_parity_data_and_cache_temperature": "Bays with parity, data and cache, temperature, usage and spin-down", "bays_state_and_usage": "Bays, state and usage", "run_scripts_scenes_and_buttons": "Run scripts, scenes and buttons", "retention_recording_types_cameras": "Retention, recording types, cameras", "camera_still_image_refreshes_continuously": "Camera still image (refreshes continuously)", "hourly_values_of_the_last_24_h_as_bars": "Hourly values of the last 24 h as bars", "faults_notices_and_info_of_the_device": "Faults, notices and info of the device", "title_with_subtitle_for_structure": "Title with subtitle for structure", "time_and_date": "Time and date", "warnings_and_faults_of_all_devices": "Warnings and faults of all devices", "warmest_device_and_temperatures_of_all_devices": "Warmest device and temperatures of all devices", "states_as_a_list_with_traffic_lights": "States as a list with traffic lights", "cpu_load": "CPU load", "memory_usage": "Memory usage", "disk_usage": "Disk usage", "uptime_2": "Uptime", "cpu_temperature": "CPU temperature", "poe_power": "PoE power", "recording_capacity": "Recording capacity", "1_day": "1 day", "drops": "drops", "wan_drops": "WAN drops", "width": "Width", "height": "Height", "rows": "rows", "full": "full", "row": "row", "lower": "Lower", "taller": "Taller", "no_room_for_that_in_the_grid": "No room for that in the grid", "language": "Language", "automatic_ha_user_language": "Automatic (HA user language)", "loss": "Loss", "numbering": "Numbering", "by_row_1_2_3_to_the_right": "by row (1 2 3 … to the right)", "by_column_1_2_3_downwards": "by column (1 2 3 … downwards)", "disk_bay": "Disk → bay", "empty_next_free_bay_duplicate_numbers_the_first": "Empty = next free bay. Duplicate numbers: the first disk wins.", "number_of_slots": "Number of slots", "installed_2": "installed", "planned": "planned", "description_e_g_lan_oled": "Description, e.g. LAN · OLED", "entity_for_live_value_optional": "Entity for live value (optional)", "entering_a_name_occupies_the_slot_clearing_it": "Entering a name occupies the slot; clearing it frees the slot. With an entity the popup shows its current value.", "create_ha_entities": "Create HA entities", "state_faults_warnings_hottest_device_for": "State, faults, warnings, hottest device – for automations and notifications", "electricity_price_kwh": "Electricity price (€/kWh)", "or_price_entity": "or price entity", "e_g_0_30": "e.g. 0.30", "export": "⇩ Export", "import": "⇧ Import", "save_the_rack_with_devices_popups_and_settings": "Save the rack with devices, popups and settings as a file", "rack_exported": "Rack exported", "night_mode_from": "Night mode from", "until": "until", "brightness_at_night": "Brightness at night", "100_dark_only": "100 % (dark only)", "heat": "Heat", "heat_map": "Heat map", "a_heat_button_below_the_rack_colours_devices_by": "A “Heat” button below the rack colours devices by temperature (needs two devices with temperatures)", "on_the_shelf": "On the shelf", "cloud_key_small_controller": "Cloud Key / small controller", "mini_pc": "Mini PC", "small_nas": "small NAS", "generic_box": "Generic box", "access_point": "Access point", "is_this_device_state_led": "is this device (state, LED)", "device_on_the_shelf": "＋ Device on the shelf", "small_devices_lying_on_the_shelf_the_linked_ha": "Small devices lying on the shelf. The linked HA device shows its state on the LED.", "assignment_from_entity_optional": "Assignment from entity (optional)", "entity_does_not_provide_an_assignment_yet": "Entity does not provide an assignment (yet) – manual values apply", "horizontal_tiles": "Horizontal (tiles)", "vertical_like_the_enclosure": "Vertical (like the enclosure)", "screen_touchkio": "Screen (TouchKio)", "none_2": "– none –", "switch_off_after": "Switch off after", "never_always_on": "never (always on)", "1_minute": "1 minute", "2_minutes": "2 minutes", "5_minutes": "5 minutes", "10_minutes": "10 minutes", "30_minutes": "30 minutes", "without_touch_ha_switches_the_screen_off_a": "Without touch HA switches the screen off; a touch switches it back on.", "vertical_all_in_one_row": "vertical: all in one row", "rack_temperature": "Rack temperature", "ntp_time_server": "NTP time server", "cloud_key_module": "Cloud Key module", "width_in_slots": "Width in slots", "slot": "slot", "slots_2": "slots", "edit_own_popup": "Edit own popup ›", "own_popup_link_ha_device": "+ Own popup (link HA device)", "popup_removed": "Popup removed", "remove_device_2": "Remove device", "meter": "Meter", "today_2": "Today", "restarted_with_firmware_n": "Restarted with firmware {0}", "started_with_firmware_n": "Started with firmware {0}", "n_assignments_from_the_entity_manual_values": "{0} assignments from the entity · manual values only apply to disks without an entry", "n_devices": "{0} devices", "on_shelf_u_n": "on shelf U {0}", "import_failed_n": "Import failed: {0}", "create_n_as_a_new_rack": "Create “{0}” as a new rack?", "n_imported": "“{0}” imported", "today_n": "today · ≈ {0}", "n_month": "≈ {0} / month", "n_rows": "{0} rows", "n_of_12_columns": "{0} of 12 columns", "n_n_drag_the_corner_in_the_preview_or_use_arrow": "{0} × {1} · drag the corner in the preview or use arrow keys (⇧ = size)", "bullet_n": "· {0}", "n_days": "{0} days", "n_h": "{0} h", "n_u": "{0} U", "from_u_n": "from U {0}", "n_u_from_u_n": "{0} U · from U {1}", "n_u_does_not_fit_here": "{0} U · does not fit here", "n_of_n_u": "{0} of {1} U", "n_of_n_used": "{0} of {1} used", "n_of_n_used_n_planned": "{0} of {1} used · {2} planned", "n_of_n_connected": "{0} of {1} connected", "n_of_n_cameras": "{0} of {1} cameras", "n_faults": "{0} faults", "n_notices": "{0} notices", "n_with_problems": "{0} with problems", "n_warm": "{0} warm", "n_more": "{0} more", "n_more_2": "+{0} more", "n_devices_powered": "{0} devices powered", "n_outlets": "{0} outlets", "n_errors": "{0} errors", "n_u_n_used_n_active_devices": "{0} U · {1} used · {2} active devices", "n_n_u_n_used_n_items": "{0} · {1} U · {2} used · {3} items", "n_of_ups_capacity_via_pdu": "{0} % of UPS capacity · via PDU", "n_of_ups_capacity": "{0} % of UPS capacity", "ups_load_n": "UPS load {0} %", "ups_battery_n_percent_n_minutes_runtime": "UPS battery {0} percent, {1} minutes runtime", "warmest_device_n_degrees": "Warmest device {0} degrees", "currently_n": "currently {0}", "limit_n": "Limit {0}", "temperature_above_n": "Temperature above {0}", "n_at_n": "{0} at {1}", "since_n_values_appear_here_automatically_once": "since {0}. Values appear here automatically once it is switched on.", "since_n": "since {0}", "battery_n": "Battery {0}", "bay_n": "Bay {0}", "internal_n": "Internal {0}", "disk_n": "Disk {0}", "parity_n": "Parity {0}", "cache_n": "Cache {0}", "n_used": "{0} % used", "fans_n": "Fans ({0})", "n_peak_n": "Ø {0} · peak {1}", "n_y_n_mo_ago": "{0} y {1} mo ago", "n_ago": "{0} ago", "automatic_n": "automatic ({0})", "after_n_seconds": "after {0} seconds", "after_n_minutes": "after {0} minutes", "size_width_n_of_12_height_n_rows": "Size · width {0} of 12, height {1} rows", "n_n_in_popup": "{0} × {1} · in popup", "of_n_rows": "of {0} rows", "of_n_rows_too_tall": "of {0} rows – too tall", "n_n_px_n_ppi_detail_view_grid": "{0} × {1} px · {2} ppi · detail view grid", "n_no_data_for_n_yet_choose_entities_in_the": "{0} · No data for “{1}” yet – choose entities in the module after adding", "n_already_in_the_popup": "{0} · already in the popup", "sizes_as_in_the_popup_preview_with_data_from_n": "Sizes as in the popup, preview with data from “{0}”.", "which_device_is_plugged_into_which_outlet_can": "Which device is plugged into which outlet can be set in the rack editor on the device “{0}”.", "n_removed": "“{0}” removed", "module_n_removed": "Module “{0}” removed", "n_added": "“{0}” added", "n_inserted_at_u_n": "“{0}” inserted at U {1}", "n_inserted_rear": "“{0}” inserted (rear)", "n_moved_to_u_n": "“{0}” moved to U {1}", "size_n_n": "Size {0} × {1}", "n_copied_to_n": "“{0}” copied to “{1}”", "no_room_for_n_u_in_n": "No room for {1} U in “{0}”", "replace_n_in_n_popup_photos_and_link_are_copied": "Replace “{0}” in “{1}”? Popup, photos and link are copied, its position there stays.", "copy_n_with_its_popup_to_n": "Copy “{0}” with its popup to “{1}”?", "copy_failed_n": "Copy failed: {0}", "upload_failed_n": "Upload failed: {0}", "not_saved_n": "Not saved: {0}", "no_room_for_n_u_here": "No room for {0} U here", "n_device_s_do_not_fit_in_n_u": "{0} device(s) do not fit in {1} U:", "insert_n": "Insert {0}", "u_n_insert_device": "U {0}: insert device", "n_u_n": "{0}, U {1}", "n_rear": "{0}, rear", "port_n_n": "Port {0}, {1}", "n_rear_2": "{0} (rear)", "remove_n_from_the_rack": "Remove “{0}” from the rack?", "online_ups_n": "Online UPS · {0}", "wled_n": "WLED · {0}", "of_n": "of {0}", "value_n_2": "{0} ·", "part_of_n": "part of {0}", "n_slots": "{0} slots", "1_slot": "1 slot", "popup_for_n_created_now_pick_the_ha_device": "Popup for “{0}” created – now pick the HA device", "slots_nn": "Slots {0}–{1}", "slot_n": "Slot {0}", "n_slot_n": "{0} · slot {1}", "u_n": "U {0}", "total_power": "Total power", "updated_to_n": "Updated to {0}", "new_firmware": "new firmware", "n_is_back_online": "{0} is back online", "n_was_offline": "{0} was offline", "poe_on_port_n_switched_on": "PoE on port {0} switched on", "poe_on_port_n_switched_off": "PoE on port {0} switched off", "switched_on_when_needed": "switched on when needed", "state_n": "State: {0}", "power_output": "Power", "ip_address": "IP address", "connection_type": "Connection", "wifi": "Wi-Fi", "wired": "Wired", "battery_source": "Battery", "error": "Error", "no_test": "no test", "network_card": "Network card", "battery_temp_short": "Battery temp.", "battery_date": "Battery date", "battery_operation": "On battery", "n_alarms_at_the_ups": "{0} alarm(s) at the UPS", "self_test_n": "Self-test: {0}", "bay_n_reports_a_problem": "Bay {0} ({1}) reports a problem", "switch_wled_on_or_off": "Switch WLED on or off", "according_to_the_pdu": "according to the PDU", "input_min": "Input min", "check_n_drive": "Check {0} drive", "check_n_drives": "Check {0} drives", "check_drives": "Check drives", "check": "Check", "drives": "drives", "battery_mode": "On battery", "mains_failed_battery_supplies": "Mains failed – battery supplies the load", "n_years_n_months": "{0} y {1} mo", "n_months": "{0} mo", "too_warm": "too warm", "load_lower": "load", "n_min": "{0} min", "on_shelf": "on shelf", "disconnected_lower": "disconnected", "disk": "Disk", "disks_and_shares_after_start": "Disks and shares are only available after the array has started.", "module_error": "Module error", "no_ha_device_linked": "No Home Assistant device is linked to this device yet. As soon as there is an integration (e.g. Unraid), it can be linked in the editor; temperatures, load and disks then appear here.", "card_rack_id": "Rack ID (empty = first rack)", "card_view": "View", "card_height": "Height in pixels", "card_view_full": "Rack with detail view", "card_view_rack": "Rack with status only", "pdu_rear_label": "PDU, rear", "already_in_the_popup": "already in the popup", "in_the_popup": "in popup", "n_devices_do_not_fit": "{0} device(s) do not fit into {1} U:", "too_high": "too high", "default_oled_lan": "Default (OLED + LAN)", "half_or_full_width": "Half or full width", "entity_word": "Entity", "already_used_by_n": "already used by “{0}”", "too_high_lower_modules_cut_off": "too high, the lower modules are cut off", "module": "Module", "n_inserted_in_u_n": "“{0}” inserted in U {1}", "no_devices": "no devices", "last_24_hours": "last 24 hours", "double_conversion": "double conversion", "at_time": "at", "n_of_n_on": "{0} of {1} on", "n_device_powered": "{0} device powered", "n_on": "{0} on", "mod.batteries.0": "Batteries", "mod.batteries.1": "Battery levels of several devices as a list, weakest first", "mod.batteries.2": "Warning below (%)", "mod.batteries.3": "Critical below (%)", "mod.batteries.4": "Sort order", "mod.batteries.5": "Weakest first", "mod.batteries.6": "By name"}};
 // Sprache: fest im Rack eingestellt (Anzeige → Sprache) oder die des HA-Benutzers (z. B. Kiosk-Benutzer auf dem Pi)
-let RD_FORCE = "", RD_USER = "de";
-function rdApply() { const l = RD_FORCE || RD_USER; if (l === RD_LANG) return; RD_LANG = l; RD_OBS.forEach(r => rdIsDe() ? rdRestore(r) : rdTrNode(r)); }
+let RD_LANG = "en", RD_RAW = "en", RD_FORCE = "", RD_USER = "en";
+function TR(key, ...args) {
+  const s = RD_TEXT[RD_LANG]?.[key] ?? RD_TEXT.en[key] ?? key;
+  return args.length ? s.replace(/\{(\d)\}/g, (_, i) => args[+i] ?? "") : s;
+}
+const rdIsDe = () => RD_LANG === "de";
+// Zahlen und Datumsangaben folgen der Sprache des Benutzers, auch wenn es dafür keine Textdatei gibt
+const rdLoc = () => RD_RAW.startsWith("de") ? "de-DE" : RD_RAW.startsWith("en") ? "en-GB" : RD_RAW;
+// Tabellen mit Texten: je Sprache einmal aufbauen (Aufruf liefert die Fassung der aktuellen Sprache)
+function rdPerLang(make) { let lang, value; return () => { if (lang !== RD_LANG) { lang = RD_LANG; value = make(); } return value; }; }
+// Wer Texte gezeichnet hat, zeichnet bei einem Sprachwechsel neu
+const RD_ON_LANG = new Set();
+function rdOnLang(fn) { RD_ON_LANG.add(fn); return () => RD_ON_LANG.delete(fn); }
+function rdApply() {
+  const raw = RD_FORCE || RD_USER, short = raw.split("-")[0], lang = RD_TEXT[raw] ? raw : RD_TEXT[short] ? short : "en";
+  if (raw === RD_RAW && lang === RD_LANG) return;
+  const wasDe = rdIsDe(); RD_RAW = raw; RD_LANG = lang;
+  RD_ON_LANG.forEach(fn => { try { fn(); } catch (e) { console.warn("Rack Display:", e); } });
+  if (wasDe !== rdIsDe()) RD_OBS.forEach(r => rdIsDe() ? rdRestore(r) : rdTrNode(r));
+}
+function rdSetLang(h) { RD_USER = String(h?.locale?.language || h?.language || "en").toLowerCase(); rdApply(); }
+function rdForceLang(l) { RD_FORCE = l ? String(l).toLowerCase() : ""; rdApply(); }
+// Feste Texte im Grundgerüst (rack.html): data-i18n = Text, data-i18n-label = aria-label
+function rdFill(root) {
+  root.querySelectorAll("[data-i18n]").forEach(el => { el.textContent = TR(el.dataset.i18n); });
+  root.querySelectorAll("[data-i18n-label]").forEach(el => el.setAttribute("aria-label", TR(el.dataset.i18nLabel)));
+}
+// Katalog (blocks.json): beim Build markierte Texte ("\u0001schluessel") in der aktuellen Sprache
+function rdResolve(o) {
+  if (typeof o === "string") return o[0] === "\u0001" ? TR(o.slice(1)) : o;
+  if (Array.isArray(o)) return o.map(rdResolve);
+  return o && typeof o === "object" ? Object.fromEntries(Object.entries(o).map(([k, v]) => [k, rdResolve(v)])) : o;
+}
+// Beschriftungen, die das Backend aus den Gerätevorlagen in gespeicherte Racks übernimmt (blocks.json → templates):
+// in jeder Sprache erkennen und in der aktuellen zeigen
+const RD_DEFAULT_KEYS = ["load_2", "power", "total_power"];
+const RD_DEFAULT = new Map(RD_DEFAULT_KEYS.flatMap(k => Object.values(RD_TEXT).map(t => [t[k], k])).filter(x => x[0]));
+const rdLabel = s => RD_DEFAULT.has(s) ? TR(RD_DEFAULT.get(s)) : s;
+
+/* ---------- Altbestand: deutsche Texte in gespeicherten Racks ----------
+   Bis 0.1.x war Deutsch die Quellsprache; Racks aus dieser Zeit enthalten deutsche Standardbeschriftungen.
+   Für andere Sprachen ersetzt ein Beobachter gezeichnete Texte, die genau einem deutschen Text entsprechen.
+   Bei Deutsch läuft nichts davon (keine Kosten auf dem Pi). */
+const RD_LEGACY = new Map();
+{
+  const de = RD_TEXT.de || {}, en = RD_TEXT.en, enTexts = new Set(Object.values(en));
+  // nicht anfassen: Texte mit Platzhaltern und deutsche Texte, die zugleich ein englischer Text sind
+  for (const [k, v] of Object.entries(de)) if (!/\{\d\}/.test(v) && !enTexts.has(v) && !RD_LEGACY.has(v)) RD_LEGACY.set(v, k);
+}
 // Übersetzte Texte merken sich ihr Original, damit ein Wechsel zurück auf Deutsch ohne Neuzeichnen geht
 const RD_ORIG = new WeakMap(), RD_ORIG_ATTR = new WeakMap();
 function rdRestore(root) {
@@ -43,24 +90,13 @@ function rdRestore(root) {
     for (const c of el.childNodes) if (c.nodeType === 3 && RD_ORIG.has(c)) { c.nodeValue = RD_ORIG.get(c); RD_ORIG.delete(c); }
   }
 }
-function rdSetLang(h) { RD_USER = String(h?.locale?.language || h?.language || "de").toLowerCase(); rdApply(); }
-function rdForceLang(l) { RD_FORCE = l ? String(l).toLowerCase() : ""; rdApply(); }
-const RD_EN = {"Tür zu": "Door closed", "Tür offen": "Door open", "Rückseite": "Rear", "Tür": "Door", "Serverrack": "Server rack", "Zurück zur Übersicht": "Back to overview", "Zurück": "Back", "Strom": "Power", "heute": "today", "Akku": "Battery", "Netzbetrieb": "On mains", "Leistung 24 Std.": "Power · 24 h", "Temperatur": "Temperature", "wärmstes Gerät": "warmest device", "Wärmstes Gerät": "Warmest device", "Gerätetemperaturen · keine Rack-Sensoren": "Device temperatures · no rack sensors", "Gerätetemperaturen": "Device temperatures", "Gerät": "Device", "Hinweise": "Notices", "Hinweis": "Notice", "1 Hinweis": "1 notice", "Keine Daten": "No data", "Keine Werte": "No values", "Noch kein Home-Assistant-Gerät verknüpft": "No Home Assistant device linked yet", "Antwortzeit": "Latency", "Stromleiste": "PDU", "USV": "UPS", "jetzt": "now", "Normal": "Normal", "Warm": "Warm", "Zu heiß": "Too hot", "In Ordnung": "OK", "Störung": "Fault", "Störungen": "Faults", "1 Störung": "1 fault", "Warnung": "Warning", "Passiv": "Passive", "Aus": "Off", "Läuft": "Running", "läuft": "running", "Gestoppt": "Stopped", "Inaktiv": "Inactive", "Aktiv": "Active", "aktiv": "active", "Ausgeschaltet": "Switched off", "Aus seit": "Off since", "Zustand": "State", "Status": "Status", "Problem": "Problem", "ohne Problem": "no problem", "OK": "OK", "✓ OK": "✓ OK", "Alles in Ordnung": "All good", "meldet ein Problem": "reports a problem", "Alle Sensoren sind nicht verfügbar": "All sensors are unavailable", "Noch kein Rack angelegt.": "No rack created yet.", "Rack-Editor öffnen": "Open the rack editor", "Das Gerät läuft nicht dauerhaft.": "The device does not run permanently.", "Sobald es eingeschaltet wird, erscheinen die Werte hier automatisch.": "Values appear here automatically once it is switched on.", "Das Gerät läuft nicht dauerhaft. Sobald es eingeschaltet wird, erscheinen die Werte hier automatisch.": "The device does not run permanently. Values appear here automatically once it is switched on.", "⏻ Einschalten": "⏻ Power on", "Nochmal tippen": "Tap again", "Nochmal tippen zum Einschalten": "Tap again to power on", "⏻ Aus": "⏻ Off", "Server aus": "Server off", "Belegung, Cache und Parität erscheinen nach dem Einschalten.": "Usage, cache and parity appear after power-on.", "Passives Element ohne Sensoren. Im Editor der Integration lässt sich hier eine Belegung oder Notiz hinterlegen.": "Passive element without sensors. Assignments or notes can be added in the integration's editor.", "Uptime": "Uptime", "History": "History", "Verlauf": "History", "Meldungen": "Messages", "Auslastung": "Load", "Prozessor": "Processor", "Arbeitsspeicher": "Memory", "RAM": "RAM", "CPU": "CPU", "GPU": "GPU", "CPU-Temp.": "CPU temp.", "Temp.": "Temp.", "Temperaturen": "Temperatures", "Temperaturverlauf": "Temperature history", "Speicher": "Storage", "Netzwerk": "Network", "Internet": "Internet", "System": "System", "Durchsatz": "Throughput", "Download": "Download", "Upload": "Upload", "Clients": "Clients", "Ports": "Ports", "Aktive Ports": "Active ports", "Uplink": "Uplink", "Bündel": "Bundle", "Verbunden mit": "Connected to", "Nicht verbunden": "Not connected", "verbunden": "connected", "frei": "free", "Frei": "Free", "belegt": "used", "Belegt": "Used", "leer": "empty", "Gesamt": "Total", "Verfügbar": "Available", "Nicht verfügbar": "Unavailable", "Unbekannt": "Unknown", "An": "On", "Zuhause": "Home", "Abwesend": "Away", "Offen": "Open", "Geschlossen": "Closed", "Verbunden": "Connected", "Getrennt": "Disconnected", "Bereit": "Ready", "Nimmt auf": "Recording", "Streamt": "Streaming", "Spielt": "Playing", "Pausiert": "Paused", "Gestartet": "Started", "Platten fehlen": "Disks missing", "Ungültige Erweiterung": "Invalid expansion", "Paritätsprüfung": "Parity check", "Wird neu aufgebaut": "Rebuilding", "Wartung": "Maintenance", "Sicher": "Safe", "Unsicher": "Unsafe", "Neu, nicht zugewiesen": "New, unassigned", "Fehlt": "Missing", "Deaktiviert": "Disabled", "Ungültig": "Invalid", "Falsche Platte": "Wrong disk", "Emuliert": "Emulated", "abgeschlossen": "completed", "abgebrochen": "cancelled", "pausiert": "paused", "fehlgeschlagen": "failed", "nie ausgeführt": "never run", "Schächte": "Bays", "Intern": "Internal", "Parität": "Parity", "Daten": "Data", "Cache": "Cache", "blass = schläft": "faded = spun down", "schläft": "spun down", "Array": "Array", "Array gestoppt": "Array stopped", "Keine Belegung": "No usage", "Der Sensor liefert noch keine Größen.": "The sensor does not report sizes yet.", "Platten fehlen. Platten und Freigaben sind erst nach dem Start verfügbar.": "Disks missing. Disks and shares are available after the array starts.", "Fehlende Platten": "Missing disks", "Ungültige Platten": "Invalid disks", "Deaktivierte Platten": "Disabled disks", "Konfiguration": "Configuration", "Mover": "Mover", "Hardware": "Hardware", "Peripherie": "Peripheral", "Lüfter in U/min": "Fans in rpm", "Lüfter": "Fans", "U/min": "rpm", "Aufnahme": "Recording", "Dauer": "Continuous", "Bewegung": "Motion", "Erkennungen": "Detections", "Erkennungen heute": "Detections today", "Zeitraffer": "Timelapse", "Kameras": "Cameras", "Kamera": "Camera", "Kamera offline": "Camera offline", "Festplatten": "Disks", "Laufwerk": "Drive", "Zufriedenheit": "Satisfaction", "Gäste": "Guests", "Switches": "Switches", "APs": "APs", "Top-Client": "Top client", "WLAN-Kanalauslastung": "Wi-Fi channel utilisation", "Anbindung": "Connection", "Schnittstellen": "Interfaces", "Container": "Containers", "Steckplätze": "Slots", "Eingebaut": "Installed", "Reserve": "Runtime", "Last": "Load", "Eingang": "Input", "Ausgang": "Output", "Spannung": "Voltage", "Gleichrichter": "Rectifier", "Wechselrichter": "Inverter", "Bypass": "Bypass", "Bypass aktiv": "Bypass active", "Online-USV": "Online UPS", "Netz": "Mains", "Netz ↓": "Mains ↓", "Netz aus": "Mains off", "Schutz": "Protection", "Selbsttest": "Self-test", "Selbsttest bestanden": "Self-test passed", "bestanden": "passed", "Voll funktionsfähig": "Fully functional", "Optimal": "Optimal", "Akku wird geladen": "Battery charging", "lädt": "charging", "entlädt": "discharging", "Last hängt direkt am Netz": "Load runs directly on mains", "Netz ausgefallen, Last läuft aus dem Akku": "Mains failed, load runs on battery", "Netz ausgefallen: Die Last läuft aus dem Akku.": "Mains failed: the load runs on battery.", "Der Strom läuft immer über Akku und Wechselrichter. Fällt das Netz aus, gibt es keine Umschaltzeit.": "Power always flows through battery and inverter. If mains fails there is no transfer time.", "Alles versorgt": "Everything powered", "Ausgänge": "Outlets", "Aktuell": "Current", "Aktuelle Werte": "Current values", "Spitze": "Peak", "Monat": "Month", "letzte Stunde": "last hour", "max.": "max.", "max": "max", "Neu gestartet": "Restarted", "Nicht erreichbar": "Unreachable", "Gerät ist nicht im Netzwerk": "Device is not on the network", "Firmware wird installiert": "Installing firmware", "Firmware-Update verfügbar": "Firmware update available", "Wird eingerichtet": "Setting up", "Wird übernommen": "Adopting", "Überhitzung gemeldet": "Overheating reported", "Überhitzung": "Overheating", "Schaltzustand wird von der Stromleiste derzeit nicht korrekt gemeldet.": "The PDU currently does not report the switching state correctly.", "Rack-Thermosensor": "Rack thermal sensor", "Tage": "days", "Tag": "day", "Std.": "h", "24 Std.": "24 h", "Ø RAM": "Ø RAM", "Übrige": "Other", "ggü. gestern": "vs. yesterday", "Übersicht": "Overview", "Speicherdauer": "Retention", "Keine Temperaturwerte vorhanden.": "No temperature values available.", "Rückseite (0 HE)": "Rear (0 U)", "Ein": "On", "Hohe Temperatur": "High temperature", "Port": "Port", "Rack-Editor": "Rack editor", "Wird geladen …": "Loading …", "Rack wählen": "Choose rack", "Gerät bearbeiten": "Edit device", "Gerät wählen …": "Choose device …", "▦ Übersicht (Startseite)": "▦ Overview (home page)", "Neue Version · neu laden": "New version · reload", "Der Editor wurde aktualisiert": "The editor was updated", "Rückgängig (⌘Z)": "Undo (⌘Z)", "Wiederholen (⇧⌘Z)": "Redo (⇧⌘Z)", "Rückgängig": "Undo", "Ungespeicherte Änderungen": "Unsaved changes", "Gespeichert": "Saved", "Verwerfen": "Discard", "Speichern": "Save", "Eine Ebene zurück (Esc)": "Up one level (Esc)", "Rack": "Rack", "Geräte": "Devices", "Startseite neben dem Rack": "Home page next to the rack", "Passive Elemente": "Passive elements", "Antippen zum Bearbeiten. Im Rack rechts: ziehen zum Verschieben, ＋ zum Einsetzen.": "Tap to edit. In the rack on the right: drag to move, ＋ to insert.", "Name": "Name", "Höheneinheiten": "Rack units", "USV-Kapazität (W)": "UPS capacity (W)", "Tür & Beschriftung": "Door & labels", "Schild": "Badge", "z. B. Firmenname": "e.g. company name", "Typenschild": "Type plate", "Beschriftung oben": "Top label", "Beschriftung unten": "Bottom label", "Aussehen": "Appearance", "Gehäusefarbe": "Cabinet colour", "Hellgrau (Standard)": "Light grey (default)", "Weiß": "White", "Graphit": "Graphite", "Schwarz": "Black", "Eigene Farbe …": "Custom colour …", "Eigene Farbe": "Custom colour", "Lochgitter": "Perforated", "Glas": "Glass", "Blech": "Solid", "Ohne Tür": "No door", "Farbe Beschriftung": "Label colour", "Anzeige": "Display", "Darstellen auf": "Show on", "Zurück zur Übersicht nach": "Back to overview after", "nie": "never", "nach 30 Sekunden": "after 30 seconds", "nach 1 Minute": "after 1 minute", "nach 2 Minuten": "after 2 minutes", "nach 5 Minuten": "after 5 minutes", "Breite (px)": "Width (px)", "Höhe (px)": "Height (px)", "Diagonale (Zoll)": "Diagonal (inch)", "Skalierung": "Scaling", "Felder": "cells", "Die Ansicht wird für diese Fläche gebaut und überall (Seite „Rack“, Karten, Pi) passend skaliert. „Nur Dashboard“ nutzt immer die ganze verfügbare Fläche.": "The view is built for this area and scaled everywhere (“Rack” page, cards, Pi). “Dashboard only” always uses the whole available area.", "7\" Pi-Display hochkant": "7\" Pi display portrait", "7\" Pi-Display quer": "7\" Pi display landscape", "Full HD 1920 × 1080": "Full HD 1920 × 1080", "HD 1280 × 720": "HD 1280 × 720", "HD hochkant 720 × 1280": "HD portrait 720 × 1280", "Tablet 1024 × 768": "Tablet 1024 × 768", "Eigene Größe": "Custom size", "Nur Dashboard – ganze Fläche nutzen": "Dashboard only – use the whole area", "Gerät einsetzen": "Insert device", "erste freie Stelle von oben": "first free slot from the top", "Tipp: ＋ im Rack antippen, um die Höhe vorzugeben, oder eine Vorlage ins Rack ziehen.": "Tip: tap ＋ in the rack to choose the position, or drag a template into the rack.", "Server & Speicher": "Servers & storage", "Zubehör": "Accessories", "Gateway": "Gateway", "Switch": "Switch", "SFP-Switch": "SFP switch", "Patchfeld": "Patch panel", "LWL-Patchfeld": "Fibre patch panel", "Server 1 HE": "Server 1 U", "Server 2 HE": "Server 2 U", "Server 4 HE": "Server 4 U", "Rekorder": "Recorder", "Gerät allgemein": "Generic device", "Zusatzbatterie": "Battery pack", "Stromleiste (hinten)": "PDU (rear)", "Fachboden": "Shelf", "Modulrahmen": "Module frame", "Kabelführung": "Cable management", "Blende": "Blanking panel", "Server": "Server", "Server mit Lüfterblende": "Server with fan panel", "USV / Batterie": "UPS / battery", "Allgemein": "General", "Modell": "Model", "Vorlage": "Template", "Höhe (HE)": "Height (U)", "Position": "Position", "Vorne in HE": "Front in U", "Passiv (ohne Sensoren)": "Passive (no sensors)", "Nicht immer eingeschaltet": "Not always on", "Aus = grau, keine Warnungen": "Off = grey, no warnings", "„Aus“ erkennen über": "Detect “off” via", "automatisch (alle Werte weg)": "automatic (all values gone)", "Einschalt-Taste": "Power-on button", "– keine –": "– none –", "Gehört zu (z. B. Zusatzbatterie → USV)": "Belongs to (e.g. battery pack → UPS)", "– eigenständig –": "– standalone –", "Home Assistant": "Home Assistant", "verknüpft": "linked", "nicht verknüpft": "not linked", "Noch nicht verknüpft": "Not linked yet", "Nicht verknüpft": "Not linked", "Mit Home Assistant verknüpft": "Linked to Home Assistant", "Automatisch erkannt:": "Detected automatically:", "Weiteres Gerät verknüpfen": "Link another device", "Gerät suchen": "Search device", "Name, Modell oder Hersteller": "Name, model or manufacturer", "Kein Treffer": "No match", "Ausgänge benennen": "Name outlets", "Module": "Modules", "Fotos": "Photos", "Foto vorhanden": "Photo available", "Vorderseite": "Front", "Kein Foto": "No photo", "Hochladen": "Upload", "Entfernen": "Remove", "Senkrechtes Bild (in der Rückansicht)": "Vertical image (rear view)", "🗑 Entfernen": "🗑 Remove", "🗑 Gerät entfernen": "🗑 Remove device", "In anderes Rack übernehmen …": "Copy to another rack …", "Gerät samt Popup in ein anderes Rack übernehmen": "Copy device with its popup to another rack", "Raster belegt": "Grid used", "Neue Module aus der Bibliothek in der Mitte antippen oder ins Popup ziehen. Im Popup: ⋮⋮ verschieben, Ecke ziehen = Größe.": "Tap new modules in the library in the middle or drag them into the popup. In the popup: ⋮⋮ to move, drag the corner to resize.", "Die Startseite neben dem Rack ist ein Raster wie die Popups: Karten aus der Bibliothek hinzufügen, ⋮⋮ verschieben, an der Ecke skalieren, antippen für Einstellungen und Entitäten.": "The home page next to the rack is a grid like the popups: add cards from the library, ⋮⋮ to move, drag the corner to resize, tap for settings and entities.", "Standard wiederherstellen": "Restore default", "Eigene Übersicht entfernen": "Remove custom overview", "Zurück zur festen Standard-Übersicht": "Back to the fixed default overview", "Module suchen …": "Search modules …", "antippen oder ins Popup ziehen": "tap or drag into the popup", "Alle": "All", "Zuletzt benutzt": "Recently used", "Für dieses Gerät keine Daten": "No data for this device", "Entitäten nach dem Hinzufügen wählen": "Choose entities after adding", "Größe ändern": "Resize", "Verschieben": "Move", "Name eintippen": "Type a name", "Foto der Vorderseite hochladen": "Upload front photo", "📷 Foto": "📷 Photo", "Größe · Breite": "Size · width", "Darstellung": "Display style", "Titel": "Title", "Untertitel": "Subtitle", "optional": "optional", "z. B. Netzwerk": "e.g. Network", "Text": "Text", "Minimum": "Minimum", "Maximum": "Maximum", "Warnung ab": "Warning from", "Kritisch ab": "Critical from", "+ Entität": "+ Entity", "+ Kennzahl": "+ Key figure", "Entität suchen": "Search entity", "Name oder entity_id": "Name or entity_id", "Anzeigename": "Display name", "Noch keine Entität": "No entity yet", "Automatisch": "Automatic", "Kennzahlen oben (bis zu 4). Leer = automatisch (z. B. Uptime, Clients, Ports, Durchsatz).": "Key figures at the top (up to 4). Empty = automatic (e.g. uptime, clients, ports, throughput).", "Vorschläge von diesem Gerät": "Suggestions from this device", "Tippe, um alle Entitäten zu durchsuchen": "Type to search all entities", "dieses Gerät": "this device", "immer oben": "always on top", "Kacheln": "Tiles", "Kacheln mit 24-Std.-Kurve": "Tiles with 24 h curve", "Kompakt (Zeilen)": "Compact (rows)", "Hardware (Temperaturen + Lüfter)": "Hardware (temperatures + fans)", "Balken": "Bars", "Thermometer (Temperaturen)": "Thermometer (temperatures)", "Kurven-Kacheln": "Curve tiles", "Verfolgbarer Verlauf": "Trackable history", "Wert": "Value", "Wert mit 24-Std.-Kurve": "Value with 24 h curve", "Chips": "Chips", "Liste (Probleme zuerst)": "List (problems first)", "Schächte vorne": "Front bays", "Spalten": "Columns", "Cache-Laufwerke stecken in Schächten (sonst „Intern“)": "Cache drives sit in bays (otherwise “Internal”)", "Fertig": "Done", "🗑 Modul entfernen": "🗑 Remove module", "Modul verschoben": "Module moved", "Dort ist kein Platz – zurückgesetzt": "No room there – reverted", "Kein freier Platz": "No free space", "Vorne ist kein Platz frei": "No free space at the front", "Bild wird hochgeladen …": "Uploading image …", "Nach oben": "Up", "Nach unten": "Down", "Mein Rack": "My rack", "Schließen (Esc)": "Close (Esc)", "Alle ungespeicherten Änderungen verwerfen?": "Discard all unsaved changes?", "Ungespeicherte Änderungen gehen verloren. Trotzdem wechseln?": "Unsaved changes will be lost. Switch anyway?", "Ungespeicherte Änderungen gehen beim Neuladen verloren. Trotzdem neu laden?": "Unsaved changes will be lost when reloading. Reload anyway?", "Eigene Übersicht entfernen und zur Standard-Übersicht zurückkehren?": "Remove the custom overview and return to the default overview?", "Tippe auf eine freie Höheneinheit, um ein Gerät einzusetzen, oder auf ein Gerät, um es zu bearbeiten.": "Tap a free rack unit to insert a device, or a device to edit it.", "Werte als Kacheln": "Values as tiles", "Werte mit Kurven": "Values with curves", "Einzelwert": "Single value", "Einzelwert mit Kurve": "Single value with curve", "Kurven": "Curves", "Tacho": "Gauge", "Ring": "Ring", "Kennzahl": "Key figure", "Fortschritt": "Progress", "Balkendiagramm": "Bar chart", "Status-Chips": "Status chips", "Schalter": "Switches", "Aktionen": "Actions", "Überschrift": "Heading", "Uhr": "Clock", "Notiz": "Note", "Notiz – Text im Modulfenster eintragen": "Note – enter text in the module panel", "Abschnitt": "Section", "Kopf": "Header", "Rack Display": "Rack Display", "Server-Rack mit Live-Werten": "Server rack with live values", "Werte & Anzeigen": "Values & gauges", "Diagramme": "Charts", "Steuerung": "Controls", "Strom & USV": "Power & UPS", "Speicher & Video": "Storage & video", "Text & Sonstiges": "Text & other", "Werte": "Values", "Energiefluss": "Energy flow", "Laufwerksschächte": "Drive bays", "Kennzahlen-Leiste": "Key figure bar", "Strom (Übersicht)": "Power (overview)", "Temperatur (Übersicht)": "Temperature (overview)", "Hinweise (Übersicht)": "Notices (overview)", "Alle Ports mit Geschwindigkeit, PoE und Live-Durchsatz": "All ports with speed, PoE and live throughput", "Ausgänge einer Stromleiste mit Belegung": "Outlets of a PDU with assignments", "Auslastung als Balken (0–100 % oder eigener Bereich)": "Load as bars (0–100 % or custom range)", "Belegung, Zustand, Cache-Pools und Parität eines Arrays": "Usage, state, cache pools and parity of an array", "Beliebige Entitäten als Kacheln": "Any entities as tiles", "CPU, RAM und Temperatur über 24 Std.": "CPU, RAM and temperature over 24 h", "Download und Upload über 24 Std.": "Download and upload over 24 h", "Ein Wert als Balken mit Min/Max": "One value as a bar with min/max", "Ein Wert als Halbkreis-Anzeige mit Min/Max und Warnfarben": "One value as a semicircle gauge with min/max and warning colours", "Ein Wert als Ring (z. B. Auslastung in %)": "One value as a ring (e.g. load in %)", "Ein Wert als eigene Kachel – wahlweise mit 24-Std.-Kurve": "One value as its own tile – optionally with a 24 h curve", "Ein bis drei Messwerte über 24 Std.": "One to three measurements over 24 h", "Ein- und Ausgangsspannung über 24 Std.": "Input and output voltage over 24 h", "Freier Text, z. B. Belegung eines Patchfelds": "Free text, e.g. patch panel assignments", "Große Zahl mit Veränderung gegenüber gestern": "Big number with change vs. yesterday", "Internet, PoE, Stromleiste, USV auf einen Blick": "Internet, PoE, PDU, UPS at a glance", "Kacheln mit den wichtigsten Messwerten": "Tiles with the key measurements", "Leistung des Racks, USV-Akku, Verbraucher und 24-Std.-Verlauf": "Rack power, UPS battery, consumers and 24 h history", "Mehrere Zustände kompakt als Chips mit Ampel": "Several states as compact chips with traffic lights", "Name, Modell, Position, Frontbild, bis zu 4 Kennzahlen": "Name, model, position, front image, up to 4 key figures", "Online-USV: Netz, Akku, Last": "Online UPS: mains, battery, load", "PoE-Leistung gesamt und je Port": "PoE power in total and per port", "Schalter, Lichter, Lüfter direkt bedienen": "Control switches, lights and fans directly", "Schächte mit Parität, Daten und Cache, Temperatur, Belegung und Ruhezustand": "Bays with parity, data and cache, temperature, usage and spin-down", "Schächte, Zustand und Belegung": "Bays, state and usage", "Skripte, Szenen und Tasten auslösen": "Run scripts, scenes and buttons", "Speicherdauer, Aufnahmearten, Kameras": "Retention, recording types, cameras", "Standbild einer Kamera (aktualisiert sich laufend)": "Camera still image (refreshes continuously)", "Stundenwerte der letzten 24 Std. als Balken": "Hourly values of the last 24 h as bars", "Störungen, Hinweise und Infos des Geräts": "Faults, notices and info of the device", "Titel mit Untertitel zum Gliedern": "Title with subtitle for structure", "Uhrzeit und Datum": "Time and date", "Warnungen und Störungen aller Geräte": "Warnings and faults of all devices", "Wärmstes Gerät und Temperaturen aller Geräte": "Warmest device and temperatures of all devices", "Zustände als Liste mit Ampel": "States as a list with traffic lights", "CPU-Auslastung": "CPU load", "Speicherauslastung": "Memory usage", "Speicherplatzauslastung": "Disk usage", "Betriebszeit": "Uptime", "CPU-Temperatur": "CPU temperature", "PoE-Leistung": "PoE power", "Aufnahmekapazität": "Recording capacity", "1 Tag": "1 day", "Abbrüche": "drops", "WAN-Abbrüche": "WAN drops", "Breite": "Width", "Höhe": "Height", "Zeilen": "rows", "ganz": "full", "Zeile": "row", "Niedriger": "Lower", "Höher": "Taller", "Dafür ist im Raster kein Platz": "No room for that in the grid", "Sprache": "Language", "Automatisch (Sprache des HA-Benutzers)": "Automatic (HA user language)", "Verlust": "Loss", "Nummerierung": "Numbering", "zeilenweise (1 2 3 … nach rechts)": "by row (1 2 3 … to the right)", "spaltenweise (1 2 3 … nach unten)": "by column (1 2 3 … downwards)", "Platte → Schacht": "Disk → bay", "auto": "auto", "Leer = nächster freier Schacht. Doppelte Nummern: die erste Platte gewinnt.": "Empty = next free bay. Duplicate numbers: the first disk wins.", "Anzahl Steckplätze": "Number of slots", "eingebaut": "installed", "geplant": "planned", "Beschreibung, z. B. LAN · OLED": "Description, e.g. LAN · OLED", "Entität für Live-Wert (optional)": "Entity for live value (optional)", "Name eintragen belegt den Steckplatz; leeren gibt ihn frei. Mit Entität zeigt das Popup den aktuellen Wert.": "Entering a name occupies the slot; clearing it frees the slot. With an entity the popup shows its current value.", "HA-Entitäten anlegen": "Create HA entities", "Zustand, Störungen, Warnungen, wärmstes Gerät – für Automationen und Benachrichtigungen": "State, faults, warnings, hottest device – for automations and notifications", "Strompreis (€/kWh)": "Electricity price (€/kWh)", "oder Preis-Entität": "or price entity", "z. B. 0,30": "e.g. 0.30", "⇩ Exportieren": "⇩ Export", "⇧ Importieren": "⇧ Import", "Rack mit Geräten, Popups und Einstellungen als Datei sichern": "Save the rack with devices, popups and settings as a file", "Rack exportiert": "Rack exported", "Nachtmodus von": "Night mode from", "bis": "until", "Helligkeit nachts": "Brightness at night", "100 % (nur dunkel)": "100 % (dark only)", "Wärme": "Heat", "Wärmekarte": "Heat map", "Knopf „Wärme“ unter dem Rack färbt die Geräte nach Temperatur (ab zwei Geräten mit Temperaturwert)": "A “Heat” button below the rack colours devices by temperature (needs two devices with temperatures)", "Auf dem Fachboden": "On the shelf", "Cloud Key / kleiner Controller": "Cloud Key / small controller", "Mini-PC": "Mini PC", "kleines NAS": "small NAS", "Box allgemein": "Generic box", "Access Point": "Access point", "ist dieses Gerät (Zustand, LED)": "is this device (state, LED)", "＋ Gerät auf den Fachboden": "＋ Device on the shelf", "Kleingeräte, die auf der Ablage liegen. Das verknüpfte HA-Gerät zeigt seinen Zustand an der LED.": "Small devices lying on the shelf. The linked HA device shows its state on the LED.", "Zuordnung aus Entität (optional)": "Assignment from entity (optional)", "Entität liefert (noch) keine Zuordnung – manuelle Werte gelten": "Entity does not provide an assignment (yet) – manual values apply", "Liegend (Kacheln)": "Horizontal (tiles)", "Stehend (wie im Gehäuse)": "Vertical (like the enclosure)", "Bildschirm (TouchKio)": "Screen (TouchKio)", "– keiner –": "– none –", "Ausschalten nach": "Switch off after", "nie (immer an)": "never (always on)", "1 Minute": "1 minute", "2 Minuten": "2 minutes", "5 Minuten": "5 minutes", "10 Minuten": "10 minutes", "30 Minuten": "30 minutes", "Ohne Berührung schaltet HA den Bildschirm aus; eine Berührung schaltet ihn wieder ein.": "Without touch HA switches the screen off; a touch switches it back on.", "stehend: alle in einer Reihe": "vertical: all in one row", "Standard (OLED + LAN)": "Standard (OLED + LAN)", "Rack-Temperatur": "Rack temperature", "NTP-Zeitserver": "NTP time server", "Cloud-Key-Modul": "Cloud Key module", "Breite in Steckplätzen": "Width in slots", "Platz": "slot", "Plätze": "slots", "Offline": "Offline", "Online": "Online", "Eigenes Popup bearbeiten ›": "Edit own popup ›", "+ Eigenes Popup (HA-Gerät verknüpfen)": "+ Own popup (link HA device)", "Popup entfernt": "Popup removed", "Gerät entfernen": "Remove device", "Zähler": "Meter", "Heute": "Today", "Akkus": "Batteries", "Akkustände mehrerer Geräte als Liste, schwache zuerst": "Battery levels of several devices as a list, weakest first", "Warnung unter (%)": "Warning below (%)", "Kritisch unter (%)": "Critical below (%)", "Sortierung": "Sort order", "Schwache zuerst": "Weakest first", "Nach Name": "By name"};
-const RD_EN_RE = [["^Neu gestartet mit Firmware (.+)$", "Restarted with firmware $1"], ["^Gestartet mit Firmware (.+)$", "Started with firmware $1"], ["^(\\d+) Zuordnungen aus der Entität · manuelle Werte gelten nur für Platten ohne Eintrag$", "$1 assignments from the entity · manual values only apply to disks without an entry"], ["^(\\d+) Geräte$", "$1 devices"], ["^auf Fachboden HE (.+)$", "on shelf U $1"], ["^Import fehlgeschlagen: (.+)$", "Import failed: $1"], ["^„(.+)“ als neues Rack anlegen\\?$", "Create “$1” as a new rack?"], ["^„(.+)“ importiert$", "“$1” imported"], ["^heute · ≈ (.+)$", "today · ≈ $1"], ["^≈ (.+) / Monat$", "≈ $1 / month"], ["^(\\d+) Zeilen$", "$1 rows"], ["^(\\d+) von 12 Spalten$", "$1 of 12 columns"], ["^(\\d+) × (\\d+) · in der Vorschau an der Ecke ziehen oder Pfeiltasten \\(⇧ = Größe\\)$", "$1 × $2 · drag the corner in the preview or use arrow keys (⇧ = size)"], ["^· (.+)$", "· $1"], ["^(\\d+) Tage$", "$1 days"], ["^(\\d+) Std\\.$", "$1 h"], ["^(\\d+) HE$", "$1 U"], ["^HE (\\d+(?:–\\d+)?)$", "U $1"], ["^ab HE (\\d+)$", "from U $1"], ["^(\\d+) HE · ab HE (\\d+)$", "$1 U · from U $2"], ["^(\\d+) HE · passt hier nicht$", "$1 U · does not fit here"], ["^(\\d+) von (\\d+) HE$", "$1 of $2 U"], ["^(\\d+) von (\\d+) belegt$", "$1 of $2 used"], ["^(\\d+) von (\\d+) belegt · (\\d+) geplant$", "$1 of $2 used · $3 planned"], ["^(\\d+) von (\\d+) verbunden$", "$1 of $2 connected"], ["^(\\d+) von (\\d+) Kameras$", "$1 of $2 cameras"], ["^(\\d+) Störungen$", "$1 faults"], ["^(\\d+) Hinweise$", "$1 notices"], ["^(\\d+) mit Problem$", "$1 with problems"], ["^(\\d+) warm$", "$1 warm"], ["^(\\d+) weitere$", "$1 more"], ["^\\+(\\d+) weitere$", "+$1 more"], ["^(\\d+) Geräte versorgt$", "$1 devices powered"], ["^(\\d+) Ausgänge$", "$1 outlets"], ["^(\\d+) Fehler$", "$1 errors"], ["^(\\d+) HE · (\\d+) belegt · (\\d+) aktive Geräte$", "$1 U · $2 used · $3 active devices"], ["^(.+) · (\\d+) HE · (\\d+) belegt · (\\d+) Elemente$", "$1 · $2 U · $3 used · $4 items"], ["^([\\d.,]+) % der USV-Kapazität · laut Stromleiste$", "$1 % of UPS capacity · via PDU"], ["^([\\d.,]+) % der USV-Kapazität$", "$1 % of UPS capacity"], ["^([\\d.,]+) % Last ·?$", "$1 % load"], ["^Auslastung der USV ([\\d.,]+) %$", "UPS load $1 %"], ["^USV-Akku (\\d+) Prozent, (\\d+) Minuten Reserve$", "UPS battery $1 percent, $2 minutes runtime"], ["^Wärmstes Gerät (\\d+) Grad$", "Warmest device $1 degrees"], ["^aktuell (.+)$", "currently $1"], ["^Grenze (.+)$", "Limit $1"], ["^Temperatur über (.+)$", "Temperature above $1"], ["^(.+) um (\\d+:\\d+)$", "$1 at $2"], ["^seit (.+)\\. Sobald es eingeschaltet wird, erscheinen die Werte hier automatisch\\.$", "since $1. Values appear here automatically once it is switched on."], ["^seit (.+)$", "since $1"], ["^Akku (.+)$", "Battery $1"], ["^Schacht (\\d+)$", "Bay $1"], ["^Intern (\\d+)$", "Internal $1"], ["^Platte (\\w+)$", "Disk $1"], ["^Parität (\\d+)$", "Parity $1"], ["^Cache (\\d+)$", "Cache $1"], ["^([\\d.,]+) % belegt$", "$1 % used"], ["^Lüfter \\((\\d+)\\)$", "Fans ($1)"], ["^Ø (.+) · Spitze (.+)$", "Ø $1 · peak $2"], ["^vor (\\d+) J\\. (\\d+) Mon\\.$", "$1 y $2 mo ago"], ["^vor (.+)$", "$1 ago"], ["^automatisch \\((.+)\\)$", "automatic ($1)"], ["^nach (\\d+) Sekunden$", "after $1 seconds"], ["^nach (\\d+) Minuten$", "after $1 minutes"], ["^Größe · Breite (\\d+) von 12, Höhe (\\d+) Zeilen$", "Size · width $1 of 12, height $2 rows"], ["^(\\d+) × (\\d+) · im Popup$", "$1 × $2 · in popup"], ["^von (\\d+) Zeilen$", "of $1 rows"], ["^von (\\d+) Zeilen – zu hoch$", "of $1 rows – too tall"], ["^(\\d+) × (\\d+) px · (\\d+) ppi · Raster der Detailansicht$", "$1 × $2 px · $3 ppi · detail view grid"], ["^(.+) · Für „(.+)“ noch keine Daten – nach dem Hinzufügen Entitäten im Modul wählen$", "$1 · No data for “$2” yet – choose entities in the module after adding"], ["^(.+) · schon im Popup$", "$1 · already in the popup"], ["^Größen wie im Popup, Vorschau mit den Daten von „(.+)“\\.$", "Sizes as in the popup, preview with data from “$1”."], ["^Welches Gerät an welchem Ausgang hängt, lässt sich im Rack-Editor beim Gerät „(.+)“ eintragen\\.$", "Which device is plugged into which outlet can be set in the rack editor on the device “$1”."], ["^„(.+)“ entfernt$", "“$1” removed"], ["^Modul „(.+)“ entfernt$", "Module “$1” removed"], ["^„(.+)“ hinzugefügt$", "“$1” added"], ["^„(.+)“ eingesetzt in HE (.+)$", "“$1” inserted at U $2"], ["^„(.+)“ eingesetzt \\(Rückseite\\)$", "“$1” inserted (rear)"], ["^„(.+)“ nach HE (\\d+)$", "“$1” moved to U $2"], ["^Größe (\\d+) × (\\d+)$", "Size $1 × $2"], ["^„(.+)“ in „(.+)“ übernommen$", "“$1” copied to “$2”"], ["^In „(.+)“ ist kein Platz für (\\d+) HE$", "No room for $2 U in “$1”"], ["^„(.+)“ in „(.+)“ ersetzen\\? Popup, Fotos und Verknüpfung werden übernommen, die Position dort bleibt\\.$", "Replace “$1” in “$2”? Popup, photos and link are copied, its position there stays."], ["^„(.+)“ samt Popup in „(.+)“ übernehmen\\?$", "Copy “$1” with its popup to “$2”?"], ["^Übernehmen fehlgeschlagen: (.+)$", "Copy failed: $1"], ["^Hochladen fehlgeschlagen: (.+)$", "Upload failed: $1"], ["^Nicht gespeichert: (.+)$", "Not saved: $1"], ["^Für (\\d+) HE ist an dieser Stelle kein Platz$", "No room for $1 U here"], ["^(\\d+) Gerät\\(e\\) passen nicht in (\\d+) HE:$", "$1 device(s) do not fit in $2 U:"], ["^(.+) einsetzen$", "Insert $1"], ["^HE (\\d+): Gerät einsetzen$", "U $1: insert device"], ["^(.+), HE (.+)$", "$1, U $2"], ["^(.+), Rückseite$", "$1, rear"], ["^Port (\\d+), (.+)$", "Port $1, $2"], ["^(.+) \\(Rückseite\\)$", "$1 (rear)"], ["^„(.+)“ aus dem Rack entfernen\\?$", "Remove “$1” from the rack?"], ["^Online-USV · (.+)$", "Online UPS · $1"], ["^WLED · (.+)$", "WLED · $1"], ["^von ([\\d.,]+ \\S+)$", "of $1"], ["^(.+) ·$", "$1 ·"], ["^gehört zu (.+)$", "part of $1"], ["^(\\d+) Plätze$", "$1 slots"], ["^1 Platz$", "1 slot"], ["^Popup für „(.+)“ angelegt – jetzt HA-Gerät wählen$", "Popup for “$1” created – now pick the HA device"], ["^Platz (\\d+)–(\\d+)$", "Slots $1–$2"], ["^Platz (\\d+)$", "Slot $1"], ["^Platz (\\d+(?:–\\d+)?) · (.+)$", "Slot $1 · $2"], ["^(.+) · Platz (.+)$", "$1 · slot $2"]];
-const RD_EN_RX = RD_EN_RE.map(([a, b]) => [new RegExp(a), b]);
-// Einzelnen Text übersetzen (Leerraum am Rand bleibt erhalten)
+// Einzelnen Text ersetzen (Leerraum am Rand bleibt erhalten)
 function rdT(s) {
   if (rdIsDe() || !s) return s;
-  const k = s.trim(); if (!k || !/[A-Za-zÄÖÜäöüß]/.test(k)) return s;
-  let r = RD_EN[k];
-  if (r == null) for (const [re, to] of RD_EN_RX) if (re.test(k)) { r = k.replace(re, (...m) => to.replace(/\$(\d)/g, (_, i) => rdT(m[+i]))); break; }
-  // Zusammengesetzte Texte („Akku · normal“, „Patchfeld, HE 40“): Teile einzeln übersetzen
-  if (r == null) for (const sep of [" · ", " – ", ", "]) {
-    if (!k.includes(sep)) continue;
-    const parts = k.split(sep); if (sep === ", " && parts.some(x => x.split(" ").length > 4)) continue;
-    const tr = parts.map(x => rdT(x)); if (tr.some((x, i) => x !== parts[i])) { r = tr.join(sep); break; }
-  }
-  return r == null || r === k ? s : s.replace(k, r);
+  const k = s.trim(), key = k && RD_LEGACY.get(k);
+  if (!key) return s;
+  const r = TR(key);
+  return r === k ? s : s.replace(k, r);
 }
 const RD_ATTRS = ["title", "aria-label", "placeholder", "data-confirm"];
 function rdTrNode(n) {
@@ -77,7 +113,7 @@ function rdTrNode(n) {
   }
 }
 const RD_OBS = new Set();
-// Wurzel (Shadow Root) beobachten: alles, was neu gezeichnet wird, wird übersetzt
+// Wurzel (Shadow Root) beobachten: alles, was neu gezeichnet wird, wird geprüft
 function rdObserve(root) {
   if (!root || root._rdObs) return;
   root._rdObs = new MutationObserver(ms => {
@@ -147,7 +183,7 @@ function createApp(ROOT, WRAP) {
   const since = id => { const s = st(id); if (!ok(s)) return null;
     let sec; const x = parseFloat(s.state);
     if (s.attributes.unit_of_measurement === "s") sec = x; else { const t = Date.parse(s.state); if (isNaN(t)) return null; sec = (Date.now() - t) / 1000; }
-    const d = Math.floor(sec / 86400); return d >= 1 ? `${d} ${d === 1 ? "Tag" : "Tage"}` : `${Math.floor(sec / 3600)} Std.`; };
+    const d = Math.floor(sec / 86400); return d >= 1 ? `${d} ${d === 1 ? TR("day") : TR("days")}` : TR("n_h", Math.floor(sec / 3600)); };
 
   /* ---------- Verläufe (24 Std.) aus der Historie ---------- */
   const HIST = { data: {}, raw: {}, tried: new Set(), fine: new Set(), energyStart: {}, loading: false, last: 0, want: new Set() };
@@ -200,7 +236,7 @@ function createApp(ROOT, WRAP) {
       }
       ids.forEach(id => HIST.tried.add(id));
       HIST.last = Date.now();
-    } catch (e) { console.warn("Rack Display: Historie nicht geladen", e); }
+    } catch (e) { console.warn("Rack Display: history not loaded", e); }
     HIST.loading = false;
     if (!DEAD) renderPanel();
   }
@@ -225,11 +261,11 @@ function createApp(ROOT, WRAP) {
   const DLOG = {};
   const LOG_TXT = (id, s, d) => {
     const dom = id.split(".")[0];
-    if (dom === "update") return s === "on" ? "Firmware-Update verfügbar" : s === "off" ? `Auf ${st(id)?.attributes.installed_version || "neue Firmware"} aktualisiert` : null;
-    if (dom === "device_tracker") return s === "home" ? `${d.name} ist wieder online` : s === "not_home" ? `${d.name} war offline` : null;
-    if (dom === "binary_sensor" && /hitz|overheat/.test(id)) return s === "on" ? "Überhitzung gemeldet" : null;
-    if (dom === "switch" && /_poe$/.test(id)) { const n = id.match(/_(\d+)_poe$/)?.[1]; return `PoE an Port ${n} ${s === "on" ? "eingeschaltet" : "ausgeschaltet"}`; }
-    if (dom === "sensor" && /_(zustand|state)$/.test(id)) return { connected: "Verbunden", disconnected: "Getrennt", upgrading: "Firmware wird installiert", adopting: "Wird übernommen", provisioning: "Wird eingerichtet" }[s] || null;
+    if (dom === "update") return s === "on" ? TR("firmware_update_available") : s === "off" ? TR("updated_to_n", st(id)?.attributes.installed_version || TR("new_firmware")) : null;
+    if (dom === "device_tracker") return s === "home" ? TR("n_is_back_online", d.name) : s === "not_home" ? TR("n_was_offline", d.name) : null;
+    if (dom === "binary_sensor" && /hitz|overheat/.test(id)) return s === "on" ? TR("overheating_reported") : null;
+    if (dom === "switch" && /_poe$/.test(id)) { const n = id.match(/_(\d+)_poe$/)?.[1]; return TR(s === "on" ? "poe_on_port_n_switched_on" : "poe_on_port_n_switched_off", n); }
+    if (dom === "sensor" && /_(zustand|state)$/.test(id)) return { connected: TR("connected_2"), disconnected: TR("disconnected"), upgrading: TR("installing_firmware"), adopting: TR("adopting"), provisioning: TR("setting_up") }[s] || null;
     return null;
   };
   async function loadDevLog(d, devs) {
@@ -245,7 +281,7 @@ function createApp(ROOT, WRAP) {
     } catch (e) { c.last = Date.now(); }
     c.loading = false;
   }
-  const whenTxt = ms => new Date(ms).toLocaleString(rdLoc(), { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).replace(",", " um");
+  const whenTxt = ms => new Date(ms).toLocaleString(rdLoc(), { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).replace(",", " " + TR("at_time"));
 
   /* ---------- Modell: Rack aus dem Backend + Live-Zustände ---------- */
   const SPD_COL = { "25G": "--sp25g", "10G": "--sp10g", "2.5G": "--sp2g5", "1G": "--sp1g", "100M": "--sp100" };
@@ -319,7 +355,7 @@ function createApp(ROOT, WRAP) {
   function blocksOf(r) {
     if (Array.isArray(r.blocks)) return r.blocks;
     if (r.group) return [];
-    const C = RD_CATALOG, key = r.passive || C.passive_templates.includes(r.template) ? "passive" : C.templates[r.template] ? r.template : "generic";
+    const C = rdCatalog(), key = r.passive || C.passive_templates.includes(r.template) ? "passive" : C.templates[r.template] ? r.template : "generic";
     return C.templates[key].map(b => typeof b === "string" ? { type: b } : b);
   }
   // Verlauf-Block: Quelle ist eine Rolle (z. B. "load") oder eine Entitäts-ID
@@ -330,12 +366,12 @@ function createApp(ROOT, WRAP) {
       const series = b.items.slice(0, 4).map(ref => [ref, entOf(ref, R)]).filter(([, id]) => st(id)).map(([ref, id], i) => { HIST.want.add(id);
         return { id, label: b.names?.[ref] || shortName(id), unit: st(id).attributes.unit_of_measurement || "", color: b.colors?.[i] || COL[i], dec: Math.abs(num(id) || 0) < 10 ? 1 : 0, warn: b.warns?.[ref] }; });
       if (b.style === "trace") series.forEach(s => HIST.fine.add(s.id));
-      return series.length ? { multi: true, style: b.style, label: b.label || "Verlauf", series } : null;
+      return series.length ? { multi: true, style: b.style, label: rdLabel(b.label) || TR("history_2"), series } : null;
     }
     const id = entOf(b.items?.[0] || b.source, R);
     const s = st(id); if (!s) return null;
     HIST.want.add(id); if (b.style === "trace") HIST.fine.add(id);
-    return { style: b.style, label: b.label || s.attributes.friendly_name || b.source, unit: s.attributes.unit_of_measurement || "", entity: id, base: num(id) || 0,
+    return { style: b.style, label: rdLabel(b.label) || s.attributes.friendly_name || b.source, unit: s.attributes.unit_of_measurement || "", entity: id, base: num(id) || 0,
       color: b.color || "--blue", dec: b.dec ?? (Math.abs(num(id) || 0) < 10 ? 1 : 0), warn: b.warn };
   }
 
@@ -343,20 +379,20 @@ function createApp(ROOT, WRAP) {
   let LABELS = {};
   const shortName = id => LABELS[id] || st(id)?.attributes.friendly_name || id.split(".")[1];
   const nameOf = (b, ref, id) => b?.names?.[ref] || b?.names?.[id] || shortName(id);
-  const STATE_DE = { on: "An", off: "Aus", home: "Zuhause", not_home: "Abwesend", open: "Offen", closed: "Geschlossen", unavailable: "Nicht verfügbar", unknown: "Unbekannt", connected: "Verbunden", disconnected: "Getrennt", idle: "Bereit", recording: "Nimmt auf", streaming: "Streamt", playing: "Spielt", paused: "Pausiert", started: "Gestartet", stopped: "Gestoppt", too_many_missing_disks: "Platten fehlen", invalid_expansion: "Ungültige Erweiterung", parity_check: "Paritätsprüfung", rebuilding: "Wird neu aufgebaut", maintenance: "Wartung" };
+  const STATE_DE = rdPerLang(() => ({ on: TR("on"), off: TR("off"), home: TR("home"), not_home: TR("away"), open: TR("open"), closed: TR("closed"), unavailable: TR("unavailable"), unknown: TR("unknown"), connected: TR("connected_2"), disconnected: TR("disconnected"), idle: TR("ready"), recording: TR("recording"), streaming: TR("streaming"), playing: TR("playing"), paused: TR("paused"), started: TR("started"), stopped: TR("stopped"), too_many_missing_disks: TR("disks_missing"), invalid_expansion: TR("invalid_expansion"), parity_check: TR("parity_check"), rebuilding: TR("rebuilding"), maintenance: TR("maintenance") }));
   // Binärsensoren nach Geräteklasse in Klartext (Problem-Sensoren: OK/Problem statt Aus/An)
-  const BIN_DE = { problem: ["OK", "Problem"], running: ["Gestoppt", "Läuft"], connectivity: ["Getrennt", "Verbunden"], power: ["Aus", "An"], safety: ["Sicher", "Unsicher"] };
+  const BIN_DE = rdPerLang(() => ({ problem: ["OK", "Problem"], running: [TR("stopped"), TR("running")], connectivity: [TR("disconnected"), TR("connected_2")], power: [TR("off"), TR("on")], safety: [TR("safe"), TR("unsafe")] }));
   function valueOf(id) {
     const s = st(id); if (!s) return { v: "–", u: "" };
     const x = parseFloat(s.state), u = s.attributes.unit_of_measurement || "";
     if (!isNaN(x) && /^-?[\d.]+$/.test(s.state)) { if (u === "Mbit/s" && x >= 1000) return { v: fmt(x / 1000, x % 1000 ? 1 : 0), u: "Gbit/s", n: x };
       return { v: fmt(x, Math.abs(x) < 10 && x % 1 ? 1 : 0), u, n: x }; }
-    const bin = id.startsWith("binary_sensor.") && (/_active$/.test(id) && s.attributes.device_class === "running" ? ["Inaktiv", "Aktiv"] : BIN_DE[s.attributes.device_class]); if (bin && (s.state === "on" || s.state === "off")) return { v: bin[s.state === "on" ? 1 : 0], u: "" };
+    const bin = id.startsWith("binary_sensor.") && (/_active$/.test(id) && s.attributes.device_class === "running" ? [TR("inactive"), TR("active")] : BIN_DE()[s.attributes.device_class]); if (bin && (s.state === "on" || s.state === "off")) return { v: bin[s.state === "on" ? 1 : 0], u: "" };
     if (s.attributes.device_class === "timestamp") { const t = Date.parse(s.state); if (!isNaN(t)) {
       const sec = (Date.now() - t) / 1000;
-      if (sec > 0) { const dd = Math.floor(sec / 86400); return dd >= 1 ? { v: fmt(dd), u: dd === 1 ? "Tag" : "Tage" } : { v: fmt(Math.floor(sec / 3600)), u: "Std." }; }
+      if (sec > 0) { const dd = Math.floor(sec / 86400); return dd >= 1 ? { v: fmt(dd), u: dd === 1 ? TR("day") : TR("days") } : { v: fmt(Math.floor(sec / 3600)), u: TR("h") }; }
       return { v: new Date(t).toLocaleString(rdLoc(), { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }), u: "" }; } }
-    return { v: STATE_DE[s.state] || (/^[a-z0-9]+(_[a-z0-9]+)+$/.test(s.state) ? s.state[0].toUpperCase() + s.state.slice(1).replace(/_/g, " ") : s.state), u: "" };
+    return { v: STATE_DE()[s.state] || (/^[a-z0-9]+(_[a-z0-9]+)+$/.test(s.state) ? s.state[0].toUpperCase() + s.state.slice(1).replace(/_/g, " ") : s.state), u: "" };
   }
   // Für Einzel-Module: erste Entität eines Moduls
   function oneEnt(d, b) { const ref = b.items?.[0] || b.source, id = ref && entOf(ref, d.R); if (!id || !st(id)) return null; return { id, ref, label: nameOf(b, ref, id), v: valueOf(id) }; }
@@ -383,7 +419,7 @@ function createApp(ROOT, WRAP) {
     const m = r.map;
     if (r.passive) return d;
     if (!m && r.group) return d;  // Teil einer Gruppe (z. B. Zusatzbatterie), Werte kommen vom Hauptgerät
-    if (!m) { d.state = "off"; d.msgs.push(["warn", "Keine Daten", "Noch kein Home-Assistant-Gerät verknüpft"]); d.noData = true; return d; }
+    if (!m) { d.state = "off"; d.msgs.push(["warn", TR("no_data"), TR("no_home_assistant_device_linked_yet")]); d.noData = true; return d; }
     const R = m.roles;
     d.R = R;
     const temp = num(R.cpu_temp) ?? num(R.temperature), tempId = R.cpu_temp || R.temperature;
@@ -396,39 +432,39 @@ function createApp(ROOT, WRAP) {
       if ((trk && ["not_home", "off", "offline", "disconnected"].includes(trk.state)) || (vals.length && vals.every(id => !ok(st(id))))) {
         const since = trk?.last_changed || vals.map(id => st(id)?.last_changed).filter(Boolean).sort().at(-1);
         d.state = "off"; d.off = true; d.offSince = since;
-        d.msgs.push(["ok", "Ausgeschaltet", since ? `seit ${new Date(since).toLocaleString(rdLoc(), { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}` : "wird bei Bedarf eingeschaltet"]);
-        d.facts = [["Zustand", "Ausgeschaltet"], ...(since ? [["Aus seit", new Date(since).toLocaleString(rdLoc(), { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })]] : [])]; return d;
+        d.msgs.push(["ok", TR("switched_off"), since ? TR("since_n", new Date(since).toLocaleString(rdLoc(), { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })) : TR("switched_on_when_needed")]);
+        d.facts = [[TR("state"), TR("switched_off")], ...(since ? [[TR("off_since"), new Date(since).toLocaleString(rdLoc(), { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })]] : [])]; return d;
       }
     }
     // Zustand und Meldungen
-    if (Object.values(R).length && Object.values(R).every(id => !ok(st(id)))) { d.state = "alert"; d.msgs.push(["alert", "Keine Werte", "Alle Sensoren sind nicht verfügbar"]); }
+    if (Object.values(R).length && Object.values(R).every(id => !ok(st(id)))) { d.state = "alert"; d.msgs.push(["alert", TR("no_values"), TR("all_sensors_are_unavailable")]); }
     const stt = /load_state$/.test(R.state || "") ? undefined : st(R.state);
-    if (ok(stt) && !["connected", "online", "on", "home"].includes(stt.state)) { d.state = "alert"; d.msgs.push(["alert", "Nicht erreichbar", stt.state === "not_home" ? "Gerät ist nicht im Netzwerk" : `Zustand: ${stt.state}`]); }
+    if (ok(stt) && !["connected", "online", "on", "home"].includes(stt.state)) { d.state = "alert"; d.msgs.push(["alert", TR("unreachable"), stt.state === "not_home" ? TR("device_is_not_on_the_network") : TR("state_n", stt.state)]); }
     const tracker = R.state?.startsWith("device_tracker.") && ok(stt);
-    for (const p of m.problems) if (st(p)?.state === "on") { d.state = "alert"; d.msgs.push(["alert", st(p).attributes.friendly_name || "Problem", "meldet ein Problem"]); }
-    if (temp != null && temp >= TEMP_ALERT) { d.state = "alert"; d.msgs.push(["alert", `Temperatur über ${TEMP_ALERT} °C`, `aktuell ${fmt(temp)} °C`]); }
-    else if (temp != null && temp >= TEMP_WARN) { if (d.state === "ok") d.state = "warn"; d.msgs.push(["warn", `Temperatur über ${TEMP_WARN} °C`, `aktuell ${fmt(temp)} °C`]); }
-    if (st(R.firmware)?.state === "on") d.msgs.push(["ok", "Firmware-Update verfügbar", st(R.firmware).attributes.latest_version || ""]);
+    for (const p of m.problems) if (st(p)?.state === "on") { d.state = "alert"; d.msgs.push(["alert", st(p).attributes.friendly_name || "Problem", TR("reports_a_problem")]); }
+    if (temp != null && temp >= TEMP_ALERT) { d.state = "alert"; d.msgs.push(["alert", TR("temperature_above_n", `${TEMP_ALERT} °C`), TR("currently_n", `${fmt(temp)} °C`)]); }
+    else if (temp != null && temp >= TEMP_WARN) { if (d.state === "ok") d.state = "warn"; d.msgs.push(["warn", TR("temperature_above_n", `${TEMP_WARN} °C`), TR("currently_n", `${fmt(temp)} °C`)]); }
+    if (st(R.firmware)?.state === "on") d.msgs.push(["ok", TR("firmware_update_available"), st(R.firmware).attributes.latest_version || ""]);
     // Kacheln (für Geräte ohne eigene Spezialansicht)
     const T = d.tiles;
-    if (temp != null) T.push(["Temperatur", fmt(temp), "°C", null, temp >= TEMP_ALERT ? "alert" : temp >= TEMP_WARN ? "warn" : "", temp >= TEMP_WARN ? `Grenze ${TEMP_WARN} °C` : ""]);
-    if (cpu != null) T.push(["Prozessor", fmt(cpu), "%", cpu]);
-    if (ram != null) T.push(["Arbeitsspeicher", fmt(ram), "%", ram]);
-    if (num(R.storage) != null) T.push(["Speicher", fmt(round(num(R.storage))), "%", round(num(R.storage))]);
-    if (d.power != null) T.push(["Leistung", fmt(d.power), "W"]);
+    if (temp != null) T.push([TR("temperature"), fmt(temp), "°C", null, temp >= TEMP_ALERT ? "alert" : temp >= TEMP_WARN ? "warn" : "", temp >= TEMP_WARN ? TR("limit_n", `${TEMP_WARN} °C`) : ""]);
+    if (cpu != null) T.push([TR("processor"), fmt(cpu), "%", cpu]);
+    if (ram != null) T.push([TR("memory"), fmt(ram), "%", ram]);
+    if (num(R.storage) != null) T.push([TR("storage"), fmt(round(num(R.storage))), "%", round(num(R.storage))]);
+    if (d.power != null) T.push([TR("power_output"), fmt(d.power), "W"]);
     if (num(R.clients) != null) T.push(["Clients", fmt(num(R.clients)), ""]);
     // Kopf-Fakten
     const facts = [];
     if (since(R.uptime)) facts.push(["Uptime", since(R.uptime)]);
     if (num(R.clients) != null) facts.push(["Clients", fmt(num(R.clients))]);
-    if (num(R.latency) != null) facts.push(["Antwortzeit", `${fmt(num(R.latency))} ms`]);
-    if (num(R.active_ports) != null) facts.push(["Aktive Ports", fmt(num(R.active_ports))]);
+    if (num(R.latency) != null) facts.push([TR("latency"), `${fmt(num(R.latency))} ms`]);
+    if (num(R.active_ports) != null) facts.push([TR("active_ports"), fmt(num(R.active_ports))]);
     if (tracker) {
       const on = stt.state === "home";
-      T.push(["Netzwerk", on ? "Online" : "Offline", "", null, on ? "" : "alert"]);
-      if (stt.attributes.ip) facts.push(["IP-Adresse", stt.attributes.ip]);
-      if (stt.attributes.network) facts.push(["Netz", stt.attributes.network]);
-      facts.push(["Anschluss", stt.attributes.is_wired === false ? "WLAN" : "Kabel"]);
+      T.push([TR("network"), on ? "Online" : "Offline", "", null, on ? "" : "alert"]);
+      if (stt.attributes.ip) facts.push([TR("ip_address"), stt.attributes.ip]);
+      if (stt.attributes.network) facts.push([TR("mains"), stt.attributes.network]);
+      facts.push([TR("connection_type"), stt.attributes.is_wired === false ? TR("wifi") : TR("wired")]);
     }
     if (facts.length) d.facts = facts.slice(0, 4);
     // System-Diagramm oder Einzeldiagramm
@@ -462,7 +498,7 @@ function createApp(ROOT, WRAP) {
       if (s28.length) groups.push(["sfp28", s28]);
       d.portLayout = groups;
       d.traffic = d.ports.reduce((a, p) => [a[0] + (p.rx || 0), a[1] + (p.tx || 0)], [0, 0]);
-      if (d.facts && d.facts.length < 4) { d.facts.push(["Durchsatz", `${rateK(d.traffic[0] + d.traffic[1]).replace(/ (.)$/, " $1bit/s")}`]); }
+      if (d.facts && d.facts.length < 4) { d.facts.push([TR("throughput"), `${rateK(d.traffic[0] + d.traffic[1]).replace(/ (.)$/, " $1bit/s")}`]); }
       if (R.poe_total && num(R.poe_total) != null) d.poe = { used: Math.round(num(R.poe_total)), budget: o.poe_budget || (/48.?poe/i.test(d.model) ? 600 : null) };
     }
     // USV
@@ -472,20 +508,20 @@ function createApp(ROOT, WRAP) {
       const src = { battery: 5, bypass: 4, normal: 3 }[srcText] ?? num(R.source), lv = round(num(R.battery)), rt = round(num(R.runtime));
       const outV = round(num(R.output_voltage)), outA = num(R.output_current);
       d.flow = { inV: round(num(R.input_voltage)), hz: round(num(R.input_frequency), 1), outV, batt: lv, runtime: rt, loadPct: round(num(R.load)),
-        load: outV && outA ? Math.round(outV * outA) : null, source: src === 5 ? "Batterie" : "Netz", bypass: src === 4, ids: { in: R.input_voltage, out: R.output_voltage } };
+        load: outV && outA ? Math.round(outV * outA) : null, source: src === 5 ? TR("battery_source") : TR("mains"), bypass: src === 4, ids: { in: R.input_voltage, out: R.output_voltage } };
       HIST.want.add(R.input_voltage); HIST.want.add(R.output_voltage); HIST.want.add(R.load);
-      const stc = { 1: "bestanden", 2: "Warnung", 3: "Fehler", 4: "abgebrochen", 5: "läuft", 6: "kein Test" }[num(R.selftest)]
-        || { passed: "bestanden", warning: "Warnung", error: "Fehler", aborted: "abgebrochen", in_progress: "läuft", none: "kein Test" }[ok(st(R.selftest)) ? st(R.selftest).state : ""];
+      const stc = { 1: TR("passed"), 2: TR("warning"), 3: TR("error"), 4: TR("cancelled"), 5: TR("running_2"), 6: TR("no_test") }[num(R.selftest)]
+        || { passed: TR("passed"), warning: TR("warning"), error: TR("error"), aborted: TR("cancelled"), in_progress: TR("running_2"), none: TR("no_test") }[ok(st(R.selftest)) ? st(R.selftest).state : ""];
       const bdRaw = ok(st(R.battery_replace)) ? st(R.battery_replace).state : "", bdm = bdRaw.match(/^(\d{1,2})\/\d{1,2}\/(\d{4})$/) || bdRaw.match(/^(\d{4})-(\d{2})/);
       const bdate = !bdm ? bdRaw.slice(0, 10) : bdm[1].length === 4 ? `${bdm[2]}/${bdm[1]}` : `${bdm[1].padStart(2, "0")}/${bdm[2]}`;
       const nmc = ok(st(R.nmc_model)) ? st(R.nmc_model).state : null, bt = round(num(R.battery_temp)), bv = num(R.battery_voltage);
       d.ups = { bt, bv, bdate, nmc, selftest: stc, onBattSec: num(R.on_battery_seconds) };
-      d.facts = [nmc ? ["Netzwerkkarte", nmc] : ["Reserve", `${fmt(rt)} min`], bt != null ? ["Akku-Temp.", `${fmt(bt)} °C`] : ["Batterie", `${fmt(lv)} %`], bdate ? ["Akku-Datum", bdate] : ["Last", `${fmt(round(num(R.load)))} %`], ["Selbsttest", stc === "bestanden" ? "✓ OK" : stc || "–"]];
-      if (stc === "bestanden") d.msgs.push(["ok", "Selbsttest bestanden", [bv != null ? `Akku ${fmt(bv, 1)} V` : "", bt != null ? `${fmt(bt)} °C` : ""].filter(Boolean).join(" · ")]);
-      if (src === 5) { d.state = "alert"; d.msgs.unshift(["alert", "Batteriebetrieb", "Netz ausgefallen, Last läuft aus dem Akku"]); }
+      d.facts = [nmc ? [TR("network_card"), nmc] : [TR("runtime"), `${fmt(rt)} min`], bt != null ? [TR("battery_temp_short"), `${fmt(bt)} °C`] : [TR("battery_source"), `${fmt(lv)} %`], bdate ? [TR("battery_date"), bdate] : [TR("load_2"), `${fmt(round(num(R.load)))} %`], [TR("self_test"), stc === TR("passed") ? "✓ OK" : stc || "–"]];
+      if (stc === TR("passed")) d.msgs.push(["ok", TR("self_test_passed"), [bv != null ? `${TR("battery")} ${fmt(bv, 1)} V` : "", bt != null ? `${fmt(bt)} °C` : ""].filter(Boolean).join(" · ")]);
+      if (src === 5) { d.state = "alert"; d.msgs.unshift(["alert", TR("battery_operation"), TR("mains_failed_load_runs_on_battery")]); }
       d.facts = null;   // Kennzahlen stehen in der USV-Karte
-      if (num(R.alarms) > 0) { d.state = "alert"; d.msgs.unshift(["alert", `${fmt(num(R.alarms))} Alarm(e) an der USV`, ""]); }
-      if (stc && ["Warnung", "Fehler"].includes(stc)) { if (d.state === "ok") d.state = "warn"; d.msgs.push(["warn", `Selbsttest: ${stc}`, ""]); }
+      if (num(R.alarms) > 0) { d.state = "alert"; d.msgs.unshift(["alert", TR("n_alarms_at_the_ups", fmt(num(R.alarms))), ""]); }
+      if (stc && [TR("warning"), TR("error")].includes(stc)) { if (d.state === "ok") d.state = "warn"; d.msgs.push(["warn", TR("self_test_n", stc), ""]); }
     }
     // Stromleiste
     if (Object.keys(m.outlets).length) {
@@ -494,18 +530,18 @@ function createApp(ROOT, WRAP) {
       // apc_rack_power meldet derzeit alle Ausgänge als „aus“, obwohl Last anliegt → Zustand unbekannt
       d.outletsUnknown = d.outlets.every(x => !x.on) && power > 20;
       d.totalPower = power;
-      d.facts = [["Leistung", `${fmt(power)} W`], ["Strom", `${fmt(num(R.current), 1)} A`], ["Spannung", `${fmt(num(R.voltage))} V`], (() => { const e = num(R.energy), e0 = HIST.energyStart?.[R.energy]; // Zählerstand seit Inbetriebnahme ist wenig aussagekräftig: lieber „heute“
-        return e != null && e0 != null ? ["Heute", `${fmt(e - e0, 1)} kWh`] : ["Zähler", e >= 1000 ? `${fmt(e / 1000, 2)} MWh` : `${fmt(e)} kWh`]; })()];
+      d.facts = [[TR("power_output"), `${fmt(power)} W`], [TR("power"), `${fmt(num(R.current), 1)} A`], [TR("voltage"), `${fmt(num(R.voltage))} V`], (() => { const e = num(R.energy), e0 = HIST.energyStart?.[R.energy]; // Zählerstand seit Inbetriebnahme ist wenig aussagekräftig: lieber „heute“
+        return e != null && e0 != null ? [TR("today_2"), `${fmt(e - e0, 1)} kWh`] : [TR("meter"), e >= 1000 ? `${fmt(e / 1000, 2)} MWh` : `${fmt(e)} kWh`]; })()];
       HIST.want.add(R.power); HIST.want.add(R.current); if (R.energy) HIST.want.add(R.energy);
       d.energyId = R.energy;
     }
     // Rekorder
     if (m.disks.length) {
       d.disks = m.disks.map((id, i) => { const x = id.match(/_(hdd|ssd|disk)_(\d+)$/) || []; return { n: +(x[2] || i + 1), label: (x[1] || "Disk").toUpperCase(), state: st(id)?.state === "on" ? "warn" : ok(st(id)) ? "ok" : "off" }; }).sort((p, q) => p.n - q.n);
-      d.disks.filter(x => x.state === "warn").forEach(x => { d.state = "alert"; d.msgs.unshift(["alert", `Schacht ${x.n} (${x.label}) meldet ein Problem`, ""]); });
+      d.disks.filter(x => x.state === "warn").forEach(x => { d.state = "alert"; d.msgs.unshift(["alert", TR("bay_n_reports_a_problem", x.n, x.label), ""]); });
       d.raid = { used: num(R.storage), ...(o.storage || {}) };   // feste Angaben (RAID, Kapazität, Platten) aus dem Editor
       if (o.storage?.disk_label) d.disks.forEach(x => x.label = o.storage.disk_label);
-      const TN = { continuous: ["Dauer", "--blue"], detections: ["Erkennungen", "--purple"], timelapse: ["Zeitraffer", "--orange"] };
+      const TN = { continuous: [TR("continuous"), "--blue"], detections: [TR("detections"), "--purple"], timelapse: [TR("timelapse"), "--orange"] };
       const types = Object.entries(m.rec_types).map(([k, id]) => [TN[k]?.[0] || k, num(id) || 0, TN[k]?.[1] || "--teal"]).filter(t => t[1] >= 0.05);
       // Kameras am Rekorder (aus der Zuordnung, sonst über die Protect-Namensgebung gesucht)
       const cams = m.cameras || Object.keys(HASS?.states || {}).filter(id => /^camera\..+_high_resolution_channel$/.test(id));
@@ -514,9 +550,9 @@ function createApp(ROOT, WRAP) {
       const camOn = cams.filter(id => ok(st(id)));
       if (num(R.recording) != null || types.length) d.rec = { days: Math.round((num(R.recording) || 0) / 86400), types, cams: cams.length, camsOn: camOn.length, events: dets.length ? EVT.count(dets) : null };
       if (cams.length) {
-        if (camOn.length < cams.length) cams.filter(id => !ok(st(id))).forEach(id => { if (d.state === "ok") d.state = "warn"; d.msgs.unshift(["warn", "Kamera offline", (st(id)?.attributes.friendly_name || id).replace(/ High Resolution Channel$/i, "")]); });
+        if (camOn.length < cams.length) cams.filter(id => !ok(st(id))).forEach(id => { if (d.state === "ok") d.state = "warn"; d.msgs.unshift(["warn", TR("camera_offline"), (st(id)?.attributes.friendly_name || id).replace(/ High Resolution Channel$/i, "")]); });
       }
-      d.model = `${d.model} · ${m.disks.length} Schächte`;
+      d.model = `${d.model} · ${m.disks.length} ${TR("bays")}`;
       d.facts = null;
     }
     for (const b of d.blocks) if (b.type === "chart") chartOf(b, R);
@@ -604,11 +640,11 @@ function renderRack(){
   const empties = [];
   for (let u = 1; u <= RACK.units; u++) if (!used.has(u)) empties.push(u);
   $("hits").innerHTML =
-    DEVICES.filter(d => !["bl", "cm", "blank"].includes(d.type)).map(d => `<button class="hit ${d.passive ? "" : d.state} ${isSel(d) ? "sel" : ""}" style="grid-row:${rowOf(d)}" data-id="${selOf(d)}" aria-label="${d.name}, HE ${d.u}${d.h > 1 ? "–" + (d.u + d.h - 1) : ""}"></button>`).join("") +
+    DEVICES.filter(d => !["bl", "cm", "blank"].includes(d.type)).map(d => `<button class="hit ${d.passive ? "" : d.state} ${isSel(d) ? "sel" : ""}" style="grid-row:${rowOf(d)}" data-id="${selOf(d)}" aria-label="${TR("n_u_n", d.name, `${d.u}${d.h > 1 ? "–" + (d.u + d.h - 1) : ""}`)}"></button>`).join("") +
     "" ;
   $("hits").innerHTML += S.side === "rear" ? "" : DEVICES.filter(f => f.kids).flatMap(f => f.kids.map(k => { const n = f.slots || 10, L = 4.5 + 91 * (0.035 + 0.93 * (0.01 + 0.98 * (k.mod.slot - 1) / n)), W = 91 * 0.93 * 0.98 * (k.mod.w || 1) / n; return `<button class="hit sub ${k.state} ${isSel(k) ? "sel" : ""}" style="grid-row:${rowOf(f)};margin:0 0 0 ${L.toFixed(2)}%;width:${W.toFixed(2)}%;justify-self:start" data-id="${k.id}" aria-label="${k.name}"></button>`; })).join("");
   $("pduHit").hidden = S.side !== "rear";
-  const pdu0 = ZERO_U[0]; $("pduHit").hidden = S.side !== "rear" || !pdu0; if (pdu0){ $("pduHit").dataset.id = pdu0.id; $("pduHit").setAttribute("aria-label", pdu0.name + ", Rückseite"); }
+  const pdu0 = ZERO_U[0]; $("pduHit").hidden = S.side !== "rear" || !pdu0; if (pdu0){ $("pduHit").dataset.id = pdu0.id; $("pduHit").setAttribute("aria-label", TR("n_rear", pdu0.name)); }
   $("pduHit").classList.toggle("sel", !!pdu0 && S.sel === pdu0.id);
   $("pduHit").style.backgroundImage = `url('${PDU_IMG}')`;
   $("hits").innerHTML +=
@@ -623,8 +659,8 @@ function chartSVG(c, seed, W = 600, H = 150){
   const col = css(c.color) || "#0a84ff", gid = "g" + seed;
   const dec = c.dec ?? 0, f = y => y.toLocaleString(rdLoc(), {maximumFractionDigits: dec, minimumFractionDigits: dec});
   const ticks = H < 120 ? [lo + (hi - lo) * .15, hi - (hi - lo) * .15] : [lo + (hi - lo) * .15, (lo + hi) / 2, hi - (hi - lo) * .15];
-  const hours = ["−24 h","−18 h","−12 h","−6 h","jetzt"];
-  return `<svg class="chart" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="height:${H}px" role="img" aria-label="${c.label}, letzte 24 Stunden">
+  const hours = ["−24 h","−18 h","−12 h","−6 h",TR("now")];
+  return `<svg class="chart" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="height:${H}px" role="img" aria-label="${c.label}, ${TR("last_24_hours")}">
     <defs><linearGradient id="${gid}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="${col}" stop-opacity=".45"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></linearGradient></defs>
     ${ticks.map(t => `<line class="gl" x1="${pl}" x2="${W - pr}" y1="${Y(t)}" y2="${Y(t)}"/><text x="${pl - 6}" y="${Y(t) + 4}" text-anchor="end">${f(t)}</text>`).join("")}
     ${c.warn ? `<line x1="${pl}" x2="${W - pr}" y1="${Y(c.warn)}" y2="${Y(c.warn)}" stroke="${css("--orange")}" stroke-dasharray="4 4" stroke-width="1.2"/>` : ""}
@@ -643,7 +679,7 @@ const ICONS = {
   chev:'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>',
 };
 
-const STATE_TXT = { ok:"In Ordnung", warn:"Hinweis", alert:"Störung", off:"Passiv" };
+const STATE_TXT = rdPerLang(() => ({ ok:TR("ok"), warn:TR("notice"), alert:TR("fault"), off:TR("passive") }));
 
 const worst = () => { const s = DEVICES.concat(ZERO_U).filter(d => !d.passive).map(d => d.state); const m = allDevices().filter(d => !d.passive && !d.group).flatMap(d => (d.msgs || []).map(x => x[0])); return s.includes("alert") || m.includes("alert") ? "alert" : s.includes("warn") || m.includes("warn") ? "warn" : "ok"; };
 
@@ -672,7 +708,7 @@ function chartMulti(sers, {lo, hi, fmt = v => nf.format(Math.round(v)), mirror =
   const Y = y => pt + (1 - (y - lo) / (hi - lo)) * (H - pt - pb);
   const path = v => v.map((y, i) => `${i ? "L" : "M"}${X(i, v.length).toFixed(1)},${Y(y).toFixed(1)}`).join("");
   const ticks = mirror ? (H < 120 ? [hi * .8, lo * .8] : [hi * .8, 0, lo * .8]) : (H < 120 ? [lo + (hi - lo) * .2, hi - (hi - lo) * .2] : [lo + (hi - lo) * .2, (lo + hi) / 2, hi - (hi - lo) * .2]);
-  const hours = ["−24 h","−18 h","−12 h","−6 h","jetzt"];
+  const hours = ["−24 h","−18 h","−12 h","−6 h",TR("now")];
   const gid = "m" + Math.random().toString(36).slice(2, 7);
   return `<svg class="chart" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="height:${H}px" role="img">
     <defs>${sers.map((s, k) => `<linearGradient id="${gid}${k}" x1="0" x2="0" y1="${s.neg ? 1 : 0}" y2="${s.neg ? 0 : 1}"><stop offset="0" stop-color="${s.color}" stop-opacity=".42"/><stop offset="1" stop-color="${s.color}" stop-opacity="0"/></linearGradient>`).join("")}</defs>
@@ -688,24 +724,24 @@ function chartMulti(sers, {lo, hi, fmt = v => nf.format(Math.round(v)), mirror =
 }
 
 function flowCard(d){
-  const f = d.flow, onBatt = f.source !== "Netz", bypass = !!f.bypass;
+  const f = d.flow, onBatt = f.source !== TR("mains"), bypass = !!f.bypass;
   const rackIco = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 2h14a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Zm1 2v3h12V4Zm0 5v3h12V9Zm0 5v3h12v-3Z"/></svg>';
   const w = on => `<div class="fw ${on ? "on" : ""}"></div>`;
-  return `<section class="card"><h2>Energiefluss <em>Online-USV · ${bypass ? "Bypass aktiv" : onBatt ? "Batteriebetrieb" : "Doppelwandlung"}</em></h2>
+  return `<section class="card"><h2>${TR("energy_flow")} <em>${TR("online_ups_n", bypass ? TR("bypass_active") : onBatt ? TR("battery_operation") : TR("double_conversion"))}</em></h2>
     <div class="flow2">
-      <div class="byp ${bypass ? "on" : ""}"><span>Bypass ${bypass ? "aktiv" : "inaktiv"}</span></div>
+      <div class="byp ${bypass ? "on" : ""}"><span>Bypass ${bypass ? TR("active_2") : "inaktiv"}</span></div>
       <div class="frow">
-        <div class="fn ${onBatt ? "" : "on"}"><div class="ic">${ICONS.plug}</div><b>${fmt(f.inV)} V</b><span>Netz</span></div>
+        <div class="fn ${onBatt ? "" : "on"}"><div class="ic">${ICONS.plug}</div><b>${fmt(f.inV)} V</b><span>${TR("mains")}</span></div>
         ${w(!onBatt && !bypass)}
-        <div class="fn conv"><div class="ic">AC<i>→</i>DC</div><b>&nbsp;</b><span>Gleichrichter</span></div>
+        <div class="fn conv"><div class="ic">AC<i>→</i>DC</div><b>&nbsp;</b><span>${TR("rectifier")}</span></div>
         ${w(!onBatt && !bypass)}
         <div class="fn bat ${bypass ? "" : "on"}"><div class="ic"><span class="bglyph"><b style="width:${f.batt}%"></b></span></div><b>${fmt(f.batt)} %</b><span>${fmt(f.runtime)} min</span></div>
         ${w(!bypass)}
-        <div class="fn conv"><div class="ic">DC<i>→</i>AC</div><b>&nbsp;</b><span>Wechselrichter</span></div>
+        <div class="fn conv"><div class="ic">DC<i>→</i>AC</div><b>&nbsp;</b><span>${TR("inverter")}</span></div>
         ${w(!bypass)}
         <div class="fn on"><div class="ic">${rackIco}</div><b>${fmt(f.load)} W</b><span>${fmt(f.outV)} V · ${fmt(f.loadPct)} %</span></div>
       </div>
-      <p class="fnote">${onBatt ? "Netz ausgefallen: Die Last läuft aus dem Akku." : "Der Strom läuft immer über Akku und Wechselrichter. Fällt das Netz aus, gibt es keine Umschaltzeit."}</p>
+      <p class="fnote">${onBatt ? TR("mains_failed_the_load_runs_on_battery") : TR("power_always_flows_through_battery_and_inverter")}</p>
     </div>
   </section>`;
 }
@@ -734,7 +770,7 @@ function renderPanel(){
   if (Date.now() < NAV.until && !NAV.now) { if (!NAV.pending) { NAV.pending = true; setTimeout(() => { NAV.pending = false; renderPanel(); }, NAV.until - Date.now() + 10); } return; }
   let body;
   if (S.sel && byId(S.sel)) body = showDetail(byId(S.sel));
-  else body = (S.mode === "edit" ? `<div class="edit-banner">Tippe auf eine freie Höheneinheit, um ein Gerät einzusetzen, oder auf ein Gerät, um es zu bearbeiten.</div>` : "") + overview();
+  else body = (S.mode === "edit" ? `<div class="edit-banner">${TR("tap_a_free_rack_unit_to_insert_a_device_or_a")}</div>` : "") + overview();
   $("panel").innerHTML = header() + body;
   $("panel").classList.toggle("fit", !S.slot && S.mode === "view");
   $("panel").classList.toggle("detail", !!(S.sel && byId(S.sel)));
@@ -826,10 +862,10 @@ function cutDoor(){
     const nMsg = allDevices().flatMap(d => d.msgs || []).filter(m => m[0] === st_).length;
     const w = RAW?.wled?.entity_id && st(RAW.wled.entity_id);
     return `<div class="bar">
-      ${inDetail ? `<button class="back pill" data-back aria-label="Zurück zur Übersicht">${ICONS.chev}</button>` : ""}
-      <div><h1>${RACK.name}</h1><div class="sub">${RACK.units} HE · ${DEVICES.reduce((a, d) => a + d.h, 0)} belegt · ${DEVICES.filter(d => !d.passive && !d.group).length + ZERO_U.length} aktive Geräte</div></div>
-      <span class="chip ${st_}"><i></i>${st_ === "ok" ? "Alles in Ordnung" : `${nMsg} ${st_ === "warn" ? (nMsg === 1 ? "Hinweis" : "Hinweise") : (nMsg === 1 ? "Störung" : "Störungen")}`}</span>
-      ${w ? `<span class="wled-chip ${w.state === "on" ? "" : "off"}"><button class="wsw" data-wled-power role="switch" aria-checked="${w.state === "on"}" aria-label="WLED ein- oder ausschalten"></button><span class="wfx">WLED · ${w.state === "on" ? (w.attributes.effect || "An") : "Aus"}</span></span>` : ""}
+      ${inDetail ? `<button class="back pill" data-back aria-label="${TR("back_to_overview")}">${ICONS.chev}</button>` : ""}
+      <div><h1>${RACK.name}</h1><div class="sub">${TR("n_u_n_used_n_active_devices", RACK.units, DEVICES.reduce((a, d) => a + d.h, 0), DEVICES.filter(d => !d.passive && !d.group).length + ZERO_U.length)}</div></div>
+      <span class="chip ${st_}"><i></i>${st_ === "ok" ? TR("all_good") : TR(st_ === "warn" ? (nMsg === 1 ? "1_notice" : "n_notices") : (nMsg === 1 ? "1_fault" : "n_faults"), nMsg)}</span>
+      ${w ? `<span class="wled-chip ${w.state === "on" ? "" : "off"}"><button class="wsw" data-wled-power role="switch" aria-checked="${w.state === "on"}" aria-label="${TR("switch_wled_on_or_off")}"></button><span class="wfx">${TR("wled_n", w.state === "on" ? (w.attributes.effect || TR("on")) : TR("off"))}</span></span>` : ""}
       <span class="spacer"></span>
       <span class="clock" id="clock"></span>
     </div>`;
@@ -845,7 +881,7 @@ function cutDoor(){
     const cap = RACK.power.capacity_w || 2700, pct = total != null ? total / cap : 0;
     const other = Math.max(0, (total || 0) - powered.reduce((a, d) => a + d.power, 0));
     const segs = powered.map((d, i) => ({ name: d.name, id: d.id, w: d.power, c: `var(${SEG_COLORS[i % SEG_COLORS.length]})` }))
-      .concat([{ name: powered.length ? "nicht zugeordnet" : "Gesamt", w: other, c: "var(--label-3)" }]);
+      .concat([{ name: powered.length ? "nicht zugeordnet" : TR("total"), w: other, c: "var(--label-3)" }]);
     const eId = pdu?.energyId, eNow = num(eId), eStart = HIST.energyStart[eId];
     const today = eNow != null && eStart != null ? eNow - eStart : null;
     const warnMsgs = active.flatMap(d => (d.msgs || []).filter(m => m[0] !== "ok").map(m => ({ d, m }))).sort((a, b) => (b.m[0] === "alert") - (a.m[0] === "alert"));
@@ -854,7 +890,7 @@ function cutDoor(){
     const chipT = !hot ? "off" : hot.t >= TEMP_ALERT ? "alert" : hot.t >= TEMP_WARN ? "warn" : "ok";
     const lv = ups?.flow.batt, rt = ups?.flow.runtime, bc = lv == null ? "var(--fill-2)" : lv < 20 ? "var(--red)" : lv < 50 ? "var(--orange)" : "var(--green)";
     const powerVals = HS(pdu?.R?.power, total || 0);
-    const gw = DEVICES.find(d => d.ports && d.facts?.some(f => f[0] === "Antwortzeit"));
+    const gw = DEVICES.find(d => d.ports && d.facts?.some(f => f[0] === TR("latency")));
     const poeSw = DEVICES.find(d => d.poe);
     return { active, bc, cap, chipT, eId, eNow, eStart, gw, hot, lv, other, pct, pdu, poeSw, powerVals, powered, rt, segs, temps, today, total, ups, warnMsgs };
   }
@@ -866,50 +902,50 @@ function cutDoor(){
     return { day: money(kwhToday * price), month: money(kwhToday / h * 24 * 30.4 * price) };
   }
   function ovPower(v) { const { active, bc, cap, chipT, eId, eNow, eStart, gw, hot, lv, other, pct, pdu, poeSw, powerVals, powered, rt, segs, temps, today, total, ups, warnMsgs } = v; return `<section class="card en">
-      <h2>Strom</h2>
+      <h2>${TR("power")}</h2>
       <div class="en-head">
         <div class="en-big">${fmt(total)}<small>W</small></div>
-        <div class="en-today"><b>${today != null ? fmt(today, 1) + " kWh" : "–"}</b><span>heute${(() => { const c = energyCost(today); return c ? ` · ≈ ${c.day}` : ""; })()}</span>${(() => { const c = energyCost(today); return c ? `<em class="en-cost">≈ ${c.month} / Monat</em>` : ""; })()}</div>
+        <div class="en-today"><b>${today != null ? fmt(today, 1) + " kWh" : "–"}</b><span>${TR("today")}${(() => { const c = energyCost(today); return c ? ` · ≈ ${c.day}` : ""; })()}</span>${(() => { const c = energyCost(today); return c ? `<em class="en-cost">${TR("n_month", c.month)}</em>` : ""; })()}</div>
       </div>
-      <div class="en-bar" role="img" aria-label="Auslastung der USV ${Math.round(pct * 100)} %">
+      <div class="en-bar" role="img" aria-label="${TR("ups_load_n", Math.round(pct * 100))}">
         ${segs.map(x => `<i style="width:${x.w / cap * 100}%;background:${x.c}"></i>`).join("")}
         <span class="en-warn" style="left:70%"></span>
       </div>
-      <div class="en-scale"><span>${Math.round(pct * 100)} % der USV-Kapazität${powered.length ? "" : " · laut Stromleiste"}</span><span>${fmt(cap / 1000, 1)} kW</span></div>
-      ${ups ? `<button class="ups-bar" data-id="${selOf(ups)}" aria-label="USV-Akku ${lv} Prozent, ${rt} Minuten Reserve">
+      <div class="en-scale"><span>${TR("n_of_ups_capacity", Math.round(pct * 100))}${powered.length ? "" : " · " + TR("according_to_the_pdu")}</span><span>${fmt(cap / 1000, 1)} kW</span></div>
+      ${ups ? `<button class="ups-bar" data-id="${selOf(ups)}" aria-label="${TR("ups_battery_n_percent_n_minutes_runtime", lv, rt)}">
         <div class="en-bar bat"><i style="width:${lv || 0}%;background:${bc}"></i></div>
-        <div class="en-scale"><span>Akku <b>${fmt(lv)} %</b> · ${fmt(rt)} min</span><span class="ups-ok" style="${ups.flow.source === "Netz" ? "" : "color:var(--red)"}"><i class="dot ${ups.flow.source === "Netz" ? "ok" : ""}" style="${ups.flow.source === "Netz" ? "" : "background:var(--red)"}"></i>${ups.flow.bypass ? "Bypass" : ups.flow.source === "Netz" ? "Netzbetrieb" : "Batteriebetrieb"}</span></div></button>` : ""}
+        <div class="en-scale"><span>${TR("battery")} <b>${fmt(lv)} %</b> · ${fmt(rt)} min</span><span class="ups-ok" style="${ups.flow.source === TR("mains") ? "" : "color:var(--red)"}"><i class="dot ${ups.flow.source === TR("mains") ? "ok" : ""}" style="${ups.flow.source === TR("mains") ? "" : "background:var(--red)"}"></i>${ups.flow.bypass ? "Bypass" : ups.flow.source === TR("mains") ? TR("on_mains") : TR("battery_operation")}</span></div></button>` : ""}
       ${powered.length ? `<div class="en-list">${segs.slice(0, -1).slice(0, 5).map(x => `<button data-id="${x.id}"><i style="background:${x.c}"></i><span>${x.name}</span><b>${fmt(x.w)} W</b></button>`).join("")}
-        <div class="rest"><i style="background:var(--label-3)"></i><span>Übrige</span><b>${fmt(segs.slice(5).reduce((a, x) => a + x.w, 0))} W</b></div></div>` : ""}
-      <div class="ov-chart"><div class="ov-leg"><span><i style="background:var(--blue)"></i>Leistung 24 Std.</span><span>Ø ${fmt(Math.round(powerVals.reduce((a, b) => a + b, 0) / powerVals.length))} W · Spitze ${fmt(Math.round(Math.max(...powerVals)))} W</span></div>
+        <div class="rest"><i style="background:var(--label-3)"></i><span>${TR("other")}</span><b>${fmt(segs.slice(5).reduce((a, x) => a + x.w, 0))} W</b></div></div>` : ""}
+      <div class="ov-chart"><div class="ov-leg"><span><i style="background:var(--blue)"></i>${TR("power_24_h")}</span><span>Ø ${fmt(Math.round(powerVals.reduce((a, b) => a + b, 0) / powerVals.length))} W · ${TR("peak")} ${fmt(Math.round(Math.max(...powerVals)))} W</span></div>
         ${lazy((W, H) => { const lo = Math.min(...powerVals) * .9, hi = Math.max(...powerVals) * 1.08 || 1; return chartMulti([{ v: powerVals, color: css("--blue"), fill: true }], { lo, hi, W, H }); })}</div>
     </section>`; }
   function ovTemp(v) { const { active, bc, cap, chipT, eId, eNow, eStart, gw, hot, lv, other, pct, pdu, poeSw, powerVals, powered, rt, segs, temps, today, total, ups, warnMsgs } = v; return `<section class="card en th3">
-      <h2>Temperatur <span class="chip ${chipT}" style="text-transform:none;letter-spacing:0"><i></i>${chipT === "alert" ? "Zu heiß" : chipT === "warn" ? "Warm" : chipT === "off" ? "Keine Werte" : "Normal"}</span></h2>
+      <h2>${TR("temperature")} <span class="chip ${chipT}" style="text-transform:none;letter-spacing:0"><i></i>${chipT === "alert" ? TR("too_hot") : chipT === "warn" ? "Warm" : chipT === "off" ? TR("no_values") : "Normal"}</span></h2>
       ${hot ? `<div class="en-head">
         <div class="en-big">${fmt(hot.t)}<small>°C</small></div>
-        <div class="en-today"><b>${hot.d.name}</b><span>wärmstes Gerät</span></div>
+        <div class="en-today"><b>${hot.d.name}</b><span>${TR("warmest_device")}</span></div>
       </div>
-      <div class="tscale" role="img" aria-label="Wärmstes Gerät ${hot.t} Grad">
+      <div class="tscale" role="img" aria-label="${TR("warmest_device_n_degrees", hot.t)}">
         <i class="tz ok" style="width:${tpd(TEMP_WARN)}%"></i><i class="tz warn" style="width:${tpd(TEMP_ALERT) - tpd(TEMP_WARN)}%"></i><i class="tz alert" style="width:${100 - tpd(TEMP_ALERT)}%"></i>
         <em class="tmark out" style="left:${tpd(hot.t)}%"></em>
       </div>
-      <div class="en-scale"><span>Gerätetemperaturen · keine Rack-Sensoren</span><span>Grenze ${TEMP_WARN} °C</span></div>
+      <div class="en-scale"><span>${TR("device_temperatures_no_rack_sensors")}</span><span>${TR("limit_n", `${TEMP_WARN} °C`)}</span></div>
       <div class="ztab dev">
-        <span class="zh">Gerät</span><span class="zh">Temperatur</span>
+        <span class="zh">${TR("device")}</span><span class="zh">${TR("temperature")}</span>
         ${temps.slice(0, 6).map(({ d, t }) => `<button class="zn ${d.name.length > 16 ? "long" : ""}" data-id="${selOf(d)}" title="${d.name}">${d.name}</button><b style="color:${t >= TEMP_ALERT ? "var(--red)" : t >= TEMP_WARN ? "var(--warn-ink)" : "var(--label)"}">${fmt(t)} °C</b>`).join("")}
-      </div>` : `<p class="note">Keine Temperaturwerte vorhanden.</p>`}
+      </div>` : `<p class="note">${TR("no_temperature_values_available")}</p>`}
     </section>`; }
-  function ovHints(v) { const { active, bc, cap, chipT, eId, eNow, eStart, gw, hot, lv, other, pct, pdu, poeSw, powerVals, powered, rt, segs, temps, today, total, ups, warnMsgs } = v; return `${warnMsgs.length ? `<section class="card wide hints"><h2><span>Hinweise <i class="cnt ${warnMsgs.some(x => x.m[0] === "alert") ? "alert" : ""}">${warnMsgs.length}</i></span>${warnMsgs.length > 2 ? `<em>+${warnMsgs.length - 2} weitere</em>` : ""}</h2><div class="hint-grid">
+  function ovHints(v) { const { active, bc, cap, chipT, eId, eNow, eStart, gw, hot, lv, other, pct, pdu, poeSw, powerVals, powered, rt, segs, temps, today, total, ups, warnMsgs } = v; return `${warnMsgs.length ? `<section class="card wide hints"><h2><span>${TR("notices")} <i class="cnt ${warnMsgs.some(x => x.m[0] === "alert") ? "alert" : ""}">${warnMsgs.length}</i></span>${warnMsgs.length > 2 ? `<em>${TR("n_more_2", warnMsgs.length - 2)}</em>` : ""}</h2><div class="hint-grid">
       ${warnMsgs.slice(0, 2).map(({ d, m }) => `<button class="hint ${m[0]}" data-id="${selOf(d)}">
         <span class="hic">${ICONS.warn}</span>
         <span class="ht"><b>${m[1]}</b><span><i>${d.name}</i>${m[2]}</span></span><span class="chev">›</span></button>`).join("")}
     </div></section>` : ""}`; }
   function ovStats(v) { const { active, bc, cap, chipT, eId, eNow, eStart, gw, hot, lv, other, pct, pdu, poeSw, powerVals, powered, rt, segs, temps, today, total, ups, warnMsgs } = v; return `<div class="stats wide">
-      ${gw ? `<button data-id="${gw.id}"><span>Internet</span><b>${gw.facts.find(f => f[0] === "Antwortzeit")[1].replace(" ms", "")}<small>ms</small></b><em>Antwortzeit</em></button>` : ""}
-      ${poeSw ? `<button data-id="${poeSw.id}"><span>PoE</span><b>${fmt(poeSw.poe.used)}<small>W</small></b><em>${poeSw.poe.budget ? `von ${poeSw.poe.budget} W` : poeSw.name}</em></button>` : ""}
-      ${pdu ? `<button data-id="${pdu.id}"><span>Stromleiste</span><b>${fmt(num(pdu.R?.current), 1)}<small>A</small></b><em>${pdu.facts[2][1]}</em></button>` : ""}
-      ${ups ? `<button data-id="${selOf(ups)}"><span>USV</span><b>${fmt(ups.flow.loadPct)}<small>%</small></b><em>Last · ${fmt(ups.flow.runtime)} min</em></button>` : ""}
+      ${gw ? `<button data-id="${gw.id}"><span>Internet</span><b>${gw.facts.find(f => f[0] === TR("latency"))[1].replace(" ms", "")}<small>ms</small></b><em>${TR("latency")}</em></button>` : ""}
+      ${poeSw ? `<button data-id="${poeSw.id}"><span>PoE</span><b>${fmt(poeSw.poe.used)}<small>W</small></b><em>${poeSw.poe.budget ? TR("of_n", `${poeSw.poe.budget} W`) : poeSw.name}</em></button>` : ""}
+      ${pdu ? `<button data-id="${pdu.id}"><span>${TR("pdu")}</span><b>${fmt(num(pdu.R?.current), 1)}<small>A</small></b><em>${pdu.facts[2][1]}</em></button>` : ""}
+      ${ups ? `<button data-id="${selOf(ups)}"><span>${TR("ups")}</span><b>${fmt(ups.flow.loadPct)}<small>%</small></b><em>${TR("load_2")} · ${fmt(ups.flow.runtime)} min</em></button>` : ""}
     </div>`; }
   // Pseudo-Gerät für die eigene Übersicht (Module mit beliebigen Entitäten)
   function ovModel() { return { id: "__ov", name: RACK.name, model: "", R: {}, msgs: [], blocks: RAW?.overview?.blocks || [], options: { grid: true } }; }
@@ -924,7 +960,7 @@ function cutDoor(){
       const f = BLOCK_RENDER[b.type]; if (!f) return "";
       const html = f(d, b), l = b.layout || {}, w = Math.max(1, Math.min(12, l.w || 12)), h = Math.max(1, l.h || 3), fixed = Number.isInteger(l.x) && Number.isInteger(l.y);
       const st = fixed ? `grid-column:${l.x + 1} / span ${Math.min(w, 12 - l.x)} !important;grid-row:${l.y + 1} / span ${h} !important` : `grid-column:span ${w} !important;grid-row:span ${h} !important`;
-      if (!html) return EDIT_HOOK ? `<section data-bi="${bi}" style="${st}" class="gcell card empty-mod"><h2>${RD_CATALOG.blocks[b.type]?.name || b.type}</h2>${rdSkeleton(b.type)}</section>` : "";
+      if (!html) return EDIT_HOOK ? `<section data-bi="${bi}" style="${st}" class="gcell card empty-mod"><h2>${rdCatalog().blocks[b.type]?.name || b.type}</h2>${rdSkeleton(b.type)}</section>` : "";
       return html.replace(/<(section|div) class="/, `<$1 data-bi="${bi}" style="${st}" class="gcell card `);
     }).join("");
     return `<div class="dgrid gm ovg" style="--gc:12;--gr:${G.frows || 15}">${cells}</div>`;
@@ -962,7 +998,7 @@ function cutDoor(){
   // series: [{ label, id, cur, unit, color, dec, warn }]
   // Kennzahl-Kacheln: großer Wert, Pegel auf fester Skala (mit Warngrenze), darunter eine flache 24-Std.-Kurve.
   // Die Kurve skaliert auf ihren eigenen Bereich, aber mit Mindestspanne – Form sichtbar, ohne Rauschen aufzublasen.
-  function trendCard(title, series, sub = "24 Std.") {
+  function trendCard(title, series, sub = TR("24_h")) {
     const tiles = series.filter(s => s.id || s.cur != null).map(s => {
       const v = HS(s.id, s.cur ?? 0), dec = s.dec ?? 0, cur = s.cur ?? v.at(-1), col = css(s.color || "--blue");
       const [flo, fhi] = trendRange(v, s.unit, s.warn), lo = Math.min(...v), hi = Math.max(...v), span = Math.max(hi - lo, (fhi - flo) * .15);
@@ -981,33 +1017,33 @@ function cutDoor(){
   function sysCard(d) {
     const s = d.sys;
     return trendCard("System", [
-      s.cpu != null && { label: "Prozessor", id: s.ids.cpu, cur: s.cpu, unit: "%", color: "--blue" },
-      s.ram != null && { label: "Arbeitsspeicher", id: s.ids.ram, cur: s.ram, unit: "%", color: "--indigo" },
-      { label: "Temperatur", id: s.ids.temp, cur: s.temp, unit: "°C", color: "--orange", warn: TEMP_WARN },
+      s.cpu != null && { label: TR("processor"), id: s.ids.cpu, cur: s.cpu, unit: "%", color: "--blue" },
+      s.ram != null && { label: TR("memory"), id: s.ids.ram, cur: s.ram, unit: "%", color: "--indigo" },
+      { label: TR("temperature"), id: s.ids.temp, cur: s.temp, unit: "°C", color: "--orange", warn: TEMP_WARN },
     ].filter(Boolean));
   }
   function sysCardOld(d) {
     const s = d.sys, cpu = HS(s.ids.cpu, s.cpu), ram = HS(s.ids.ram, s.ram), tmp = HS(s.ids.temp, s.temp);
-    return `<section class="card grow"><h2>System <em>24 Std.</em></h2>
+    return `<section class="card grow"><h2>System <em>${TR("24_h")}</em></h2>
       <div class="serleg">${s.cpu != null ? `<span><i style="background:var(--blue)"></i>CPU <b>${fmt(s.cpu)} %</b></span>` : ""}${s.ram != null ? `<span><i style="background:var(--indigo)"></i>RAM <b>${fmt(s.ram)} %</b></span>` : ""}<span><i style="background:var(--orange)"></i>Temp. <b>${fmt(s.temp)} °C</b></span></div>
       ${lazy((W, H) => chartMulti([s.cpu != null && { v: cpu, color: css("--blue"), fill: true }, s.ram != null && { v: ram, color: css("--indigo") }, { v: tmp, color: css("--orange") }].filter(Boolean), { lo: 0, hi: 100, W, H }))}
-      <div class="mini" style="margin-top:10px"><span>Spitze ${s.cpu != null ? `<b>${Math.round(Math.max(...cpu))} %</b> · ` : ""}<b>${Math.round(Math.max(...tmp))} °C</b></span>${s.ram != null ? `<span>Ø RAM <b>${Math.round(ram.reduce((a, b) => a + b) / ram.length)} %</b></span>` : ""}</div>
+      <div class="mini" style="margin-top:10px"><span>${TR("peak")} ${s.cpu != null ? `<b>${Math.round(Math.max(...cpu))} %</b> · ` : ""}<b>${Math.round(Math.max(...tmp))} °C</b></span>${s.ram != null ? `<span>Ø RAM <b>${Math.round(ram.reduce((a, b) => a + b) / ram.length)} %</b></span>` : ""}</div>
     </section>`;
   }
   function voltCard(d) {
     const f = d.flow;
-    return trendCard("Spannung", [
-      { label: "Eingang", id: f.ids.in, cur: f.inV, unit: "V", color: "--orange" },
-      { label: "Ausgang", id: f.ids.out, cur: f.outV, unit: "V", color: "--green" },
+    return trendCard(TR("voltage"), [
+      { label: TR("input"), id: f.ids.in, cur: f.inV, unit: "V", color: "--orange" },
+      { label: TR("output"), id: f.ids.out, cur: f.outV, unit: "V", color: "--green" },
     ]);
   }
   function voltCardOld(d) {
     const f = d.flow, vin = HS(f.ids.in, f.inV), vout = HS(f.ids.out, f.outV);
     const lo = Math.min(...vin, ...vout) - 3, hi = Math.max(...vin, ...vout) + 3;
-    return `<section class="card grow"><h2>Spannung <em>24 Std.</em></h2>
-      <div class="serleg"><span><i style="background:var(--orange)"></i>Eingang <b>${fmt(f.inV)} V</b></span><span><i style="background:var(--green)"></i>Ausgang <b>${fmt(f.outV)} V</b></span></div>
+    return `<section class="card grow"><h2>${TR("voltage")} <em>${TR("24_h")}</em></h2>
+      <div class="serleg"><span><i style="background:var(--orange)"></i>${TR("input")} <b>${fmt(f.inV)} V</b></span><span><i style="background:var(--green)"></i>${TR("output")} <b>${fmt(f.outV)} V</b></span></div>
       ${lazy((W, H) => chartMulti([{ v: vin, color: css("--orange") }, { v: vout, color: css("--green") }], { lo, hi, W, H }))}
-      <div class="mini" style="margin-top:10px"><span>Eingang min <b>${Math.round(Math.min(...vin))} V</b> · max <b>${Math.round(Math.max(...vin))} V</b></span><span>${f.hz != null ? `${fmt(f.hz, 1)} Hz` : ""}</span></div>
+      <div class="mini" style="margin-top:10px"><span>${TR("input_min")} <b>${Math.round(Math.min(...vin))} V</b> · max <b>${Math.round(Math.max(...vin))} V</b></span><span>${f.hz != null ? `${fmt(f.hz, 1)} Hz` : ""}</span></div>
     </section>`;
   }
   // Speicher wie im UNVR: Status, Belegungsbalken (belegt/frei/Schutz), Laufwerksliste
@@ -1024,23 +1060,23 @@ function cutDoor(){
     const lens = raw.map(x => x < MIN ? MIN : x * (C - MIN * small.length) / (big || 1)); let off = 0;
     const arcs = segs.map(([, c], i) => { const len = Math.max(0.5, lens[i] - gap), el = `<circle cx="56" cy="56" r="${RR}" fill="none" stroke="var(${c})" stroke-width="12" stroke-dasharray="${len.toFixed(1)} ${C.toFixed(1)}" stroke-dashoffset="${(-off).toFixed(1)}"/>`; off += lens[i]; return el; }).join("");
     const pct = r.used != null ? r.used : used != null && cap ? used / cap * 100 : null;
-    const rows = tot ? [["Belegt", tb(used), "--blue"], ["Frei", tb(cap - used), "--label-3"], prot && ["Schutz", tb(prot), "--purple"]].filter(Boolean) : pct != null ? [["Belegt", `${fmt(pct)} %`, "--blue"]] : [];
-    const ring = segs.length ? `<div class="sring"><div class="ring"><svg viewBox="0 0 112 112">${arcs}</svg><div class="c"><b>${fmt(pct)}<small>%</small></b><span>belegt</span></div></div>
-        <div class="srows"><div class="sstat ${allOk ? "ok" : "warn"}"><i></i>${allOk ? "Voll funktionsfähig" : `${d.disks.length - okN} Laufwerk${d.disks.length - okN === 1 ? "" : "e"} prüfen`}</div>
+    const rows = tot ? [[TR("used_2"), tb(used), "--blue"], [TR("free_2"), tb(cap - used), "--label-3"], prot && [TR("protection"), tb(prot), "--purple"]].filter(Boolean) : pct != null ? [[TR("used_2"), `${fmt(pct)} %`, "--blue"]] : [];
+    const ring = segs.length ? `<div class="sring"><div class="ring"><svg viewBox="0 0 112 112">${arcs}</svg><div class="c"><b>${fmt(pct)}<small>%</small></b><span>${TR("used")}</span></div></div>
+        <div class="srows"><div class="sstat ${allOk ? "ok" : "warn"}"><i></i>${allOk ? TR("fully_functional") : TR(d.disks.length - okN === 1 ? "check_n_drive" : "check_n_drives", d.disks.length - okN)}</div>
           ${rows.map(([k, v, c]) => `<div class="srow"><span><i style="background:var(${c})"></i>${k}</span><b>${v}</b></div>`).join("")}
-          ${tot ? `<div class="srow tot"><span>Gesamt</span><b>${tb(tot)}</b></div>` : ""}</div></div>` : `<div class="sstat ${allOk ? "ok" : "warn"}"><i></i>${allOk ? "Voll funktionsfähig" : "Laufwerke prüfen"}</div>`;
+          ${tot ? `<div class="srow tot"><span>${TR("total")}</span><b>${tb(tot)}</b></div>` : ""}</div></div>` : `<div class="sstat ${allOk ? "ok" : "warn"}"><i></i>${allOk ? TR("fully_functional") : TR("check_drives")}</div>`;
     // Schächte als Kacheln nebeneinander (wie die Laufwerksansicht der UNVR)
-    const bays = `<div class="dbays" style="grid-template-columns:repeat(${Math.min(4, d.disks.length)},minmax(0,1fr))">${d.disks.map(x => { const k = info(x.n); return `<div class="dbay ${x.state}" title="${k.model || ""}"><div class="bt"><i></i><b>${x.label} ${x.n}</b></div><span>${x.state === "ok" ? "Optimal" : x.state === "warn" ? "Prüfen" : "Keine Daten"}</span><em>${k.size || ""}${k.model ? ` · ${k.model}` : ""}</em></div>`; }).join("")}</div>`;
-    return `<section class="card"><h2>Speicher <em>${[r.raid, `${d.disks.length} ${r.disk_label || "Laufwerke"}`, cap && `${fmt(cap, 2)} TB`].filter(Boolean).join(" · ")}</em></h2>
+    const bays = `<div class="dbays" style="grid-template-columns:repeat(${Math.min(4, d.disks.length)},minmax(0,1fr))">${d.disks.map(x => { const k = info(x.n); return `<div class="dbay ${x.state}" title="${k.model || ""}"><div class="bt"><i></i><b>${x.label} ${x.n}</b></div><span>${x.state === "ok" ? "Optimal" : x.state === "warn" ? TR("check") : TR("no_data")}</span><em>${k.size || ""}${k.model ? ` ${TR("bullet_n", k.model)}` : ""}</em></div>`; }).join("")}</div>`;
+    return `<section class="card"><h2>${TR("storage")} <em>${[r.raid, `${d.disks.length} ${r.disk_label || TR("drives")}`, cap && `${fmt(cap, 2)} TB`].filter(Boolean).join(" · ")}</em></h2>
       ${ring}${bays}
     </section>`;
   }
   // USV-Karte: großer Akku-Ring mit Reserve, Betriebsart in Klartext, schmaler Stromweg Netz → USV → Last, Kennwerte als Kacheln
   function upsFlow(d) {
-    const f = d.flow, u = d.ups || {}, onBatt = f.source !== "Netz", bypass = !!f.bypass, charging = !onBatt && !bypass && f.batt != null && f.batt < 99.5;
+    const f = d.flow, u = d.ups || {}, onBatt = f.source !== TR("mains"), bypass = !!f.bypass, charging = !onBatt && !bypass && f.batt != null && f.batt < 99.5;
     const bp = Math.max(0, Math.min(100, f.batt ?? 0)), lp = Math.max(0, Math.min(100, f.loadPct ?? 0));
     const bcol = bp < 20 ? "--red" : bp < 50 ? "--orange" : "--green", mcol = bypass ? "--yellow" : onBatt ? "--orange" : "--green";
-    const mode = bypass ? ["Bypass", "warn", "Last hängt direkt am Netz"] : onBatt ? ["Akkubetrieb", "alert", "Netz ausgefallen – Akku versorgt"] : ["Netzbetrieb", "ok", charging ? "Akku wird geladen" : "Alles versorgt"];
+    const mode = bypass ? ["Bypass", "warn", TR("load_runs_directly_on_mains")] : onBatt ? [TR("battery_mode"), "alert", TR("mains_failed_battery_supplies")] : [TR("on_mains"), "ok", charging ? TR("battery_charging") : TR("everything_powered")];
     const RR = 52, C = 2 * Math.PI * RR;
     const ring = `<svg viewBox="0 0 124 124" class="ug-svg"><circle cx="62" cy="62" r="${RR}" class="ug-tr"/>
       <circle cx="62" cy="62" r="${RR}" class="ug-v" style="--c:var(${bcol})" stroke-dasharray="${(C * bp / 100).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 62 62)"/></svg>`;
@@ -1069,38 +1105,38 @@ function cutDoor(){
     const bfill = (34 * bp / 100).toFixed(1);
     const path = `<svg viewBox="0 0 400 120" class="upath" data-v="${(40 + lp * 0.8).toFixed(0)}">
       <rect x="${J1 - 14}" y="12" width="${J2 - J1 + 28}" height="${BYB + 5}" rx="6" class="uenc"/>
-      <g class="ubl"><rect x="${BX - 52}" y="4" width="104" height="16" rx="8"/><text x="${BX}" y="15.5" text-anchor="middle">${online ? "Online-USV" : "Line-Interactive"}</text></g>
+      <g class="ubl"><rect x="${BX - 52}" y="4" width="104" height="16" rx="8"/><text x="${BX}" y="15.5" text-anchor="middle">${online ? TR("online_ups") : "Line-Interactive"}</text></g>
       ${wire(`M${NX + S},${Y} L${RX - BW / 2},${Y}`, mains || bypass, bypass ? "--yellow" : "--green")}
       ${wire(`M${J1},${Y} L${J1},${YB} L${BX - 12},${YB} M${BX + 12},${YB} L${J2},${YB} L${J2},${Y}`, bypass, "--yellow").replace('class="ul ', 'class="ul byp ')}
       ${sw}<circle cx="${BX - 12}" cy="${YB}" r="2.2" class="ujn"/><circle cx="${BX + 12}" cy="${YB}" r="2.2" class="ujn"/>
-      <text x="${J1 + 8}" y="${YB - 5}" class="ulb">${bypass ? "Bypass aktiv" : "Bypass"}</text>
+      <text x="${J1 + 8}" y="${YB - 5}" class="ulb">${bypass ? TR("bypass_active") : "Bypass"}</text>
       ${wire(`M${RX + BW / 2},${Y} L${IX - BW / 2},${Y}`, !bypass, onBatt ? "--orange" : "--green")}
       ${wire(`M${BX},${Y} L${BX},${BYB - 11}`, onBatt || charging, onBatt ? "--orange" : "--green")}
       ${wire(`M${IX + BW / 2},${Y} L${LX - S},${Y}`, true, mcol)}
       
-      ${box(RX, "AC → DC", "Gleichrichter", mains, "--green")}${box(IX, "DC → AC", "Wechselrichter", !bypass, onBatt ? "--orange" : "--green")}
+      ${box(RX, "AC → DC", TR("rectifier"), mains, "--green")}${box(IX, "DC → AC", TR("inverter"), !bypass, onBatt ? "--orange" : "--green")}
       <rect x="${BX - 21}" y="${BYB - 11}" width="40" height="22" rx="5" class="ubat"/><rect x="${BX + 20}" y="${BYB - 4}" width="3" height="8" rx="1.5" class="ubatk"/>
       <rect x="${BX - 18}" y="${BYB - 8}" width="${bfill}" height="16" rx="3" style="fill:var(${bcol})"/>
       
-      ${node(NX, !onBatt, "--green", P.plug, onBatt ? "Netz aus" : f.hz ? `${fmt(f.hz, 1)} Hz` : "Netz", onBatt ? "–" : `${fmt(f.inV)} V`)}
-      ${node(LX, true, mcol, P.rack, "Last", f.load != null ? `${fmt(f.load)} W` : `${fmt(lp)} %`)}
+      ${node(NX, !onBatt, "--green", P.plug, onBatt ? TR("mains_off") : f.hz ? `${fmt(f.hz, 1)} Hz` : TR("mains"), onBatt ? "–" : `${fmt(f.inV)} V`)}
+      ${node(LX, true, mcol, P.rack, TR("load_2"), f.load != null ? `${fmt(f.load)} W` : `${fmt(lp)} %`)}
       ${mp.join("")}${dts}</svg>`;
     const cell = (k, v, s, c) => `<div class="ukc"><span>${k}</span><b${c ? ` style="color:var(${c})"` : ""}>${v}</b>${s ? `<em>${s}</em>` : ""}</div>`;
-    const age = (() => { const m = (u.bdate || "").match(/^(\d{2})\/(\d{4})$/); if (!m) return ""; const mo = (new Date().getFullYear() - +m[2]) * 12 + new Date().getMonth() + 1 - +m[1]; return mo >= 12 ? `seit ${Math.floor(mo / 12)} J. ${mo % 12} Mon.` : `seit ${mo} Mon.`; })();
+    const age = (() => { const m = (u.bdate || "").match(/^(\d{2})\/(\d{4})$/); if (!m) return ""; const mo = (new Date().getFullYear() - +m[2]) * 12 + new Date().getMonth() + 1 - +m[1]; return mo >= 12 ? TR("since_n", TR("n_years_n_months", Math.floor(mo / 12), mo % 12)) : TR("since_n", TR("n_months", mo)); })();
     // Kacheln nur mit dem, was der Stromweg nicht schon zeigt: Akku-Zustand und Wartung
     const cells = [
-      cell("Temperatur", u.bt != null ? `${fmt(u.bt)} °C` : "–", u.bt != null ? (u.bt >= 40 ? "Akku · zu warm" : "Akku · normal") : "Akku", u.bt >= 40 ? "--orange" : ""),
-      cell("Spannung", u.bv != null ? `${fmt(u.bv, 1)} V` : "–", "Akku"),
-      cell("Eingebaut", u.bdate || "–", age ? age.replace("seit", "vor") : "Akku"),
-      cell("Selbsttest", u.selftest === "bestanden" ? "✓ OK" : u.selftest || "–", u.selftest === "bestanden" ? "bestanden" : "", u.selftest && u.selftest !== "bestanden" ? "--orange" : ""),
+      cell(TR("temperature"), u.bt != null ? `${fmt(u.bt)} °C` : "–", u.bt != null ? (u.bt >= 40 ? `${TR("battery")} · ${TR("too_warm")}` : `${TR("battery")} · normal`) : TR("battery"), u.bt >= 40 ? "--orange" : ""),
+      cell(TR("voltage"), u.bv != null ? `${fmt(u.bv, 1)} V` : "–", TR("battery")),
+      cell(TR("installed"), u.bdate || "–", age ? age.replace("seit", "vor") : TR("battery")),
+      cell(TR("self_test"), u.selftest === TR("passed") ? "✓ OK" : u.selftest || "–", u.selftest === TR("passed") ? TR("passed") : "", u.selftest && u.selftest !== TR("passed") ? "--orange" : ""),
     ].join("");
     return `<section class="card wide ups2" style="--uc:var(${mcol})">
       <div class="uh">
-        <div class="ug">${ring}<div class="ugc"><b>${fmt(bp)}<small>%</small></b><span>${charging ? "lädt" : onBatt ? "entlädt" : "Akku"}</span></div></div>
+        <div class="ug">${ring}<div class="ugc"><b>${fmt(bp)}<small>%</small></b><span>${charging ? TR("charging") : onBatt ? TR("discharging") : TR("battery")}</span></div></div>
         <div class="ui">
           <span class="umode ${mode[1]}"><i></i>${mode[0]}</span>
           <b class="ut">${mode[2]}</b>
-          <span class="us">${fmt(lp)} % Last${f.runtime != null ? ` · <b>${fmt(f.runtime)} min</b> Reserve` : ""}</span>
+          <span class="us">${fmt(lp)} % ${TR("load_lower")}${f.runtime != null ? ` · <b>${fmt(f.runtime)} min</b> ${TR("runtime")}` : ""}</span>
         </div>
       </div>
       ${path}
@@ -1132,11 +1168,11 @@ function cutDoor(){
   function recCard(d) {
     const r = d.rec, R = 52, C = 2 * Math.PI * R; let off = 0;
     const arcs = r.types.map(([n, v, c]) => { const a = `<circle cx="62" cy="62" r="${R}" fill="none" stroke="var(${c})" stroke-width="14" stroke-dasharray="${Math.max(0.5, C * v / 100)} ${C}" stroke-dashoffset="${-off}"/>`; off += C * v / 100; return a; }).join("");
-    return `<section class="card grow"><h2>Aufnahme <em>${r.cams ? `${r.camsOn} von ${r.cams} Kameras` : "Speicherdauer"}</em></h2>
+    return `<section class="card grow"><h2>${TR("recording_2")} <em>${r.cams ? TR("n_of_n_cameras", r.camsOn, r.cams) : TR("retention")}</em></h2>
       <div class="rec">
-        <div class="ring"><svg viewBox="0 0 124 124"><circle cx="62" cy="62" r="${R}" fill="none" stroke="var(--fill-2)" stroke-width="14"/>${arcs}</svg><div class="c"><b>${r.days}</b><span>Tage</span></div></div>
+        <div class="ring"><svg viewBox="0 0 124 124"><circle cx="62" cy="62" r="${R}" fill="none" stroke="var(--fill-2)" stroke-width="14"/>${arcs}</svg><div class="c"><b>${r.days}</b><span>${TR("days")}</span></div></div>
         <div class="rows">${r.types.map(([n, v, c]) => `<div class="row"><span><i style="background:var(${c})"></i>${n}</span><b>${fmt(v, v < 1 ? 1 : 0)} %</b></div>`).join("")}
-          ${r.events != null ? `<div class="row" style="padding-top:8px;border-top:1px solid var(--sep)"><span>Erkennungen heute</span><b>${fmt(r.events)}</b></div>` : ""}</div>
+          ${r.events != null ? `<div class="row" style="padding-top:8px;border-top:1px solid var(--sep)"><span>${TR("detections_today")}</span><b>${fmt(r.events)}</b></div>` : ""}</div>
       </div>
     </section>`;
   }
@@ -1175,11 +1211,11 @@ function cutDoor(){
     const W = HIST_BINS * 10, H = 100, mid = H / 2, bw = 7;
     const bar = (v, i, dir, col) => v == null ? "" : `<rect x="${i * 10 + 1.5}" y="${dir > 0 ? mid - 1 - Math.max(.8, v / mx * (mid - 2)) : mid + 1}" width="${bw}" height="${Math.max(.8, v / mx * (mid - 2))}" fill="var(${col})" opacity="${i === HIST_BINS - 1 ? 1 : .75}"/>`;
     const first = (LIVE[p.ids.rx] || [])[0]?.[0], mins = first ? Math.min(60, Math.max(1, Math.round((now - first) / 60e3))) : 0;
-    return `<div class="phist-ax"><span>↓ ${rateK(mx / 1.1)}</span><span>${mins >= 60 ? "letzte Stunde" : mins ? `seit ${mins} Min.` : ""}</span></div>
+    return `<div class="phist-ax"><span>↓ ${rateK(mx / 1.1)}</span><span>${mins >= 60 ? TR("last_hour") : mins ? TR("since_n", TR("n_min", mins)) : ""}</span></div>
       <svg class="plive" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
       ${rx.map((v, i) => bar(v, i, 1, "--rx")).join("")}${tx.map((v, i) => bar(v, i, -1, "--tx")).join("")}
       <line x1="0" x2="${W}" y1="${mid}" y2="${mid}" stroke="var(--sep)" stroke-width="1" vector-effect="non-scaling-stroke"/></svg>
-      <div class="phist-ax"><span>↑ ${rateK(mx / 1.1)}</span><span>jetzt</span></div>`;
+      <div class="phist-ax"><span>↑ ${rateK(mx / 1.1)}</span><span>${TR("now")}</span></div>`;
   }
   // Nachbarn: Uplink (Gerät weiter oben in der Kette: Gateway > Aggregation > Switch) und Bündel (mehrere Ports zum selben Gerät)
   const portRange = l => { const n = l.map(Number).sort((x, y) => x - y); return n.length > 2 && n.at(-1) - n[0] === n.length - 1 ? `${n[0]}–${n.at(-1)}` : n.join(", "); };
@@ -1217,12 +1253,12 @@ function cutDoor(){
       return `<button class="port ${kind} ${p.speed ? "up s" + p.speed.replace(".", "_") : ""} ${S.port === n ? "sel" : ""}" style="grid-area:${top ? 1 : 2}/${c}" data-port="${n}" aria-label="Port ${p.label}${p.peer ? ", " + p.peer : ""}">${icon(p)}</button>`;
     }).join("")}</div>`; };
     const tr = d.traffic;
-    const head = `<h2>Ports <em>${up} von ${d.ports.length} verbunden${tr && (tr[0] || tr[1]) ? ` · ↓ ${rateK(tr[0])} ↑ ${rateK(tr[1])}` : ""}</em></h2>`;
-    const upl = R.up ? `<div class="conn">Verbunden mit <button data-id="${R.up.o.id}">${R.up.o.name}</button>${R.remote.length ? `<span>Port ${portRange(R.remote)}</span>` : ""}</div>`
+    const head = `<h2>Ports <em>${TR("n_of_n_connected", up, d.ports.length)}${tr && (tr[0] || tr[1]) ? ` · ↓ ${rateK(tr[0])} ↑ ${rateK(tr[1])}` : ""}</em></h2>`;
+    const upl = R.up ? `<div class="conn">${TR("connected_to")} <button data-id="${R.up.o.id}">${R.up.o.name}</button>${R.remote.length ? `<span>Port ${portRange(R.remote)}</span>` : ""}</div>`
       : d.wan && d.wan.isp ? `<div class="conn">Internet <span>${d.wan.isp}</span></div>` : "";
-    const peerDev = devNamed(sel.peer), role = R.isUp(sel) ? "Uplink" : R.lag(sel.peer) ? "Bündel" : "";
+    const peerDev = devNamed(sel.peer), role = R.isUp(sel) ? "Uplink" : R.lag(sel.peer) ? TR("bundle") : "";
     const info = `<div class="pinfo"><span class="pn">${sel.label}</span>
-        <span class="pd">${sel.peer ? peerDev ? `<button class="peer" data-id="${peerDev.id}">${sel.peer} ›</button>` : `<b>${sel.peer}</b>` : `<b>Port ${sel.label}${sel.speed ? "" : " · frei"}</b>`}
+        <span class="pd">${sel.peer ? peerDev ? `<button class="peer" data-id="${peerDev.id}">${sel.peer} ›</button>` : `<b>${sel.peer}</b>` : `<b>Port ${sel.label}${sel.speed ? "" : (" " + TR("bullet_n", TR("free")))}</b>`}
           <span>${sel.peer ? `Port ${sel.label} · ` : ""}${KIND_TXT[sel.kind] || sel.kind}${sel.speed ? " · " + SPEED_TXT[sel.speed] : ""}${role ? " · " + role : ""}${sel.poe ? ` · ${sel.poePP ? "PoE++" : "PoE+"} ${fmt(sel.poe, 1)} W` : ""}</span></span>
         ${sel.speed ? `<span class="tr"><span><i class="dl"></i>↓ <b>${rate(sel.rx)}</b></span><span><i class="ul"></i>↑ <b>${rate(sel.tx)}</b></span></span>` : ""}</div>`;
     const live = sel.ids?.rx && sel.speed ? `<div class="plive-wrap">${liveSvg(sel)}</div>` : "";
@@ -1230,15 +1266,15 @@ function cutDoor(){
     if (d.ports.length <= 8) {
       const tiles = d.ports.map(p => `<button class="if2 ${p.speed ? "up s" + p.speed.replace(".", "_") : "down"} ${S.port === p.n ? "sel" : ""}" data-port="${p.n}" aria-label="Port ${p.label}">
         <span class="ifg">${IF_GLYPH[p.kind === "rj45" ? "rj45" : "sfp"]}</span><b>Port ${p.label}</b>
-        <span class="ifs-sp">${p.speed ? p.peer || SPEED_TXT[p.speed] : "frei"}</span>
+        <span class="ifs-sp">${p.speed ? p.peer || SPEED_TXT[p.speed] : TR("free")}</span>
         <span class="ifrates">${p.speed && (p.rx != null || p.tx != null) ? `<span><i></i>${rateK(p.rx)}</span><span><i class="ul"></i>${rateK(p.tx)}</span>` : `<span>${p.peer && p.speed ? SPEED_TXT[p.speed] : KIND_TXT[p.kind] || p.kind}</span>`}</span></button>`).join("");
       return `<section class="card${live ? " pgrow" : ""}">${head}${upl}<div class="ifs" style="grid-template-columns:repeat(${Math.min(4, d.ports.length)},minmax(0,1fr))">${tiles}</div>${info}${live}</section>`;
     }
     const has = f => d.ports.some(f), sw = c => `<i class="sw" style="background:var(${c})"></i>`;
     const legend = [...["100M", "1G", "2.5G", "10G", "25G"].filter(x => has(p => p.speed === x)).map(x => `<span>${sw(SPD_COL[x])}${SPD_SHORT[x]}</span>`),
-      `<span>${sw("--fill-2")}Nicht verbunden</span>`,
+      `<span>${sw("--fill-2")}${TR("not_connected")}</span>`,
       has(p => p.poeCap && !p.poePP) && `<span>${PORT_ICON.poe}PoE+</span>`, has(p => p.poeCap && p.poePP) && `<span>${PORT_ICON.poe2}PoE++</span>`,
-      has(R.isUp) && `<span>${PORT_ICON.up}Uplink</span>`, has(p => !R.isUp(p) && R.lag(p.peer)) && `<span>${PORT_ICON.lag}Bündel</span>`].filter(Boolean).join("");
+      has(R.isUp) && `<span>${PORT_ICON.up}Uplink</span>`, has(p => !R.isUp(p) && R.lag(p.peer)) && `<span>${PORT_ICON.lag}${TR("bundle")}</span>`].filter(Boolean).join("");
     return `<section class="card${live ? " pgrow" : ""}">${head}${upl}
       <div class="ports pp">${d.portLayout.map(grp).join("")}</div>
       <div class="plegend pl3">${legend}</div>${info}${live}
@@ -1251,14 +1287,14 @@ function cutDoor(){
       { label: "Download", id: w.ids.down, cur: w.down, unit: "Mbit/s", color: "--rx", dec: 1 },
       { label: "Upload", id: w.ids.up, cur: w.up, unit: "Mbit/s", color: "--tx", dec: 1 },
     ]);
-    const foot = [w.avail != null && `Verfügbar <b>${fmt(w.avail, 1)} %</b>`, w.loss != null && `Verlust <b>${fmt(w.loss, 1)} %</b>`, w.drops != null && `Abbrüche <b>${fmt(w.drops)}</b>`].filter(Boolean).join(" · ");
+    const foot = [w.avail != null && `${TR("available")} <b>${fmt(w.avail, 1)} %</b>`, w.loss != null && `${TR("loss")} <b>${fmt(w.loss, 1)} %</b>`, w.drops != null && `${TR("drops")} <b>${fmt(w.drops)}</b>`].filter(Boolean).join(" · ");
     return card.replace(/<\/section>$/, `${foot || w.isp ? `<div class="wanfoot"><span>${foot}</span></div>` : ""}</section>`);
   }
   function poeCard(d) {
     const top = d.ports.filter(p => p.poe).sort((a, b) => b.poe - a.poe), max = top[0]?.poe || 1;
     const pct = d.poe.budget ? Math.round(d.poe.used / d.poe.budget * 100) : null;
-    return `<section class="card grow"><h2>PoE <em>${top.length} ${top.length === 1 ? "Gerät" : "Geräte"} versorgt</em></h2>
-      <div class="mini" style="border-top:0;padding-top:0"><span><b style="font:700 26px var(--font-display)">${fmt(d.poe.used)} W</b>${d.poe.budget ? ` von ${d.poe.budget} W` : ""}</span>${pct != null ? `<b>${pct} %</b>` : ""}</div>
+    return `<section class="card grow"><h2>PoE <em>${TR(top.length === 1 ? "n_device_powered" : "n_devices_powered", top.length)}</em></h2>
+      <div class="mini" style="border-top:0;padding-top:0"><span><b style="font:700 26px var(--font-display)">${fmt(d.poe.used)} W</b>${d.poe.budget ? ` ${TR("of_n", `${d.poe.budget} W`)}` : ""}</span>${pct != null ? `<b>${pct} %</b>` : ""}</div>
       ${pct != null ? `<div class="meter"><b style="width:${pct}%;background:var(--orange)"></b></div>` : ""}
       <div class="poelist">${top.slice(0, 8).map(p => `<div><span>Port ${p.label}</span><i><b style="width:${p.poe / max * 100}%"></b></i><em>${fmt(p.poe, 1)} W</em></div>`).join("")}</div>
     </section>`;
@@ -1270,13 +1306,13 @@ function cutDoor(){
     const groups = []; for (let i = 0; i < os.length; i += 8) groups.push(os.slice(i, i + 8));
     const named = os.filter(x => x.name).length;
     // Noch nichts benannt: kompakte Leiste wie am Gerät statt 24 Zeilen „frei“
-    if (!named) return `<section class="card"><h2>Ausgänge <em>${os.length} Ausgänge${unk ? "" : ` · ${on} an`}</em></h2>
+    if (!named) return `<section class="card"><h2>${TR("outlets")} <em>${TR("n_outlets", os.length)}${unk ? "" : ` · ${TR("n_on", on)}`}</em></h2>
       <div class="ostrip">${groups.map(g => `<div class="og"><span class="ogl">${g[0].n}–${g.at(-1).n}</span>${g.map(x => `<span class="sock ${x.kind} ${x.on && !unk ? "on" : ""}">${x.n}</span>`).join("")}</div>`).join("")}</div>
-      <p class="note" style="margin:8px 0 0;font-size:12px">Welches Gerät an welchem Ausgang hängt, lässt sich im Rack-Editor beim Gerät „${d.name}“ eintragen.</p></section>`;
-    return `<section class="card ocard"><h2>Ausgänge <em>${unk ? `${named} von ${os.length} belegt` : `${on} von ${os.length} an`}</em></h2>
+      <p class="note" style="margin:8px 0 0;font-size:12px">${TR("which_device_is_plugged_into_which_outlet_can", d.name)}</p></section>`;
+    return `<section class="card ocard"><h2>${TR("outlets")} <em>${unk ? TR("n_of_n_used", named, os.length) : TR("n_of_n_on", on, os.length)}</em></h2>
       <div class="ovlist">${groups.map(g => `<div class="obank"><span class="obh">${g[0].n}–${g.at(-1).n}</span>${g.map(x => `
-        <div class="orow"><span class="onum ${x.on && !unk ? "on" : ""}">${x.n}</span><span class="onm ${x.name ? "" : "empty"}">${x.name || "frei"}</span><i class="okind">${x.kind}</i>${unk ? "" : `<i class="ost ${x.on ? "on" : ""}">${x.on ? "an" : "aus"}</i>`}</div>`).join("")}</div>`).join("")}</div>
-      ${unk ? `<span class="note onote">Schaltzustand wird von der Stromleiste derzeit nicht korrekt gemeldet.</span>` : ""}
+        <div class="orow"><span class="onum ${x.on && !unk ? "on" : ""}">${x.n}</span><span class="onm ${x.name ? "" : "empty"}">${x.name || TR("free")}</span><i class="okind">${x.kind}</i>${unk ? "" : `<i class="ost ${x.on ? "on" : ""}">${x.on ? "an" : "aus"}</i>`}</div>`).join("")}</div>`).join("")}</div>
+      ${unk ? `<span class="note onote">${TR("the_pdu_currently_does_not_report_the_switching")}</span>` : ""}
     </section>`;
   }
 
@@ -1363,24 +1399,24 @@ function cutDoor(){
     const used = runs.filter(x => x.m && x.m.status !== "planned").reduce((a, x) => a + x.w, 0), plan = mods.filter(m => m.status === "planned").length;
     const tile = ({ n: i, m, w }) => {
       const pos = w > 1 ? `${i}–${i + w - 1}` : `${i}`;
-      if (!m) return `<div class="slt free"><span class="sn">${pos}</span><b>frei</b></div>`;
+      if (!m) return `<div class="slt free"><span class="sn">${pos}</span><b>${TR("free")}</b></div>`;
       const k = kidOf(d, m), s = m.entity && st(m.entity), trk = s && m.entity.startsWith("device_tracker.");
       const state = k ? (k.passive ? "off" : k.state) : s ? ({ alert: "alert", warn: "warn", off: "off" }[lamp(m.entity)] || "ok") : m.status === "planned" ? "off" : "";
-      const txt = k ? STATE_TXT[state] : trk ? (s.state === "home" ? "Online" : "Offline") : m.status === "planned" ? "geplant" : s ? "" : "";
-      const facts = k ? factsOf(k).slice(0, 3) : s && !trk ? [["Wert", (v => `${v.v}${v.u ? " " + v.u : ""}`)(valueOf(m.entity))]] : trk && s.attributes.ip ? [["IP", s.attributes.ip]] : [];
+      const txt = k ? STATE_TXT()[state] : trk ? (s.state === "home" ? "Online" : "Offline") : m.status === "planned" ? TR("planned") : s ? "" : "";
+      const facts = k ? factsOf(k).slice(0, 3) : s && !trk ? [[TR("value"), (v => `${v.v}${v.u ? " " + v.u : ""}`)(valueOf(m.entity))]] : trk && s.attributes.ip ? [["IP", s.attributes.ip]] : [];
       const tag = k ? "button" : "div";
       return `<${tag} class="slt ${m.status === "planned" ? "planned" : ""} ${k ? "link" : ""}" ${k ? `data-id="${k.id}"` : ""} style="--w:${w}">
         <span class="slf">${m.status !== "planned" ? `<span class="slot mod ${m.kind || ""}">${slotFace(m, k || d)}</span>` : ""}</span>
         <span class="slm"><span class="slh"><b>${m.name}</b>${txt ? `<span class="chip ${state}"><i></i>${txt}</span>` : ""}</span>
-          <em>Platz ${pos}${m.desc ? ` · ${m.desc}` : ""}</em>
+          <em>${TR("slot")} ${pos}${m.desc ? ` ${TR("bullet_n", m.desc)}` : ""}</em>
           ${facts.length ? `<span class="slx">${facts.map(([a, b]) => `<span><small>${a}</small><b>${b}</b></span>`).join("")}</span>` : ""}</span>${k ? '<i class="chev">›</i>' : ""}</${tag}>`; };
-    return `<section class="card slotc"><h2>Steckplätze <em>${used} von ${n} belegt${plan ? ` · ${plan} geplant` : ""}</em></h2>
+    return `<section class="card slotc"><h2>${TR("slots")} <em>${TR("n_of_n_used", used, n)}${plan ? ` · ${plan} ${TR("planned")}` : ""}</em></h2>
       <div class="sltl">${runs.map(tile).join("")}</div></section>`;
   }
   // Einschalten (z. B. IPMI): erst beim zweiten Tippen innerhalb von 4 s
   function powerOnBtn(d) {
     const id = d.options.power_on, arm = ARMED?.id === id && Date.now() - ARMED.t < 4000;
-    return `<button class="pwrchip ${arm ? "armed" : ""}" data-press="${id}" data-confirm="Nochmal tippen">${arm ? "Nochmal tippen" : "⏻ Einschalten"}</button>`;
+    return `<button class="pwrchip ${arm ? "armed" : ""}" data-press="${id}" data-confirm="${TR("tap_again")}">${arm ? TR("tap_again") : TR("power_on")}</button>`;
   }
   // Module, die bei ausgeschaltetem Gerät als graues Gerüst (ohne Werte) stehen bleiben; alle anderen werden zum Platzhalter
   const OFF_SKELETON = ["bays", "array"];
@@ -1390,17 +1426,17 @@ function cutDoor(){
     const hb = d.blocks.find(b => b.type === "header");
     if (hb?.items?.length && !d.off) d.facts = hb.items.slice(0, 4).map(ref => [ref, entOf(ref, d.R)]).filter(x => x[1]).map(([ref, id]) => { const v = valueOf(id); return [nameOf(hb, ref, id), `${v.v}${v.u ? " " + v.u : ""}`]; });
     const mm = members(d.id), lo = Math.min(...mm.map(x => x.u)), hi = Math.max(...mm.map(x => x.u + x.h - 1));
-    const where = d.parent ? `${d.frameName || "Modulrahmen"} · ${d.mod?.w > 1 ? `Platz ${d.mod.slot}–${d.mod.slot + d.mod.w - 1}` : `Platz ${d.mod?.slot ?? "–"}`}` : d.u ? `${d.type === "shelf" ? "auf Fachboden " : ""}HE ${lo}${hi > lo ? "–" + hi : ""}` : "Rückseite, 0 HE";
+    const where = d.parent ? `${d.frameName || TR("module_frame")} · ${d.mod?.w > 1 ? TR("slots_nn", d.mod.slot, d.mod.slot + d.mod.w - 1) : TR("slot_n", d.mod?.slot ?? "–")}` : d.u ? `${d.type === "shelf" ? TR("on_shelf") + " " : ""}${TR("u_n", `${lo}${hi > lo ? "–" + hi : ""}`)}` : `${TR("rear")}, ${TR("n_u", 0)}`;
     return `<section class="card"><div class="dhero">
       <div class="top"><div style="min-width:0"><h1 data-ed-name style="font:700 24px/1.1 var(--font-display);margin:0 0 4px">${d.name}</h1><div class="sub" style="color:var(--label-2);font-size:13px">${d.model} · ${where}</div></div>
-        ${d.off && d.options?.power_on && st(d.options.power_on) ? powerOnBtn(d) : `<span class="chip ${d.passive ? "off" : d.state}"><i></i>${d.off ? "Aus" : STATE_TXT[d.passive ? "off" : d.state]}</span>`}</div>
+        ${d.off && d.options?.power_on && st(d.options.power_on) ? powerOnBtn(d) : `<span class="chip ${d.passive ? "off" : d.state}"><i></i>${d.off ? TR("off") : STATE_TXT()[d.passive ? "off" : d.state]}</span>`}</div>
       ${headThumb(d)}
       ${d.facts ? `<div class="facts4">${d.facts.map(([k, v]) => `<div><span>${k}</span><b>${v}</b></div>`).join("")}</div>` : ""}
       ${warnMsgsOf(d).slice(0, 2).map(m => `<div class="hmsg ${m[0]}"><i></i><b>${m[1]}</b><span>${m[2] || ""}</span></div>`).join("")}
     </div></section>`;
   }
   function tilesCard(d) {
-    return `<section class="card"><h2>Aktuell</h2><div class="grid t3">${d.tiles.slice(0, 6).map(([k, v, unit, meter, stt, hint]) => `
+    return `<section class="card"><h2>${TR("current")}</h2><div class="grid t3">${d.tiles.slice(0, 6).map(([k, v, unit, meter, stt, hint]) => `
       <div class="tile ${stt || ""}"><span class="k">${k}</span><span class="v">${v}<small>${unit}</small></span>
       ${meter != null ? `<div class="meter"><b style="width:${meter}%;${meter > 85 && !hint ? "background:var(--orange)" : ""}"></b></div>` : ""}
       ${hint ? `<span class="h">${hint}</span>` : ""}</div>`).join("")}</div></section>`;
@@ -1423,21 +1459,21 @@ function cutDoor(){
     const src = st(b.source)?.attributes, ports = b.ifaces || [];
     if (!ports.length || !src) return "";                       // ohne Link-Daten lieber nichts als falschen Zustand
     const spd = m => m >= 25000 ? "25G" : m >= 10000 ? "10G" : m >= 2500 ? "2.5G" : m >= 1000 ? "1G" : m > 0 ? "100M" : null;
-    const spdTxt = s => ({ "25G": "25 Gbit/s", "10G": "10 Gbit/s", "2.5G": "2,5 Gbit/s", "1G": "1 Gbit/s", "100M": "100 Mbit/s" })[s] || "verbunden";
+    const spdTxt = s => ({ "25G": "25 Gbit/s", "10G": "10 Gbit/s", "2.5G": "2,5 Gbit/s", "1G": "1 Gbit/s", "100M": "100 Mbit/s" })[s] || TR("connected");
     const tile = p => {
       const a = src[p.key] || {}, up = a.state === "up", sp = up ? spd(a.speed) : null, rx = up ? mbit(p.rx) : null, tx = up ? mbit(p.tx) : null;
       return `<div class="if2 ${up ? "up" : "down"} ${sp ? "s" + sp.replace(".", "_") : ""}">
         <span class="ifg">${IF_GLYPH[p.kind] || IF_GLYPH.rj45}</span>
-        <b>${p.name}</b><span class="ifs-sp">${up ? spdTxt(sp) : a.state === "missing" ? "fehlt" : "frei"}</span>
+        <b>${p.name}</b><span class="ifs-sp">${up ? spdTxt(sp) : a.state === "missing" ? "fehlt" : TR("free")}</span>
         <span class="ifrates">${up ? `<span><i></i>${rateK(rx)}</span><span><i class="ul"></i>${rateK(tx)}</span>` : "&nbsp;"}</span></div>`;
     };
     const bondKeys = new Set(b.bond?.members || ports.filter(p => p.kind === "sfp").map(p => p.key));
     const bd = b.bond && src[b.bond.key], inBond = ports.filter(p => bd && bondKeys.has(p.key)), rest = ports.filter(p => !inBond.includes(p));
     const bond = inBond.length ? `<div class="ifgrp ${bd.state === "up" ? "up" : ""}" style="grid-column:span ${inBond.length}">
-        <div class="ifbr"><span>${b.bond.name || "Bündel"}${bd.state === "up" ? ` · ${fmt(bd.speed / 1000)}G` : " · getrennt"}</span>${bd.state === "up" ? `<em>↓ ${rateK(mbit(b.bond.rx))} · ↑ ${rateK(mbit(b.bond.tx))}</em>` : ""}</div>
+        <div class="ifbr"><span>${b.bond.name || TR("bundle")}${bd.state === "up" ? ` · ${fmt(bd.speed / 1000)}G` : " · " + TR("disconnected_lower")}</span>${bd.state === "up" ? `<em>↓ ${rateK(mbit(b.bond.rx))} · ↑ ${rateK(mbit(b.bond.tx))}</em>` : ""}</div>
         <div class="ifrow" style="grid-template-columns:repeat(${inBond.length},minmax(0,1fr))">${inBond.map(tile).join("")}</div></div>` : "";
     const upN = ports.filter(p => src[p.key]?.state === "up").length;
-    return `<section class="card"><h2>${b.label || "Schnittstellen"} <em>${upN} von ${ports.length} verbunden</em></h2>
+    return `<section class="card"><h2>${b.label || TR("interfaces")} <em>${TR("n_of_n_connected", upN, ports.length)}</em></h2>
       <div class="ifs" style="grid-template-columns:repeat(${ports.length},minmax(0,1fr))">${bond}${rest.map(tile).join("")}</div></section>`;
   }
   // Ringe: Auslastung auf einen Blick (Prozent, sonst Bereich min–max)
@@ -1446,12 +1482,12 @@ function cutDoor(){
     const COL = ["--blue", "--indigo", "--teal", "--green", "--orange"];
     const items = b.items.map(ref => [ref, entOf(ref, d.R)]).filter(x => x[1] && st(x[1]));
     items.forEach(([, id]) => HIST.want.add(id));
-    return trendCard(b.label || "Auslastung", items.map(([ref, id], i) => ({ label: nameOf(b, ref, id), id, cur: num(id), unit: st(id).attributes.unit_of_measurement || "%", color: b.colors?.[i] || COL[i % COL.length], dec: 0 })));
+    return trendCard(b.label || TR("load"), items.map(([ref, id], i) => ({ label: nameOf(b, ref, id), id, cur: num(id), unit: st(id).attributes.unit_of_measurement || "%", color: b.colors?.[i] || COL[i % COL.length], dec: 0 })));
   }
   // Laufwerksschächte (z. B. Unraid): je Platte Gesundheits- und/oder Belegungssensor, Attribute liefern Typ, Größe, Temperatur, Ruhezustand
   const sizeTB = s => { const m = String(s ?? "").match(/([\d.,]+)\s*([KMGTP]?)i?B/i); if (!m) return null; const x = parseFloat(m[1].replace(",", ".")); return x * ({ "": 1e-12, K: 1e-9, M: 1e-6, G: 1e-3, T: 1, P: 1e3 }[m[2].toUpperCase()] ?? 0); };
   const tbTxt = x => x >= 1 ? `${fmt(x, x >= 10 || Math.abs(x - Math.round(x)) < .05 ? 0 : 1)} TB` : `${fmt(x * 1000)} GB`;
-  const DISK_ST = { DISK_OK: "OK", DISK_NEW: "Neu, nicht zugewiesen", DISK_NP: "Fehlt", DISK_NP_DSBL: "Fehlt", DISK_DSBL: "Deaktiviert", DISK_DSBL_NEW: "Deaktiviert", DISK_INVALID: "Ungültig", DISK_WRONG: "Falsche Platte", DISK_EMULATED: "Emuliert" };
+  const DISK_ST = rdPerLang(() => ({ DISK_OK: "OK", DISK_NEW: TR("new_unassigned"), DISK_NP: TR("missing"), DISK_NP_DSBL: TR("missing"), DISK_DSBL: TR("disabled"), DISK_DSBL_NEW: TR("disabled"), DISK_INVALID: TR("invalid"), DISK_WRONG: TR("wrong_disk"), DISK_EMULATED: TR("emulated") }));
   function bayDisks(d, b) {
     const ROLE = { PARITY: "parity", DATA: "data", CACHE: "cache", FLASH: "flash" };
     const seen = new Set();
@@ -1465,11 +1501,11 @@ function cutDoor(){
       const role = ROLE[String(A.type || "").toUpperCase()] || (/parity/.test(key) ? "parity" : /cache/.test(key) ? "cache" : /flash/.test(key) ? "flash" : "data");
       const nr = (key.match(/\d+$/) || [""])[0];
       const short = role === "parity" ? "P" + (nr || "") : role === "cache" ? "C" + (nr || "1") : nr || key.slice(0, 3);
-      const name = b.names?.[id] || b.names?.[h] || b.names?.[u] || (role === "parity" ? "Parität" + (nr ? " " + nr : "") : role === "cache" ? "Cache" + (nr ? " " + nr : "") : "Platte " + (nr || key));
+      const name = b.names?.[id] || b.names?.[h] || b.names?.[u] || (role === "parity" ? TR("parity") + (nr ? " " + nr : "") : role === "cache" ? "Cache" + (nr ? " " + nr : "") : TR("disk") + " " + (nr || key));
       const spun = A.spin_state ? A.spin_state === "active" : A.standby != null ? !A.standby : A.spinning !== false;
       const used = num(u), tb = sizeTB(A.total);
       return { id: hs ? h : u, key, dev: A.device || null, serial: A.serial || A.serial_number || null, role, short, name, tb: tb > 0 ? tb : null, temp: A.temperature_celsius ?? A.temperature ?? null, used: used != null ? Math.round(used) : null, spun,
-        bad: hs?.state === "on" || (A.num_errors > 0), status: A.status ? (DISK_ST[A.status] || A.status) : hs ? (hs.state === "on" ? "Problem" : "OK") : null, errors: A.num_errors || 0 };
+        bad: hs?.state === "on" || (A.num_errors > 0), status: A.status ? (DISK_ST()[A.status] || A.status) : hs ? (hs.state === "on" ? "Problem" : "OK") : null, errors: A.num_errors || 0 };
     }).filter(x => x && x.role !== "flash");
   }
   function baysCard(d, b) {
@@ -1487,7 +1523,7 @@ function cutDoor(){
     list.forEach(x => { const n = slotOf(x); if (n >= 1 && n <= slots && !at[n - 1]) at[n - 1] = x; });
     list.filter(x => !at.includes(x)).forEach(x => { const k = at.indexOf(null); if (k >= 0) at[k] = x; });
     const bays = at.map((x, i) => x ? { ...x, n: i + 1 } : { n: i + 1, role: "empty" });
-    internal.forEach((x, i) => { x.n = null; x.slot = `Intern ${i + 1}`; });
+    internal.forEach((x, i) => { x.n = null; x.slot = TR("internal_n", i + 1); });
     const all = [...bays, ...internal];
     const sel = (S.bay && all.find(x => x.key === S.bay)) || all.find(x => x.bad) || all.find(x => x.role !== "empty");
     // Temperatur: HDD ab 45/55 °C, SSD ab 55/65 °C gelb/rot (warn/alert im Modul überschreibbar)
@@ -1496,21 +1532,21 @@ function cutDoor(){
     // Stehend: Einschübe senkrecht wie in einem Storage-Gehäuse (Griff in Rollenfarbe, LEDs, Füllstand = Belegung)
     const vtile = x => `<button class="bv ${x.role} ${x.spun ? "" : "down"} ${x.bad ? "bad" : ""} ${sel === x && !d.off ? "sel" : ""}" data-bay="${x.key}" aria-label="${x.name}"><i class="bv-h"></i><i class="bv-led ${x.bad ? "alert" : x.spun ? "ok" : "off"}"></i>${x.used != null ? `<b style="height:${x.used}%"></b>` : ""}<em class="${tcol(x)}">${x.spun ? (x.temp != null ? fmt(x.temp) + "°" : "") : "zz"}</em><span>${x.short}</span></button>`;
     const tile = x => vert ? vtile(x) : `<button class="bay24 ${x.role} ${x.spun ? "" : "down"} ${x.bad ? "bad" : ""} ${sel === x && !d.off ? "sel" : ""}" data-bay="${x.key}" aria-label="${x.name}"><i></i><span>${x.short}</span><em class="${tcol(x)}">${x.spun ? (x.temp != null ? fmt(x.temp) + "°" : "") : "zz"}</em>${x.used != null ? `<b style="width:${x.used}%"></b>` : ""}</button>`;
-    const roleTxt = { parity: "Parität", data: "Daten", cache: "Cache" };
+    const roleTxt = { parity: TR("parity"), data: TR("data"), cache: "Cache" };
     const bad = disks.filter(x => x.bad).length, hot = disks.filter(x => tcol(x)).length;
     const temps = disks.filter(x => x.spun && x.temp != null).map(x => x.temp), tmax = temps.length ? Math.max(...temps) : null;
-    return `<section class="card bayc"><h2>${b.label || "Schächte"} <em>${bad ? `<b class="hv" style="color:var(--red)">${bad} mit Problem</b> · ` : ""}${hot ? `<b class="hv" style="color:var(--warn-ink)">${hot} warm</b> · ` : ""}${list.length} von ${slots} belegt${tmax != null ? ` · max. ${fmt(tmax)} °C` : ""}</em></h2>
+    return `<section class="card bayc"><h2>${b.label || TR("bays")} <em>${bad ? `<b class="hv" style="color:var(--red)">${TR("n_with_problems", bad)}</b> · ` : ""}${hot ? `<b class="hv" style="color:var(--warn-ink)">${TR("n_warm", hot)}</b> · ` : ""}${TR("n_of_n_used", list.length, slots)}${tmax != null ? ` · max. ${fmt(tmax)} °C` : ""}</em></h2>
       <div class="${vert ? `baysv ${slots > 14 ? "dense" : ""}` : "bays24"} ${b.order === "cols" && !vert ? "bycol" : ""}" style="--bc:${cols};--br:${Math.ceil(slots / cols)}">${bays.map(x => x.role === "empty" ? (vert ? `<div class="bv empty"><i class="bv-h"></i><span>${x.n}</span></div>` : `<div class="bay24"><span>${x.n}</span></div>`) : tile(x)).join("")}</div>
-      ${internal.length ? `<div class="bayint"><span class="lbl">Intern</span><div class="${vert ? "baysv int" : "bays24"}" style="--bc:${vert ? Math.max(internal.length, Math.min(slots, 12)) : cols}">${internal.map(tile).join("")}</div></div>` : ""}
-      <div class="plegend blg"><span><i style="background:var(--indigo)"></i>Parität</span><span><i style="background:var(--blue)"></i>Daten</span><span><i style="background:var(--teal)"></i>Cache</span><span><i style="background:var(--fill-2)"></i>leer</span><span class="hint-sleep">blass = schläft</span></div>
-      ${d.off ? "" : `<div class="pinfo"><span class="pn" ${sel.bad ? `style="color:var(--red)"` : ""}>${sel.short}</span><span class="pd"><b>${sel.name}${sel.tb ? " · " + tbTxt(sel.tb) : ""}</b><span>${sel.n ? `Schacht ${sel.n}` : sel.slot} · ${roleTxt[sel.role]}${sel.used != null ? ` · ${sel.used} % belegt` : ""}${sel.status ? ` · <em style="font-style:normal;${sel.bad ? "color:var(--red)" : ""}">${sel.status}</em>` : ""}${sel.errors ? ` · ${sel.errors} Fehler` : ""}</span></span>
-        <span class="tr ${tcol(sel)}">${sel.spun ? (sel.temp != null ? `<b>${fmt(sel.temp)} °C</b>` : "") : "schläft"}</span></div>`}
+      ${internal.length ? `<div class="bayint"><span class="lbl">${TR("internal")}</span><div class="${vert ? "baysv int" : "bays24"}" style="--bc:${vert ? Math.max(internal.length, Math.min(slots, 12)) : cols}">${internal.map(tile).join("")}</div></div>` : ""}
+      <div class="plegend blg"><span><i style="background:var(--indigo)"></i>${TR("parity")}</span><span><i style="background:var(--blue)"></i>${TR("data")}</span><span><i style="background:var(--teal)"></i>Cache</span><span><i style="background:var(--fill-2)"></i>${TR("empty")}</span><span class="hint-sleep">${TR("faded_spun_down")}</span></div>
+      ${d.off ? "" : `<div class="pinfo"><span class="pn" ${sel.bad ? `style="color:var(--red)"` : ""}>${sel.short}</span><span class="pd"><b>${sel.name}${sel.tb ? " · " + tbTxt(sel.tb) : ""}</b><span>${sel.n ? TR("bay_n", sel.n) : sel.slot} · ${roleTxt[sel.role]}${sel.used != null ? ` · ${sel.used} % ${TR("used")}` : ""}${sel.status ? ` · <em style="font-style:normal;${sel.bad ? "color:var(--red)" : ""}">${sel.status}</em>` : ""}${sel.errors ? ` · ${TR("n_errors", sel.errors)}` : ""}</span></span>
+        <span class="tr ${tcol(sel)}">${sel.spun ? (sel.temp != null ? `<b>${fmt(sel.temp)} °C</b>` : "") : TR("spun_down")}</span></div>`}
     </section>`;
   }
   // Array (z. B. Unraid): Belegung aus dem Belegungssensor (Attribute total/used/free), Zustand, Cache-Pools, Parität
   function arrayCard(d, b) {
     const ids = (b.items || []).map(ref => entOf(ref, d.R)).filter(id => id && st(id)); if (!ids.length) return "";
-    if (d.off) return `<section class="card grow arrc"><h2>${b.label || "Array"}</h2><div class="arr2"><div class="arroff off"><b>Server aus</b><span>Belegung, Cache und Parität erscheinen nach dem Einschalten.</span></div>
+    if (d.off) return `<section class="card grow arrc"><h2>${b.label || "Array"}</h2><div class="arr2"><div class="arroff off"><b>${TR("server_off")}</b><span>${TR("usage_cache_and_parity_appear_after_power_on")}</span></div>
       ${ids.filter(id => /_disk_cache\d*_usage$/.test(id)).map(id => { const nr = (id.match(/cache(\d*)_usage$/) || [])[1]; return `<div class="crow"><span>${b.names?.[id] || "Cache" + (nr ? " " + nr : "")}</span><div class="meter"><b style="width:0"></b></div><b>–</b></div>`; }).join("")}</div></section>`;
     const find = re => ids.find(id => re.test(id));
     const uid = find(/_array_usage$/) || ids.find(id => st(id).attributes.unit_of_measurement === "%" && st(id).attributes.total != null);
@@ -1519,17 +1555,17 @@ function cutDoor(){
     const state = sid && st(sid).state, running = !state || state === "started" || state === "STARTED";
     const stTxt = sid ? valueOf(sid).v : "";
     const P = pid ? st(pid) : null, pst = P?.attributes?.status;
-    const PST = { completed: "abgeschlossen", cancelled: "abgebrochen", running: "läuft", paused: "pausiert", failed: "fehlgeschlagen", never_run: "nie ausgeführt" };
-    const parTxt = P ? [P.state === "on" ? "Problem" : "", pst ? PST[pst] || pst : P.state === "on" ? "" : "OK", P.attributes?.errors ? `${P.attributes.errors} Fehler` : ""].filter(Boolean).join(" · ") : "";
+    const PST = { completed: TR("completed"), cancelled: TR("cancelled"), running: TR("running_2"), paused: TR("paused_2"), failed: TR("failed"), never_run: TR("never_run") };
+    const parTxt = P ? [P.state === "on" ? "Problem" : "", pst ? PST[pst] || pst : P.state === "on" ? "" : "OK", P.attributes?.errors ? TR("n_errors", P.attributes.errors) : ""].filter(Boolean).join(" · ") : "";
     return `<section class="card grow arrc"><h2>${b.label || "Array"} <em ${running ? "" : `style="color:var(--warn-ink)"`}>${stTxt || ""}</em></h2>
       <div class="arr2">
-        ${running && tot ? `<div><div class="big2">${tbTxt(usedTB || 0)}<small>von ${tbTxt(tot)}</small></div>
+        ${running && tot ? `<div><div class="big2">${tbTxt(usedTB || 0)}<small>${TR("of_n", tbTxt(tot))}</small></div>
           <div class="capb"><b style="width:${Math.round(pct ?? 0)}%"></b></div>
-          <div class="mini" style="border-top:0;padding-top:0"><span>${fmt(pct ?? 0)} % belegt</span><span>frei <b>${tbTxt(freeTB || 0)}</b></span></div></div>`
-        : `<div class="arroff"><b>${running ? "Keine Belegung" : "Array gestoppt"}</b><span>${running ? "Der Sensor liefert noch keine Größen." : `${stTxt}. Platten und Freigaben sind erst nach dem Start verfügbar.`}</span></div>`}
+          <div class="mini" style="border-top:0;padding-top:0"><span>${TR("n_used", fmt(pct ?? 0))}</span><span>${TR("free")} <b>${tbTxt(freeTB || 0)}</b></span></div></div>`
+        : `<div class="arroff"><b>${running ? TR("no_usage") : TR("array_stopped")}</b><span>${running ? TR("the_sensor_does_not_report_sizes_yet") : `${stTxt}. ${TR("disks_and_shares_after_start")}`}</span></div>`}
         ${cids.map(id => { const A = st(id).attributes, t = sizeTB(A.total), v = num(id); const nr = (id.match(/cache(\d*)_usage$/) || [])[1];
           return `<div class="crow"><span>${b.names?.[id] || "Cache" + (nr ? " " + nr : "")}${t > 0 ? ` <small>${tbTxt(t)}</small>` : ""}</span><div class="meter"><b style="width:${v ?? 0}%;background:var(--teal)"></b></div><b>${v != null ? fmt(v) + " %" : "–"}</b></div>`; }).join("")}
-        ${P ? `<div class="mini"><span>Paritätsprüfung</span><b ${P.state === "on" ? `style="color:var(--red)"` : ""}>${parTxt}</b></div>` : ""}
+        ${P ? `<div class="mini"><span>${TR("parity_check")}</span><b ${P.state === "on" ? `style="color:var(--red)"` : ""}>${parTxt}</b></div>` : ""}
       </div>
     </section>`;
   }
@@ -1545,7 +1581,7 @@ function cutDoor(){
     const fanEl = fans.map(([ref, id]) => { const n = num(id) || 0, bad = !d.off && (lamp(id) === "alert" || n < (b.fan_min ?? 200)), dur = n > 0 ? Math.max(.25, Math.min(4, 900 / n)).toFixed(2) : 0;
       const nm = nameOf(b, ref, id).replace(/^(FAN|Lüfter)\s*/i, "");
       return `<div class="hwf ${bad ? "bad" : ""}" title="${nameOf(b, ref, id)}"><svg viewBox="0 0 24 24" style="${dur ? `--fd:${dur}s` : ""}"><circle class="ring" cx="12" cy="12" r="11"/><g class="${dur && !bad ? "spin" : ""}"><g transform="translate(12 12)">${[0, 120, 240].map(r => `<path transform="rotate(${r})" d="M0-2C1.6-5 3.8-8.4 1.4-9.4-1.4-10.2-2.2-5.8-1.4-2.2Z"/>`).join("")}<circle r="2"/></g></g></svg><b>${n >= 1000 ? fmt(n / 1000, 1) + "k" : fmt(n)}</b><span>${nm}</span></div>`; }).join("");
-    return `<section class="card mod hwc"><h2>${b.label || "Hardware"}${fans.length ? ` <em>Lüfter in U/min</em>` : ""}</h2>${tiles ? `<div class="hwts">${tiles}</div>` : ""}${fanEl ? `<div class="hwfs">${fanEl}</div>` : ""}</section>`;
+    return `<section class="card mod hwc"><h2>${b.label || "Hardware"}${fans.length ? ` <em>${TR("fans_in_rpm")}</em>` : ""}</h2>${tiles ? `<div class="hwts">${tiles}</div>` : ""}${fanEl ? `<div class="hwfs">${fanEl}</div>` : ""}</section>`;
   }
   function compactCard(d, b) {
     const ids = (b.items || []).map(ref => [ref, entOf(ref, d.R)]).filter(x => x[1] && ok(st(x[1]))); if (!ids.length) return "";
@@ -1557,14 +1593,14 @@ function cutDoor(){
       ${fans.length ? (() => { const fv = fans.map(([, id]) => { const v = valueOf(id); return { v, c: col(id, v) }; }), bad = fv.filter(x => x.c), ns = fv.map(x => x.v.n).filter(n => n != null);
         // Alle Lüfter in Ordnung: Spanne min–max, sonst die auffälligen einzeln
         const txt = bad.length ? bad.map(x => `<em style="color:var(${x.c})">${x.v.v}</em>`).join(" · ") : ns.length ? (Math.min(...ns) === Math.max(...ns) ? fmt(ns[0]) : `${fmt(Math.min(...ns))}–${fmt(Math.max(...ns))}`) : "–";
-        return pair(`${b.fan_label || "Lüfter"}${fans.length > 1 ? ` (${fans.length})` : ""}`, `${txt} <small>U/min</small>`, ""); })() : ""}</div></section>`;
+        return pair(`${b.fan_label || TR("fans")}${fans.length > 1 ? ` (${fans.length})` : ""}`, `${txt} <small>${TR("rpm")}</small>`, ""); })() : ""}</div></section>`;
   }
   // Thermometer: Temperaturen als Balken mit Ampelfarbe (Grenzen warn/alert, Standard 80/90 °C)
   function thermoCard(d, b) {
     const warn = b.warn ?? 80, alert = b.alert ?? 90, lo = b.min ?? 20, hi = b.max ?? 100;
     const rows = b.items.map(ref => entOf(ref, d.R)).filter(Boolean).map(id => ({ id, v: valueOf(id) })).filter(x => x.v.n != null).sort((x, y) => y.v.n - x.v.n);
     const hot = rows.reduce((m, x) => Math.max(m, x.v.n), -Infinity), wp = ((warn - lo) / (hi - lo) * 100).toFixed(1);
-    return `<section class="card grow"><h2>${b.label || "Temperaturen"} <em>max. <b class="hv">${fmt(hot)} °C</b></em></h2><div class="thermo2">${rows.map(({ id, v }) => {
+    return `<section class="card grow"><h2>${b.label || TR("temperatures")} <em>max. <b class="hv">${fmt(hot)} °C</b></em></h2><div class="thermo2">${rows.map(({ id, v }) => {
       const p = Math.max(3, Math.min(100, (v.n - lo) / (hi - lo) * 100)), col = v.n >= alert ? "--red" : v.n >= warn ? "--yellow" : v.n >= 60 ? "--green" : "--teal";
       const name = shortName(id).replace(/[- ]?Temperatur$/i, "").replace(/^CPU-Chiplet/, "Chiplet") || shortName(id);
       return `<div class="t2"><span>${name}</span><i style="--w:${wp}%"><b style="width:${p}%;background:var(${col})"></b></i><em style="${v.n >= warn ? `color:var(${v.n >= alert ? "--red" : "--warn-ink"})` : ""}">${fmt(v.n)}°</em></div>`; }).join("")}</div></section>`;
@@ -1601,7 +1637,7 @@ function cutDoor(){
     const soft = v => { const f = v.map(x => x ?? null); if (f.some(x => x == null)) return f; return smooth(smooth(f)); };  // leicht glätten, Messrauschen raus
     const series = c.series.map(s => ({ ...s, v: soft(fineSeries(s.id)), color: css(s.color) }));
     const warn = c.series.find(s => s.warn != null)?.warn ?? c.warn;
-    return `<section class="card grow trace"><h2>${c.label} <em class="tread" data-k="${key}">24 Std.</em></h2>
+    return `<section class="card grow trace"><h2>${c.label} <em class="tread" data-k="${key}">${TR("24_h")}</em></h2>
       <div class="serleg">${c.series.map(s => `<span><i style="background:var(${s.color})"></i>${s.label} <b data-s="${s.id}">${valueOf(s.id).v} ${s.unit}</b></span>`).join("")}</div>
       ${lazy((W, H) => traceSvg(key, series, W, H, warn, unit))}</section>`;
   }
@@ -1614,13 +1650,13 @@ function cutDoor(){
     g.querySelector("line").setAttribute("x1", T.X(i)); g.querySelector("line").setAttribute("x2", T.X(i));
     g.querySelectorAll("circle").forEach((c, k) => { const v = T.series[k].v[i]; c.style.display = v == null ? "none" : ""; c.setAttribute("cx", T.X(i)); if (v != null) c.setAttribute("cy", T.Y(v)); });
     const card = svg.closest(".card"), t = new Date(Date.now() - (T.n - 1 - i) * 300e3);
-    card.querySelector(".tread").textContent = i === T.n - 1 ? "jetzt" : t.toLocaleTimeString(rdLoc(), { hour: "2-digit", minute: "2-digit" }) + " Uhr";
+    card.querySelector(".tread").textContent = i === T.n - 1 ? TR("now") : t.toLocaleTimeString(rdLoc(), { hour: "2-digit", minute: "2-digit" }) + (" " + TR("clock"));
     T.series.forEach(s => { const b = card.querySelector(`b[data-s="${s.id}"]`); if (b) b.textContent = `${fmt(s.v[i], s.dec ?? 0)} ${unescH(s.unit)}`; });
   }
   function traceLeave(e) {
     const card = e.target.closest?.(".trace"); if (!card) return;
     const svg = card.querySelector(".trace-svg"), T = svg && TRACE[svg.dataset.k]; if (!T) return;
-    svg.querySelector(".tguide").style.display = "none"; card.querySelector(".tread").textContent = "24 Std.";
+    svg.querySelector(".tguide").style.display = "none"; card.querySelector(".tread").textContent = TR("24_h");
     T.series.forEach(s => { const b = card.querySelector(`b[data-s="${s.id}"]`); if (b) b.textContent = unescH(`${valueOf(s.id).v} ${s.unit}`); });
   }
   function chartCard(c) {
@@ -1629,12 +1665,12 @@ function cutDoor(){
     if (false) {
       const COL = ["--blue", "--orange", "--green"], vals = c.series.map(x => HS(x.id, num(x.id) || 0));
       const all = vals.flat(), lo = Math.min(...all), hi = Math.max(...all), pad = (hi - lo) * .1 || 1;
-      return `<section class="card grow"><h2>${c.label} <em>24 Std.</em></h2>
+      return `<section class="card grow"><h2>${c.label} <em>${TR("24_h")}</em></h2>
         <div class="serleg">${c.series.map((x, i) => `<span><i style="background:var(${COL[i]})"></i>${x.label} <b>${valueOf(x.id).v} ${x.unit}</b></span>`).join("")}</div>
         ${lazy((W, H) => chartMulti(c.series.map((x, i) => ({ v: vals[i], color: css(COL[i]), fill: i === 0 })), { lo: lo - pad, hi: hi + pad, W, H }))}</section>`;
     }
     const now = HS(c.entity, c.base).at(-1);
-    return `<section class="card grow"><h2>${c.label} <em><b class="hv">${fmt(now, c.dec)} ${c.unit}</b> · ${c.warn != null ? `Grenze ${fmt(c.warn)} ${c.unit}` : "24 Std."}</em></h2>${lazy((W, H) => chartSVG(c, 0, W, H))}</section>`;
+    return `<section class="card grow"><h2>${c.label} <em><b class="hv">${fmt(now, c.dec)} ${c.unit}</b> ${TR("bullet_n", c.warn != null ? TR("limit_n", `${fmt(c.warn)} ${c.unit}`) : TR("24_h"))}</em></h2>${lazy((W, H) => chartSVG(c, 0, W, H))}</section>`;
   }
   // Warnungen/Störungen stehen im Gerätekopf; die Karte „Meldungen“ zeigt die übrigen Infos
   const warnMsgsOf = d => (d.msgs || []).filter(m => m[0] !== "ok");
@@ -1656,12 +1692,12 @@ function cutDoor(){
     // Letzter Start mit Firmware-Stand (wie „has updated to …“ im Controller); Zeitpunkt aus der Laufzeit
     const up = st(d.R?.uptime), fw = st(d.R?.firmware)?.attributes.installed_version;
     if (up && ok(up)) { const x = parseFloat(up.state), t = up.attributes.unit_of_measurement === "s" ? Date.now() - x * 1000 : Date.parse(up.state);
-      if (!isNaN(t) && !log.some(r => Math.abs(r[1] - t) < 30 * 60e3)) log.push([fw ? `Gestartet mit Firmware ${fw.split(".").slice(0, 3).join(".")}` : "Neu gestartet", t]); }
+      if (!isNaN(t) && !log.some(r => Math.abs(r[1] - t) < 30 * 60e3)) log.push([fw ? TR("started_with_firmware_n", fw.split(".").slice(0, 3).join(".")) : TR("restarted"), t]); }
     log.sort((p, q) => q[1] - p[1]);
     if (!rest.length && !log.length) return "";
     const ms = rest.slice(0, 2);
     const hist = log.length ? `<div class="dlog"><h2>History</h2>${log.slice(0, rest.length ? 2 : 3).map(([t, w]) => `<div class="dl"><span>${t}</span><time>${whenTxt(w)}</time></div>`).join("")}</div>` : "";
-    return `<section class="card wide msgs${hist ? " hasl" : ""}">${ms.length ? `<h2>Meldungen${d.msgs.length > 2 ? ` <em>+${d.msgs.length - 2} weitere</em>` : ""}</h2>${ms.map(m => `<div class="msg ${m[0]}"><i></i><div>${m[1]}<time>${m[2]}</time></div></div>`).join("")}` : ""}${hist}</section>`;
+    return `<section class="card wide msgs${hist ? " hasl" : ""}">${ms.length ? `<h2>${TR("messages")}${d.msgs.length > 2 ? ` <em>${TR("n_more_2", d.msgs.length - 2)}</em>` : ""}</h2>${ms.map(m => `<div class="msg ${m[0]}"><i></i><div>${m[1]}<time>${m[2]}</time></div></div>`).join("")}` : ""}${hist}</section>`;
   }
   // Jeder Block liefert eine Karte oder nichts (keine Daten). half = darf neben einem zweiten halben Block stehen.
   const BLOCK_RENDER = {
@@ -1677,10 +1713,10 @@ function cutDoor(){
     disks: d => d.disks && diskCard(d),
     recording: d => d.rec && recCard(d),
     messages: d => msgsCard(d),
-    values: (d, b) => b.style === "hw" ? hwCard(d, b) : b.style === "compact" ? compactCard(d, b) : b.style === "ifaces" ? ifacesCard(d, b) : b.items?.length && (b.style === "rings" ? ringsCard(d, b) : `<section class="card"><h2>${b.label || "Werte"}</h2><div class="grid t3">${b.items.map(ref => [ref, entOf(ref, d.R)]).filter(x => x[1]).map(([ref, id]) => { const v = valueOf(id);
+    values: (d, b) => b.style === "hw" ? hwCard(d, b) : b.style === "compact" ? compactCard(d, b) : b.style === "ifaces" ? ifacesCard(d, b) : b.items?.length && (b.style === "rings" ? ringsCard(d, b) : `<section class="card"><h2>${b.label || TR("values")}</h2><div class="grid t3">${b.items.map(ref => [ref, entOf(ref, d.R)]).filter(x => x[1]).map(([ref, id]) => { const v = valueOf(id);
       const txt = v.n == null && String(v.v).length > 9;   // Text statt Zahl (z. B. Client-Name): kleiner, höchstens zwei Zeilen
       return `<div class="tile"><span class="k">${nameOf(b, ref, id)}</span><span class="v ${txt ? "txt" : ""}" ${txt ? `title="${String(v.v).replace(/"/g, "&quot;")}"` : ""}>${v.v}<small>${v.u}</small></span>${v.u === "%" && v.n != null ? `<div class="meter"><b style="width:${Math.max(0, Math.min(100, v.n))}%"></b></div>` : ""}</div>`; }).join("")}</div></section>`),
-    bars: (d, b) => b.items?.length && (b.style === "thermo" ? thermoCard(d, b) : `<section class="card grow"><h2>${b.label || "Auslastung"}</h2><div class="bars2 ${b.items.length > 5 && b.size === "full" ? "two" : ""}">${b.items.map(ref => [ref, entOf(ref, d.R)]).filter(x => x[1]).map(([ref, id]) => { const v = valueOf(id), lo = b.min ?? 0, hi = b.max ?? 100;
+    bars: (d, b) => b.items?.length && (b.style === "thermo" ? thermoCard(d, b) : `<section class="card grow"><h2>${b.label || TR("load")}</h2><div class="bars2 ${b.items.length > 5 && b.size === "full" ? "two" : ""}">${b.items.map(ref => [ref, entOf(ref, d.R)]).filter(x => x[1]).map(([ref, id]) => { const v = valueOf(id), lo = b.min ?? 0, hi = b.max ?? 100;
       const p = v.n == null ? 0 : Math.max(0, Math.min(100, (v.n - lo) / ((hi - lo) || 1) * 100));
       return `<div class="b2"><span>${nameOf(b, ref, id)}</span><b>${v.v} ${v.u}</b><div class="meter"><b style="width:${p}%;${p > 85 ? "background:var(--orange)" : ""}"></b></div></div>`; }).join("")}</div></section>`),
     // Einzelwert: eine Entität als eigene Kachel, wahlweise mit 24-Std.-Kurve (wie eine Kachel aus „Auslastung“)
@@ -1705,7 +1741,7 @@ function cutDoor(){
       return `<section class="card mod ringm"><div class="rw"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" class="gtr"/><circle cx="50" cy="50" r="42" class="gv" style="stroke:var(${thrCol(b, o.v.n)})" stroke-dasharray="${(C * p).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 50 50)"/></svg>
         <b class="gval">${o.v.v}<small>${o.v.u}</small></b></div><span class="k">${o.label}</span></section>`; },
     stat: (d, b) => { const o = oneEnt(d, b); if (!o) return ""; HIST.want.add(o.id); const h = HIST.data[o.id], d0 = h ? h[0] : null, dv = o.v.n != null && d0 != null ? o.v.n - d0 : null;
-      const tr = dv == null || Math.abs(dv) < 1e-9 ? "" : `<span class="trd ${dv > 0 ? "up" : "dn"}">${dv > 0 ? "▲" : "▼"} ${fmt(Math.abs(dv), Math.abs(dv) < 10 ? 1 : 0)} ${o.v.u} <em>ggü. gestern</em></span>`;
+      const tr = dv == null || Math.abs(dv) < 1e-9 ? "" : `<span class="trd ${dv > 0 ? "up" : "dn"}">${dv > 0 ? "▲" : "▼"} ${fmt(Math.abs(dv), Math.abs(dv) < 10 ? 1 : 0)} ${o.v.u} <em>${TR("vs_yesterday")}</em></span>`;
       return `<section class="card mod statm"><span class="k">${o.label}</span><b class="sv" style="color:var(${b.warn != null || b.alert != null ? thrCol(b, o.v.n) : "--label"})">${o.v.v}<small>${o.v.u}</small></b>${tr}</section>`; },
     progress: (d, b) => { const o = oneEnt(d, b); if (!o) return ""; const lo = b.min ?? 0, hi = b.max ?? autoMax(o.v), p = frac(o.v.n, lo, hi);
       return `<section class="card mod prog"><div class="ph"><span class="k">${o.label}</span><b>${o.v.v}<small>${o.v.u}</small></b></div><div class="pbar"><i style="width:${(p * 100).toFixed(1)}%;background:var(${thrCol(b, o.v.n)})"></i></div><span class="gmm"><i>${fmt(lo)}</i><i>${fmt(hi)}</i></span></section>`; },
@@ -1714,11 +1750,11 @@ function cutDoor(){
       const mx = Math.max(...bars, 1e-9), col = b.colors?.[0] || "--blue", now = new Date().getHours();
       return `<section class="card mod histo"><div class="ph"><span class="k">${o.label}</span><b>${o.v.v}<small>${o.v.u}</small></b></div>
         <div class="hb">${bars.map((v, i) => `<i style="height:${Math.max(3, v / mx * 100).toFixed(0)}%;background:var(${col});opacity:${i === 23 ? 1 : .55}" title="${fmt(v, 1)} ${o.v.u}"></i>`).join("")}</div>
-        <span class="gmm"><i>${String((now + 1) % 24).padStart(2, "0")}:00</i><i>jetzt</i></span></section>`; },
+        <span class="gmm"><i>${String((now + 1) % 24).padStart(2, "0")}:00</i><i>${TR("now")}</i></span></section>`; },
     chips: (d, b) => { const ids = (b.items || []).map(ref => [ref, entOf(ref, d.R)]).filter(x => x[1] && st(x[1])); if (!ids.length) return "";
       if (b.style === "list") { const ICON = { ok: "✓", alert: "!", warn: "!", off: "–" };
         return `<section class="card mod stlist">${b.label ? `<h2>${b.label}</h2>` : ""}<div class="sts">${ids.map(x => [...x, lamp(x[1])]).sort((x, y) => ({ alert: 0, warn: 1 }[x[2]] ?? 2) - ({ alert: 0, warn: 1 }[y[2]] ?? 2)).map(([ref, id, l]) => { const v = valueOf(id);
-          return `<div class="st ${l}"><i>${ICON[l] || "✓"}</i><span>${nameOf(b, ref, id)}</span><b>${v.v}${v.u ? " " + v.u : ""}</b></div>`; }).join("")}${(() => { const okn = ids.filter(x => !["alert", "warn"].includes(lamp(x[1]))); return okn.length ? `<div class="st ok sum"><i>✓</i><span>${okn.length === ids.length ? "Alles in Ordnung" : `${okn.length} weitere`}</span><b>ohne Problem</b></div>` : ""; })()}</div></section>`; }
+          return `<div class="st ${l}"><i>${ICON[l] || "✓"}</i><span>${nameOf(b, ref, id)}</span><b>${v.v}${v.u ? " " + v.u : ""}</b></div>`; }).join("")}${(() => { const okn = ids.filter(x => !["alert", "warn"].includes(lamp(x[1]))); return okn.length ? `<div class="st ok sum"><i>✓</i><span>${okn.length === ids.length ? TR("all_good") : TR("n_more", okn.length)}</span><b>${TR("no_problem")}</b></div>` : ""; })()}</div></section>`; }
       return `<section class="card mod chipsm">${b.label ? `<h2>${b.label}</h2>` : ""}<div class="chs">${ids.map(x => [...x, { alert: 0, warn: 1 }[lamp(x[1])] ?? 2]).sort((x, y) => x[2] - y[2]).map(([ref, id]) => { const v = valueOf(id); return `<span class="ch ${lamp(id)}"><i></i>${nameOf(b, ref, id)}<b>${v.v}${v.u ? " " + v.u : ""}</b></span>`; }).join("")}</div></section>`; },
     switch: (d, b) => { const ids = (b.items || []).map(ref => [ref, entOf(ref, d.R)]).filter(x => x[1] && st(x[1])); if (!ids.length) return "";
       return `<section class="card mod swm">${b.label ? `<h2>${b.label}</h2>` : ""}${ids.map(([ref, id]) => { const on = ["on", "open", "playing", "home"].includes(st(id).state);
@@ -1729,12 +1765,12 @@ function cutDoor(){
       return `<section class="card mod camm"><img src="${pic}${pic.includes("?") ? "&" : "?"}t=${Math.floor(Date.now() / 10000)}" alt="${o.label}" loading="lazy"><span class="camn">${o.label}</span></section>`; },
     heading: (d, b) => (b.label || b.text) && `<section class="card mod headm"><b>${b.label || ""}</b>${b.text ? `<span>${b.text}</span>` : ""}</section>`,
     clock: () => { const n = new Date(); return `<section class="card mod clockm"><b class="clk">${n.toLocaleTimeString(rdLoc(), { hour: "2-digit", minute: "2-digit" })}</b><span class="clkd">${n.toLocaleDateString(rdLoc(), { weekday: "long", day: "numeric", month: "long" })}</span></section>`; },
-    note: (d, b) => d.slots ? slotsCard(d) : (b.text || d.passive) && `<section class="card"><p class="note" style="margin:0">${b.text || "Passives Element ohne Sensoren. Im Editor der Integration lässt sich hier eine Belegung oder Notiz hinterlegen."}</p></section>`,
+    note: (d, b) => d.slots ? slotsCard(d) : (b.text || d.passive) && `<section class="card"><p class="note" style="margin:0">${b.text || TR("passive_element_without_sensors_assignments_or")}</p></section>`,
   };
   // Community-Module (modules/<typ>/render.js): bekommen nur ctx mit fertig aufbereiteten Werten und liefern HTML
   for (const [type, mod] of Object.entries(RD_MODULES)) {
     const render = mod.render, tr = s => rdIsDe() ? (mod.de?.[s] ?? s) : s;   // Module schreiben Englisch, „de“ übersetzt
-    const meta = RD_CATALOG.blocks[type] || {};
+    const meta = rdCatalog().blocks[type] || {};
     BLOCK_RENDER[type] = (d, b) => {
       const items = (b.items || (b.source ? [b.source] : [])).map(ref => [ref, entOf(ref, d.R)]).filter(x => x[1] && st(x[1])).map(([ref, id]) => { const s = st(id), v = valueOf(id);
         return { id, name: nameOf(b, ref, id), state: s.state, value: v.v, unit: v.u, number: v.n ?? null, status: lamp(id), available: ok(s), attributes: { ...s.attributes } }; });
@@ -1742,7 +1778,7 @@ function cutDoor(){
       const opt = k => b[k] ?? (meta.options || []).find(o => o.key === k)?.default;
       const ctx = { device: unescDeep({ id: d.id, name: d.name, model: d.model, state: d.state, off: !!d.off }), items: unescDeep(items), option: k => unescDeep(opt(k)), fmt, esc: escH, t: tr, lang: () => RD_LANG };
       let html = "";
-      try { html = render(ctx, unescDeep(b)) || ""; } catch (err) { console.warn(`Rack Display: Modul ${type}:`, err); html = `<p class="note">${rdIsDe() ? "Fehler im Modul" : "Module error"} ${escH(type)}</p>`; }
+      try { html = render(ctx, unescDeep(b)) || ""; } catch (err) { console.warn(`Rack Display: Modul ${type}:`, err); html = `<p class="note">${TR("module_error")} ${escH(type)}</p>`; }
       return html && `<section class="card mod mod-${type}">${b.label !== "" ? `<h2>${b.label || escH(meta.name || type)}</h2>` : ""}${html}</section>`;
     };
   }
@@ -1759,8 +1795,8 @@ function cutDoor(){
         // Module ohne Daten: im Editor als leeres Feld sichtbar (damit man es anordnen kann), in der Anzeige ausgeblendet
         // Gerät aus: Module ohne erreichbare Werte grau (Platzhalter mit Titel, damit das Layout stehen bleibt)
         const dim = d.off && b.type !== "header" && !blockEnts(d, b).some(id => ok(st(id)));
-        if (!html || (dim && !OFF_SKELETON.includes(b.type))) return dim ? `<section data-bi="${bi}" style="${stl}" class="gcell card offdim offph"><h2>${b.label || RD_CATALOG.blocks[b.type]?.name || b.type}</h2><p class="note">⏻ Aus</p></section>`
-          : EDIT_HOOK ? `<section data-bi="${bi}" style="${stl}" class="gcell card empty-mod"><h2>${RD_CATALOG.blocks[b.type]?.name || b.type}</h2>${rdSkeleton(b.type)}</section>` : "";
+        if (!html || (dim && !OFF_SKELETON.includes(b.type))) return dim ? `<section data-bi="${bi}" style="${stl}" class="gcell card offdim offph"><h2>${b.label || rdCatalog().blocks[b.type]?.name || b.type}</h2><p class="note">${TR("off_2")}</p></section>`
+          : EDIT_HOOK ? `<section data-bi="${bi}" style="${stl}" class="gcell card empty-mod"><h2>${rdCatalog().blocks[b.type]?.name || b.type}</h2>${rdSkeleton(b.type)}</section>` : "";
         return html.replace(/<section class="/, `<section data-bi="${bi}" style="${stl}" class="gcell ${dim ? "offdim " : ""}`);
       }).join("");
       return `<div class="dgrid gm" style="--gc:12;--gr:${G.frows}">${cells}</div>`;
@@ -1769,7 +1805,7 @@ function cutDoor(){
     for (const b of d.blocks) {
       if (b.type === "header" || !BLOCK_RENDER[b.type]) continue;
       const html = BLOCK_RENDER[b.type](d, b);
-      if (html) items.push({ html, half: (b.size || RD_CATALOG.blocks[b.type]?.size) === "half" });
+      if (html) items.push({ html, half: (b.size || rdCatalog().blocks[b.type]?.size) === "half" });
     }
     // Halbe Blöcke paarweise nebeneinander; ein halber Block ohne Partner geht über die volle Breite
     const wide = h => h.replace(/class="card(?![^"]*\bwide\b)/, 'class="card wide'), isWide = h => /class="card[^"]*\bwide\b/.test(h), grows = h => /class="card[^"]*\bgrow\b/.test(h);
@@ -1797,15 +1833,15 @@ function cutDoor(){
 
   function showDetail(d) {
     if (d.off && d.options?.grid && d.blocks?.length) return renderBlocks(d);
-    if (d.off) return `<div class="dgrid nodata">${headCard(d)}<section class="card wide offc"><span class="offi">⏻</span><b>Ausgeschaltet</b><span>${d.offSince ? `seit ${new Date(d.offSince).toLocaleString(rdLoc(), { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}.` : "Das Gerät läuft nicht dauerhaft."} Sobald es eingeschaltet wird, erscheinen die Werte hier automatisch.</span>${d.options?.power_on && st(d.options.power_on) ? (() => { const arm = ARMED?.id === d.options.power_on && Date.now() - ARMED.t < 4000;
-      return `<button class="actb pwron ${arm ? "armed" : ""}" data-press="${d.options.power_on}" data-confirm="Nochmal tippen zum Einschalten">${arm ? "Nochmal tippen zum Einschalten" : "⏻ Einschalten"}</button>`; })() : ""}</section></div>`;
+    if (d.off) return `<div class="dgrid nodata">${headCard(d)}<section class="card wide offc"><span class="offi">⏻</span><b>${TR("switched_off")}</b><span>${d.offSince ? TR("since_n", `${new Date(d.offSince).toLocaleString(rdLoc(), { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}.`) : TR("the_device_does_not_run_permanently")} ${TR("values_appear_here_automatically_once_it_is")}</span>${d.options?.power_on && st(d.options.power_on) ? (() => { const arm = ARMED?.id === d.options.power_on && Date.now() - ARMED.t < 4000;
+      return `<button class="actb pwron ${arm ? "armed" : ""}" data-press="${d.options.power_on}" data-confirm="${TR("tap_again_to_power_on")}">${arm ? TR("tap_again_to_power_on") : TR("power_on")}</button>`; })() : ""}</section></div>`;
     if (!d.noData) return renderBlocks(d);
     const mm = members(d.id), lo = Math.min(...mm.map(x => x.u)), hi = Math.max(...mm.map(x => x.u + x.h - 1));
     return `<div class="dgrid nodata"><section class="card wide"><div class="dhero">
-      <div class="top"><div style="min-width:0"><h1 style="font:700 24px/1.1 var(--font-display);margin:0 0 4px">${d.name}</h1><div class="sub" style="color:var(--label-2);font-size:13px">${d.model} · HE ${lo}${hi > lo ? "–" + hi : ""}</div></div>
-        <span class="chip warn"><i></i>Keine Daten</span></div>
+      <div class="top"><div style="min-width:0"><h1 style="font:700 24px/1.1 var(--font-display);margin:0 0 4px">${d.name}</h1><div class="sub" style="color:var(--label-2);font-size:13px">${d.model} · ${TR("u_n", `${lo}${hi > lo ? "–" + hi : ""}`)}</div></div>
+        <span class="chip warn"><i></i>${TR("no_data")}</span></div>
       ${headThumb(d)}
-      <p class="note" style="margin:6px 0 0">Mit diesem Gerät ist noch kein Home-Assistant-Gerät verknüpft. Sobald es eine Integration gibt (z. B. Unraid), lässt es sich im Editor verknüpfen; Temperaturen, Auslastung und Festplatten erscheinen dann hier.</p>
+      <p class="note" style="margin:6px 0 0">${TR("no_ha_device_linked")}</p>
     </div></section></div>`;
   }
 
@@ -1813,7 +1849,7 @@ function cutDoor(){
   function heatPaint() {
     const temps = DEVICES.filter(d => d.temp != null), can = !!RACK.heatmap && temps.length >= 2, seg = ROOT.querySelector(".rack-meta .seg");
     let btn = $("sideHeat");
-    if (can && !btn && seg) { seg.insertAdjacentHTML("beforeend", `<button id="sideHeat" aria-pressed="false">Wärme</button>`); btn = $("sideHeat"); }
+    if (can && !btn && seg) { seg.insertAdjacentHTML("beforeend", `<button id="sideHeat" aria-pressed="false">${TR("heat")}</button>`); btn = $("sideHeat"); }
     if (!can) { btn?.remove(); if (S.heat) { S.heat = false; } }
     const rack = $("rack"); rack?.classList.toggle("heat", !!S.heat);
     btn?.setAttribute("aria-pressed", String(!!S.heat));
@@ -1927,8 +1963,11 @@ function cutDoor(){
     seen = [];
   }
   let lastRender = 0, pending = null;
+  // Sprachwechsel (HA-Benutzer oder Rack → Anzeige → Sprache): feste Texte und Anzeige neu zeichnen
+  rdFill(ROOT);
+  const offLang = rdOnLang(() => { if (DEAD) return; rdFill(ROOT); if (RAW) { buildModel(RAW); render(true); } });
   return {
-    setRack(rack) { RAW = escDeep(rack); rack = RAW; rdForceLang(rack?.display?.lang); setTimeout(nightCheck, 0); HIST.want.clear(); DISC.clear(); buildModel(rack); computeWatch(); render(true); loadHistory(true); loadEvents(); },
+    setRack(rack) { rdForceLang(rack?.display?.lang); RAW = escDeep(rack); rack = RAW; setTimeout(nightCheck, 0); HIST.want.clear(); DISC.clear(); buildModel(rack); computeWatch(); render(true); loadHistory(true); loadEvents(); },
     setHass(h) {
       HASS = h; rdSetLang(h);
       if (!RAW) return;
@@ -1954,7 +1993,7 @@ function cutDoor(){
       CHARTS.length = start; return true;
     },
     hold(v) { HOLD = !!v; },
-    destroy() { DEAD = true; clearInterval(timer); clearInterval(idleTimer); clearInterval(liveTimer); clearInterval(histTimer); clearTimeout(pending); ro.disconnect(); },
+    destroy() { DEAD = true; offLang(); clearInterval(timer); clearInterval(idleTimer); clearInterval(liveTimer); clearInterval(histTimer); clearTimeout(pending); ro.disconnect(); },
   };
 }
 
@@ -1962,7 +2001,7 @@ function cutDoor(){
 // Anzeige-Geometrie: Auflösung + Diagonale → Skalierung (gleiche Schriftgröße in mm wie auf dem 7"-Pi) und Raster der Detailansicht
 const RD_INCH = { "pi-portrait": 7, "pi-landscape": 7, hd: 10.1, "hd-portrait": 10.1, fhd: 23.8, tablet: 9.7, custom: 15.6 };
 function rdGeometry(disp = {}) {
-  const D = RD_CATALOG.displays, p = D.find(x => x.key === (disp.preset || "pi-portrait")) || D[0];
+  const D = rdCatalog().displays, p = D.find(x => x.key === (disp.preset || "pi-portrait")) || D[0];
   if (p.key === "fill") return { fill: true, key: "fill", frows: 14 };
   const w = p.key === "custom" ? Math.max(320, +disp.w || 480) : p.w || 480, h = p.key === "custom" ? Math.max(320, +disp.h || 800) : p.h || 800;
   const inch = +disp.inch || p.inch || RD_INCH[p.key] || 7, dpi = Math.hypot(w, h) / inch;
@@ -2019,13 +2058,13 @@ const RD_HTML = `
       </div>
       <canvas class="wled-glow" id="wledCanvas" aria-hidden="true"></canvas>
       <div class="hits" id="hits"></div>
-      <button class="pdu-hit" id="pduHit" data-id="pdu" aria-label="Stromleiste, Rückseite" hidden></button>
+      <button class="pdu-hit" id="pduHit" data-id="pdu" data-i18n-label="pdu_rear_label" hidden></button>
     </div>
     <div class="rack-meta">
-      <div class="seg" role="group" aria-label="Tür">
-        <button id="doorClosed" aria-pressed="true">Tür zu</button>
-        <button id="doorOpen" aria-pressed="false">Tür offen</button>
-        <button id="sideRear" aria-pressed="false">Rückseite</button>
+      <div class="seg" role="group" data-i18n-label="door">
+        <button id="doorClosed" aria-pressed="true" data-i18n="door_closed"></button>
+        <button id="doorOpen" aria-pressed="false" data-i18n="door_open"></button>
+        <button id="sideRear" aria-pressed="false" data-i18n="rear"></button>
       </div>
     </div>
   </div>
@@ -2044,7 +2083,7 @@ class RackDisplayElement extends HTMLElement {
   getCardSize() { return 12; }
   set narrow(v) {} set route(v) {} set panel(v) {}
   set hass(h) {
-    this._hass = h;
+    this._hass = h; rdSetLang(h);
     if (!this._started) { this._started = true; this._start(); }
     else if (this._app) this._app.setHass(h);
     if (this._wrap) { this._applyDark(); }
@@ -2084,7 +2123,7 @@ class RackDisplayElement extends HTMLElement {
     if (rack) { this._rackId = rack.id; rdFrame(this._stage, this._wrap, rack, (this._config?.layout === "fill" || this._config?.view === "rack")); this._app.setRack(rack);
       // /rack?sel=<Gerät> öffnet direkt das Popup (z. B. aus einer Rack-Karte im Dashboard)
       const sel = !this._selDone && new URLSearchParams(location.search).get("sel"); this._selDone = true; if (sel) setTimeout(() => this._app?.select(sel), 300); }
-    else this._wrap.innerHTML = `<p style="padding:24px">Noch kein Rack angelegt.${this._hass.user?.is_admin ? ` <a href="/rack-editor" style="color:var(--primary-color)">Rack-Editor öffnen</a>` : ""}</p>`;
+    else this._wrap.innerHTML = `<p style="padding:24px">${TR("no_rack_created_yet")}${this._hass.user?.is_admin ? ` <a href="/rack-editor" style="color:var(--primary-color)">${TR("open_the_rack_editor")}</a>` : ""}</p>`;
   }
   disconnectedCallback() {
     this._app?.destroy(); this._unsub?.(); this._stage?._ro?.disconnect(); clearInterval(this._vt); clearInterval(this._rt);
@@ -2097,10 +2136,8 @@ class RackDisplayCard extends RackDisplayElement {
   static getStubConfig() { return {}; }
   static getConfigForm() {
     // Sprache des HA-Benutzers (das Formular kann erscheinen, bevor eine Karte Daten bekommen hat)
-    const lang = document.querySelector("home-assistant")?.hass?.locale?.language || RD_USER;
-    const de = String(lang).toLowerCase().startsWith("de"), L = de
-      ? { rack_id: "Rack-ID (leer = erstes Rack)", view: "Ansicht", height: "Höhe in Pixel", full: "Rack mit Detailansicht", rack: "Nur Rack mit Status" }
-      : { rack_id: "Rack ID (empty = first rack)", view: "View", height: "Height in pixels", full: "Rack with detail view", rack: "Rack with status only" };
+    rdSetLang(document.querySelector("home-assistant")?.hass || { language: RD_USER });
+    const L = { rack_id: TR("card_rack_id"), view: TR("card_view"), height: TR("card_height"), full: TR("card_view_full"), rack: TR("card_view_rack") };
     return {
       schema: [
         { name: "rack_id", selector: { text: {} } },
@@ -2115,8 +2152,8 @@ if (!customElements.get("rack-display-panel")) customElements.define("rack-displ
 if (!customElements.get("rack-display-card")) customElements.define("rack-display-card", RackDisplayCard);
 window.customCards = window.customCards || [];
 if (!window.customCards.find(c => c.type === "rack-display-card")) {
-  window.customCards.push({ type: "rack-display-card", name: "Rack Display", description: "Server-Rack mit Live-Werten" });
+  window.customCards.push({ type: "rack-display-card", name: "Rack Display", description: "Server rack with live values" });
 }
 
 // Für den Editor: Anzeige-Kern als Vorschau wiederverwenden
-window.__rackDisplay = { rdSkeleton, rdT, rdObserve, rdSetLang, rdForceLang, rdLoc, createApp, RD_HTML, RD_BASE, RD_VERSION, RD_CATALOG, rdNewVersion, rdFrame, rdGeometry };
+window.__rackDisplay = { rdSkeleton, rdT, rdObserve, rdSetLang, rdForceLang, rdLoc, createApp, RD_HTML, RD_BASE, RD_VERSION, get RD_CATALOG() { return rdCatalog(); }, TR, rdOnLang, rdNewVersion, rdFrame, rdGeometry };

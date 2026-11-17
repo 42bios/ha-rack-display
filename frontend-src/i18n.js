@@ -1,13 +1,58 @@
 /* ---------- Sprache ----------
-   Deutsch ist die Quellsprache der Oberfläche. Für andere Sprachen übersetzt ein Beobachter jeden neu
-   gezeichneten Text (und title/aria-label/placeholder) über ein Wörterbuch; Texte mit Zahlen über Muster.
-   Fehlende Einträge bleiben deutsch. Bei Deutsch läuft nichts davon (keine Kosten auf dem Pi). */
-let RD_LANG = "de";
-const rdIsDe = () => RD_LANG.startsWith("de");
-const rdLoc = () => rdIsDe() ? "de-DE" : RD_LANG.startsWith("en") ? "en-GB" : RD_LANG;
+   Alle Texte der Oberfläche stehen unter Schlüsseln in i18n/<sprache>.json (Englisch ist die Quellsprache).
+   TR("schluessel", wert0, wert1 …) liefert den Text der aktuellen Sprache und setzt die Werte für {0}, {1} … ein;
+   fehlt ein Schlüssel in einer Sprache, gilt der englische Text. Eine weitere Sprache ist eine weitere Datei. */
+const RD_TEXT = /*@@I18N_TEXT@@*/{ en: {} };
 // Sprache: fest im Rack eingestellt (Anzeige → Sprache) oder die des HA-Benutzers (z. B. Kiosk-Benutzer auf dem Pi)
-let RD_FORCE = "", RD_USER = "de";
-function rdApply() { const l = RD_FORCE || RD_USER; if (l === RD_LANG) return; RD_LANG = l; RD_OBS.forEach(r => rdIsDe() ? rdRestore(r) : rdTrNode(r)); }
+let RD_LANG = "en", RD_RAW = "en", RD_FORCE = "", RD_USER = "en";
+function TR(key, ...args) {
+  const s = RD_TEXT[RD_LANG]?.[key] ?? RD_TEXT.en[key] ?? key;
+  return args.length ? s.replace(/\{(\d)\}/g, (_, i) => args[+i] ?? "") : s;
+}
+const rdIsDe = () => RD_LANG === "de";
+// Zahlen und Datumsangaben folgen der Sprache des Benutzers, auch wenn es dafür keine Textdatei gibt
+const rdLoc = () => RD_RAW.startsWith("de") ? "de-DE" : RD_RAW.startsWith("en") ? "en-GB" : RD_RAW;
+// Tabellen mit Texten: je Sprache einmal aufbauen (Aufruf liefert die Fassung der aktuellen Sprache)
+function rdPerLang(make) { let lang, value; return () => { if (lang !== RD_LANG) { lang = RD_LANG; value = make(); } return value; }; }
+// Wer Texte gezeichnet hat, zeichnet bei einem Sprachwechsel neu
+const RD_ON_LANG = new Set();
+function rdOnLang(fn) { RD_ON_LANG.add(fn); return () => RD_ON_LANG.delete(fn); }
+function rdApply() {
+  const raw = RD_FORCE || RD_USER, short = raw.split("-")[0], lang = RD_TEXT[raw] ? raw : RD_TEXT[short] ? short : "en";
+  if (raw === RD_RAW && lang === RD_LANG) return;
+  const wasDe = rdIsDe(); RD_RAW = raw; RD_LANG = lang;
+  RD_ON_LANG.forEach(fn => { try { fn(); } catch (e) { console.warn("Rack Display:", e); } });
+  if (wasDe !== rdIsDe()) RD_OBS.forEach(r => rdIsDe() ? rdRestore(r) : rdTrNode(r));
+}
+function rdSetLang(h) { RD_USER = String(h?.locale?.language || h?.language || "en").toLowerCase(); rdApply(); }
+function rdForceLang(l) { RD_FORCE = l ? String(l).toLowerCase() : ""; rdApply(); }
+// Feste Texte im Grundgerüst (rack.html): data-i18n = Text, data-i18n-label = aria-label
+function rdFill(root) {
+  root.querySelectorAll("[data-i18n]").forEach(el => { el.textContent = TR(el.dataset.i18n); });
+  root.querySelectorAll("[data-i18n-label]").forEach(el => el.setAttribute("aria-label", TR(el.dataset.i18nLabel)));
+}
+// Katalog (blocks.json): beim Build markierte Texte ("\u0001schluessel") in der aktuellen Sprache
+function rdResolve(o) {
+  if (typeof o === "string") return o[0] === "\u0001" ? TR(o.slice(1)) : o;
+  if (Array.isArray(o)) return o.map(rdResolve);
+  return o && typeof o === "object" ? Object.fromEntries(Object.entries(o).map(([k, v]) => [k, rdResolve(v)])) : o;
+}
+// Beschriftungen, die das Backend aus den Gerätevorlagen in gespeicherte Racks übernimmt (blocks.json → templates):
+// in jeder Sprache erkennen und in der aktuellen zeigen
+const RD_DEFAULT_KEYS = /*@@DEFAULT_LABELS@@*/[];
+const RD_DEFAULT = new Map(RD_DEFAULT_KEYS.flatMap(k => Object.values(RD_TEXT).map(t => [t[k], k])).filter(x => x[0]));
+const rdLabel = s => RD_DEFAULT.has(s) ? TR(RD_DEFAULT.get(s)) : s;
+
+/* ---------- Altbestand: deutsche Texte in gespeicherten Racks ----------
+   Bis 0.1.x war Deutsch die Quellsprache; Racks aus dieser Zeit enthalten deutsche Standardbeschriftungen.
+   Für andere Sprachen ersetzt ein Beobachter gezeichnete Texte, die genau einem deutschen Text entsprechen.
+   Bei Deutsch läuft nichts davon (keine Kosten auf dem Pi). */
+const RD_LEGACY = new Map();
+{
+  const de = RD_TEXT.de || {}, en = RD_TEXT.en, enTexts = new Set(Object.values(en));
+  // nicht anfassen: Texte mit Platzhaltern und deutsche Texte, die zugleich ein englischer Text sind
+  for (const [k, v] of Object.entries(de)) if (!/\{\d\}/.test(v) && !enTexts.has(v) && !RD_LEGACY.has(v)) RD_LEGACY.set(v, k);
+}
 // Übersetzte Texte merken sich ihr Original, damit ein Wechsel zurück auf Deutsch ohne Neuzeichnen geht
 const RD_ORIG = new WeakMap(), RD_ORIG_ATTR = new WeakMap();
 function rdRestore(root) {
@@ -17,24 +62,13 @@ function rdRestore(root) {
     for (const c of el.childNodes) if (c.nodeType === 3 && RD_ORIG.has(c)) { c.nodeValue = RD_ORIG.get(c); RD_ORIG.delete(c); }
   }
 }
-function rdSetLang(h) { RD_USER = String(h?.locale?.language || h?.language || "de").toLowerCase(); rdApply(); }
-function rdForceLang(l) { RD_FORCE = l ? String(l).toLowerCase() : ""; rdApply(); }
-const RD_EN = /*@@I18N_EN@@*/{};
-const RD_EN_RE = /*@@I18N_EN_RE@@*/[];
-const RD_EN_RX = RD_EN_RE.map(([a, b]) => [new RegExp(a), b]);
-// Einzelnen Text übersetzen (Leerraum am Rand bleibt erhalten)
+// Einzelnen Text ersetzen (Leerraum am Rand bleibt erhalten)
 function rdT(s) {
   if (rdIsDe() || !s) return s;
-  const k = s.trim(); if (!k || !/[A-Za-zÄÖÜäöüß]/.test(k)) return s;
-  let r = RD_EN[k];
-  if (r == null) for (const [re, to] of RD_EN_RX) if (re.test(k)) { r = k.replace(re, (...m) => to.replace(/\$(\d)/g, (_, i) => rdT(m[+i]))); break; }
-  // Zusammengesetzte Texte („Akku · normal“, „Patchfeld, HE 40“): Teile einzeln übersetzen
-  if (r == null) for (const sep of [" · ", " – ", ", "]) {
-    if (!k.includes(sep)) continue;
-    const parts = k.split(sep); if (sep === ", " && parts.some(x => x.split(" ").length > 4)) continue;
-    const tr = parts.map(x => rdT(x)); if (tr.some((x, i) => x !== parts[i])) { r = tr.join(sep); break; }
-  }
-  return r == null || r === k ? s : s.replace(k, r);
+  const k = s.trim(), key = k && RD_LEGACY.get(k);
+  if (!key) return s;
+  const r = TR(key);
+  return r === k ? s : s.replace(k, r);
 }
 const RD_ATTRS = ["title", "aria-label", "placeholder", "data-confirm"];
 function rdTrNode(n) {
@@ -51,7 +85,7 @@ function rdTrNode(n) {
   }
 }
 const RD_OBS = new Set();
-// Wurzel (Shadow Root) beobachten: alles, was neu gezeichnet wird, wird übersetzt
+// Wurzel (Shadow Root) beobachten: alles, was neu gezeichnet wird, wird geprüft
 function rdObserve(root) {
   if (!root || root._rdObs) return;
   root._rdObs = new MutationObserver(ms => {

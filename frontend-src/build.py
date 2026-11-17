@@ -15,6 +15,9 @@ HERE = Path(__file__).parent
 OUT = HERE.parent / "custom_components" / "rack_display" / "frontend"
 VERSION = sys.argv[1] if len(sys.argv) > 1 else "dev"
 
+# Katalogtexte (blocks.json), deren englischer Text zu mehreren Schlüsseln gehört: welcher gemeint ist
+CATALOG_KEYS = {"Load": "load_2", "Recording": "recording_2"}
+
 LOADER = """// Rack Display – Lader (ändert sich nie). Holt die aktuelle Fassung unter versionierter Adresse.
 const base = "/rack_display/frontend";
 let v = "";
@@ -73,18 +76,10 @@ def load_modules(catalog: dict) -> list[dict]:
                 part = part.strip()
                 if part and not part.startswith(f".mod-{t}") and not re.fullmatch(r"(from|to|\d+%)", part):
                     raise SystemExit(f"{where}/style.css: Regel „{part}“ muss mit .mod-{t} beginnen")
-        # Module sind englisch geschrieben; „de“ übersetzt ins Deutsche. Intern ist Deutsch die Quellsprache der
-        # Oberfläche, darum werden die Texte hier auf Deutsch umgestellt und die englischen Fassungen ins Wörterbuch übernommen.
-        de, en_pairs = meta.get("de", {}), {}
-        def de_of(text):
-            g = de.get(text, text)
-            if g != text:
-                en_pairs[g] = text
-            return g
-        meta = {**meta, "name": de_of(meta["name"]), "desc": de_of(meta["desc"]),
-                "options": [{**o, "label": de_of(o["label"]), **({"choices": [[v, de_of(l)] for v, l in o["choices"]]} if o.get("choices") else {})} for o in meta.get("options", [])]}
+        # Module sind englisch geschrieben (Quellsprache); „de“ in module.json übersetzt ihre Texte ins Deutsche
+        de = meta.get("de", {})
         seen.add(t)
-        mods.append({"meta": meta, "js": js, "css": css, "de": de, "en": en_pairs})
+        mods.append({"meta": meta, "js": js, "css": css, "de": de})
     return mods
 
 
@@ -102,14 +97,57 @@ def main():
     modmeta = {m["meta"]["type"]: {k: v for k, v in m["meta"].items() if k not in ("type", "de")} | {"community": True} for m in mods}
     cat["blocks"].update(modmeta)
     (HERE.parent / "custom_components" / "rack_display" / "modules.json").write_text(json.dumps({"blocks": modmeta}, ensure_ascii=False, indent=2) + "\n")
-    js = js.replace("/*@@CATALOG@@*/null", json.dumps(cat, ensure_ascii=False))
     js = js.replace("/*@@MODULES@@*/", "\n".join(f"RD_MODULES[{json.dumps(m['meta']['type'])}] = {{ de: {json.dumps(m['de'], ensure_ascii=False)}, render: (() => {{\n{m['js']}\nreturn render;\n}})() }};" for m in mods))
-    # Sprache: Wörterbuch (i18n/en.json: Texte + Muster) in den Übersetzer einsetzen
-    import json as _json
-    en = _json.loads((HERE / "i18n" / "en.json").read_text())
-    for m in load_modules(json.loads(catalog)):
-        en["text"].update(m["en"])
-    i18n = (HERE / "i18n.js").read_text().replace("/*@@I18N_EN@@*/{}", _json.dumps(en["text"], ensure_ascii=False)).replace("/*@@I18N_EN_RE@@*/[]", _json.dumps(en["patterns"], ensure_ascii=False))
+    # Sprache: i18n/<sprache>.json (Schlüssel → Text). Englisch ist die Quellsprache und muss jeden Schlüssel enthalten.
+    texts = {p.stem: json.loads(p.read_text()) for p in sorted((HERE / "i18n").glob("*.json"))}
+    for lang, t in texts.items():
+        extra = sorted(set(t) - set(texts["en"]))
+        if extra:
+            raise SystemExit(f"i18n/{lang}.json: Schlüssel fehlen in en.json: {', '.join(extra[:8])}")
+    used = set(re.findall(r'\bTR\("([^"]+)"', js + (HERE / "editor.js").read_text())) | set(re.findall(r'data-i18n(?:-label)?="([^"]+)"', html))
+    unknown = sorted(used - set(texts["en"]))
+    if unknown:
+        raise SystemExit(f"Texte ohne Eintrag in i18n/en.json: {', '.join(unknown[:12])}")
+    # Katalog: Texte durch Schlüssel ersetzen ("\x01schluessel"), damit das Frontend sie je Sprache auflöst.
+    # Texte der Community-Module bekommen eigene Schlüssel (mod.<typ>.<n>), Deutsch aus ihrem „de“.
+    by_text = {}
+    for k, v in texts["en"].items():
+        by_text.setdefault(v, k)
+    by_text.update(CATALOG_KEYS)
+    mod_de = {m["meta"]["type"]: m["de"] for m in mods}
+
+    def mark(text, owner=None):
+        if owner in mod_de:
+            key = f"mod.{owner}.{len([k for k in texts['en'] if k.startswith(f'mod.{owner}.')])}"
+            hit = next((k for k, v in texts["en"].items() if k.startswith(f"mod.{owner}.") and v == text), None)
+            if hit is None:
+                texts["en"][key] = text
+                if text in mod_de[owner]:
+                    texts.setdefault("de", {})[key] = mod_de[owner][text]
+                hit = key
+            return "\x01" + hit
+        return "\x01" + by_text[text] if text in by_text else text
+
+    def mark_all(o, owner=None, key=None):
+        if isinstance(o, str):
+            return mark(o, owner) if key in ("name", "desc", "label", "choice", "group_name") else o
+        if isinstance(o, list):
+            if key == "choices":
+                return [[v, mark(l, owner)] for v, l in o]
+            return [mark_all(v, owner, key) for v in o]
+        if isinstance(o, dict):
+            return {k: mark_all(v, owner, k) for k, v in o.items()}
+        return o
+
+    marked = dict(cat)
+    marked["blocks"] = {t: mark_all(v, t) for t, v in cat["blocks"].items()}
+    marked["templates"] = mark_all(cat["templates"])
+    marked["displays"] = mark_all(cat["displays"])
+    marked["groups"] = {k: mark(v) for k, v in cat["groups"].items()}
+    js = js.replace("/*@@CATALOG@@*/null", json.dumps(marked, ensure_ascii=False))
+    # Beschriftungen aus den Gerätevorlagen landen in gespeicherten Racks; das Frontend erkennt sie in jeder Sprache
+    defaults = sorted({by_text[b["label"]] for tpl in cat["templates"].values() for b in tpl if isinstance(b, dict) and b.get("label") in by_text})
+    i18n = (HERE / "i18n.js").read_text().replace("/*@@I18N_TEXT@@*/{ en: {} }", json.dumps(texts, ensure_ascii=False)).replace("/*@@DEFAULT_LABELS@@*/[]", json.dumps(defaults))
     js = js.replace("/*@@I18N@@*/", i18n)
     # Eigentlicher Code unter versionierter Adresse, davor ein unveränderlicher Lader:
     # der Lader fragt version.txt ab und lädt app.js?v=<Version> – damit gibt es nie eine veraltete Kopie im Cache.

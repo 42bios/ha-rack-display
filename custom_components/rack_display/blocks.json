@@ -2,62 +2,62 @@
   "version": 1,
   "blocks": {
     "header": {
-      "name": "Kopf",
+      "name": "Header",
       "size": "full",
-      "desc": "Name, Modell, Position, Frontbild, bis zu 4 Kennzahlen",
+      "desc": "Name, model, position, front image, up to 4 key figures",
       "items": true,
       "group": "kopf"
     },
     "tiles": {
-      "name": "Aktuelle Werte",
+      "name": "Current values",
       "size": "full",
-      "desc": "Kacheln mit den wichtigsten Messwerten",
+      "desc": "Tiles with the key measurements",
       "group": "werte"
     },
     "values": {
-      "name": "Werte",
+      "name": "Values",
       "size": "full",
-      "desc": "Beliebige Entitäten als Kacheln",
+      "desc": "Any entities as tiles",
       "items": true,
       "group": "werte"
     },
     "entity": {
-      "name": "Einzelwert",
+      "name": "Single value",
       "size": "half",
-      "desc": "Ein Wert als eigene Kachel – wahlweise mit 24-Std.-Kurve",
+      "desc": "One value as its own tile – optionally with a 24 h curve",
       "items": true,
       "group": "werte"
     },
     "bars": {
-      "name": "Balken",
+      "name": "Bars",
       "size": "half",
-      "desc": "Auslastung als Balken (0–100 % oder eigener Bereich)",
+      "desc": "Load as bars (0–100 % or custom range)",
       "items": true,
       "group": "werte"
     },
     "status": {
       "name": "Status",
       "size": "half",
-      "desc": "Zustände als Liste mit Ampel",
+      "desc": "States as a list with traffic lights",
       "items": true,
       "group": "zustand"
     },
     "ports": {
       "name": "Ports",
       "size": "full",
-      "desc": "Alle Ports mit Geschwindigkeit, PoE und Live-Durchsatz",
+      "desc": "All ports with speed, PoE and live throughput",
       "group": "netzwerk"
     },
     "poe": {
       "name": "PoE",
       "size": "half",
-      "desc": "PoE-Leistung gesamt und je Port",
+      "desc": "PoE power in total and per port",
       "group": "netzwerk"
     },
     "system": {
       "name": "System",
       "size": "half",
-      "desc": "CPU, RAM und Temperatur über 24 Std.",
+      "desc": "CPU, RAM and temperature over 24 h",
       "slots": [
         "cpu",
         "ram",
@@ -68,7 +68,7 @@
     "internet": {
       "name": "Internet",
       "size": "half",
-      "desc": "Download und Upload über 24 Std.",
+      "desc": "Download and upload over 24 h",
       "slots": [
         "wan_down",
         "wan_up"
@@ -76,15 +76,15 @@
       "group": "netzwerk"
     },
     "flow": {
-      "name": "Energiefluss",
+      "name": "Energy flow",
       "size": "full",
-      "desc": "Online-USV: Netz, Akku, Last",
+      "desc": "Online UPS: mains, battery, load",
       "group": "strom"
     },
     "voltage": {
-      "name": "Spannung",
+      "name": "Voltage",
       "size": "half",
-      "desc": "Ein- und Ausgangsspannung über 24 Std.",
+      "desc": "Input and output voltage over 24 h",
       "slots": [
         "input_voltage",
         "output_voltage"
@@ -92,9 +92,9 @@
       "group": "strom"
     },
     "chart": {
-      "name": "Verlauf",
+      "name": "History",
       "size": "half",
-      "desc": "Ein bis drei Messwerte über 24 Std.",
+      "desc": "One to three measurements over 24 h",
       "slots": [
         "source"
       ],
@@ -102,145 +102,145 @@
       "group": "diagramme"
     },
     "outlets": {
-      "name": "Ausgänge",
+      "name": "Outlets",
       "size": "full",
-      "desc": "Ausgänge einer Stromleiste mit Belegung",
+      "desc": "Outlets of a PDU with assignments",
       "group": "strom"
     },
     "disks": {
-      "name": "Festplatten",
+      "name": "Disks",
       "size": "full",
-      "desc": "Schächte, Zustand und Belegung",
+      "desc": "Bays, state and usage",
       "group": "speicher"
     },
     "recording": {
-      "name": "Aufnahme",
+      "name": "Recording",
       "size": "half",
-      "desc": "Speicherdauer, Aufnahmearten, Kameras",
+      "desc": "Retention, recording types, cameras",
       "group": "speicher"
     },
     "messages": {
-      "name": "Meldungen",
+      "name": "Messages",
       "size": "full",
-      "desc": "Störungen, Hinweise und Infos des Geräts",
+      "desc": "Faults, notices and info of the device",
       "group": "sonstiges"
     },
     "note": {
-      "name": "Notiz",
+      "name": "Note",
       "size": "full",
-      "desc": "Freier Text, z. B. Belegung eines Patchfelds",
+      "desc": "Free text, e.g. patch panel assignments",
       "group": "sonstiges"
     },
     "gauge": {
-      "name": "Tacho",
+      "name": "Gauge",
       "size": "half",
-      "desc": "Ein Wert als Halbkreis-Anzeige mit Min/Max und Warnfarben",
+      "desc": "One value as a semicircle gauge with min/max and warning colours",
       "items": true,
       "group": "werte"
     },
     "ring": {
       "name": "Ring",
       "size": "half",
-      "desc": "Ein Wert als Ring (z. B. Auslastung in %)",
+      "desc": "One value as a ring (e.g. load in %)",
       "items": true,
       "group": "werte"
     },
     "stat": {
-      "name": "Kennzahl",
+      "name": "Key figure",
       "size": "half",
-      "desc": "Große Zahl mit Veränderung gegenüber gestern",
+      "desc": "Big number with change vs. yesterday",
       "items": true,
       "group": "werte"
     },
     "progress": {
-      "name": "Fortschritt",
+      "name": "Progress",
       "size": "half",
-      "desc": "Ein Wert als Balken mit Min/Max",
+      "desc": "One value as a bar with min/max",
       "items": true,
       "group": "werte"
     },
     "histogram": {
-      "name": "Balkendiagramm",
+      "name": "Bar chart",
       "size": "half",
-      "desc": "Stundenwerte der letzten 24 Std. als Balken",
+      "desc": "Hourly values of the last 24 h as bars",
       "items": true,
       "group": "diagramme"
     },
     "chips": {
-      "name": "Status-Chips",
+      "name": "Status chips",
       "size": "full",
-      "desc": "Mehrere Zustände kompakt als Chips mit Ampel",
+      "desc": "Several states as compact chips with traffic lights",
       "items": true,
       "group": "zustand"
     },
     "switch": {
-      "name": "Schalter",
+      "name": "Switches",
       "size": "half",
-      "desc": "Schalter, Lichter, Lüfter direkt bedienen",
+      "desc": "Control switches, lights and fans directly",
       "items": true,
       "group": "steuerung"
     },
     "button": {
-      "name": "Aktionen",
+      "name": "Actions",
       "size": "half",
-      "desc": "Skripte, Szenen und Tasten auslösen",
+      "desc": "Run scripts, scenes and buttons",
       "items": true,
       "group": "steuerung"
     },
     "camera": {
-      "name": "Kamera",
+      "name": "Camera",
       "size": "half",
-      "desc": "Standbild einer Kamera (aktualisiert sich laufend)",
+      "desc": "Camera still image (refreshes continuously)",
       "items": true,
       "group": "speicher"
     },
     "heading": {
-      "name": "Überschrift",
+      "name": "Heading",
       "size": "full",
-      "desc": "Titel mit Untertitel zum Gliedern",
+      "desc": "Title with subtitle for structure",
       "group": "sonstiges"
     },
     "clock": {
-      "name": "Uhr",
+      "name": "Clock",
       "size": "half",
-      "desc": "Uhrzeit und Datum",
+      "desc": "Time and date",
       "group": "sonstiges"
     },
     "ov_power": {
-      "name": "Strom (Übersicht)",
+      "name": "Power (overview)",
       "size": "full",
-      "desc": "Leistung des Racks, USV-Akku, Verbraucher und 24-Std.-Verlauf",
+      "desc": "Rack power, UPS battery, consumers and 24 h history",
       "group": "uebersicht"
     },
     "ov_temp": {
-      "name": "Temperatur (Übersicht)",
+      "name": "Temperature (overview)",
       "size": "full",
-      "desc": "Wärmstes Gerät und Temperaturen aller Geräte",
+      "desc": "Warmest device and temperatures of all devices",
       "group": "uebersicht"
     },
     "ov_hints": {
-      "name": "Hinweise (Übersicht)",
+      "name": "Notices (overview)",
       "size": "full",
-      "desc": "Warnungen und Störungen aller Geräte",
+      "desc": "Warnings and faults of all devices",
       "group": "uebersicht"
     },
     "ov_stats": {
-      "name": "Kennzahlen-Leiste",
+      "name": "Key figure bar",
       "size": "full",
-      "desc": "Internet, PoE, Stromleiste, USV auf einen Blick",
+      "desc": "Internet, PoE, PDU, UPS at a glance",
       "group": "uebersicht"
     },
     "bays": {
-      "name": "Laufwerksschächte",
+      "name": "Drive bays",
       "size": "full",
-      "desc": "Schächte mit Parität, Daten und Cache, Temperatur, Belegung und Ruhezustand",
+      "desc": "Bays with parity, data and cache, temperature, usage and spin-down",
       "items": true,
       "group": "speicher"
     },
     "array": {
       "name": "Array",
       "size": "half",
-      "desc": "Belegung, Zustand, Cache-Pools und Parität eines Arrays",
+      "desc": "Usage, state, cache pools and parity of an array",
       "items": true,
       "group": "speicher"
     }
@@ -292,7 +292,7 @@
       {
         "type": "chart",
         "source": "load",
-        "label": "Last"
+        "label": "Load"
       },
       "voltage",
       "messages"
@@ -303,12 +303,12 @@
       {
         "type": "chart",
         "source": "power",
-        "label": "Gesamtleistung"
+        "label": "Total power"
       },
       {
         "type": "chart",
         "source": "current",
-        "label": "Strom",
+        "label": "Power",
         "color": "--teal",
         "dec": 1,
         "warn": 13
@@ -337,14 +337,14 @@
   "displays": [
     {
       "key": "pi-portrait",
-      "name": "7\" Pi-Display hochkant",
+      "name": "7\" Pi display portrait",
       "w": 480,
       "h": 800,
       "inch": 7
     },
     {
       "key": "pi-landscape",
-      "name": "7\" Pi-Display quer",
+      "name": "7\" Pi display landscape",
       "w": 800,
       "h": 480,
       "inch": 7
@@ -358,7 +358,7 @@
     },
     {
       "key": "hd-portrait",
-      "name": "HD hochkant 720 × 1280",
+      "name": "HD portrait 720 × 1280",
       "w": 720,
       "h": 1280,
       "inch": 10.1
@@ -379,24 +379,24 @@
     },
     {
       "key": "custom",
-      "name": "Eigene Größe"
+      "name": "Custom size"
     },
     {
       "key": "fill",
-      "name": "Nur Dashboard – ganze Fläche nutzen"
+      "name": "Dashboard only – use the whole area"
     }
   ],
   "groups": {
-    "uebersicht": "Übersicht",
-    "kopf": "Kopf",
-    "werte": "Werte & Anzeigen",
-    "diagramme": "Diagramme",
-    "zustand": "Zustand",
-    "steuerung": "Steuerung",
-    "netzwerk": "Netzwerk",
+    "uebersicht": "Overview",
+    "kopf": "Header",
+    "werte": "Values & gauges",
+    "diagramme": "Charts",
+    "zustand": "State",
+    "steuerung": "Controls",
+    "netzwerk": "Network",
     "system": "System",
-    "strom": "Strom & USV",
-    "speicher": "Speicher & Video",
-    "sonstiges": "Text & Sonstiges"
+    "strom": "Power & UPS",
+    "speicher": "Storage & video",
+    "sonstiges": "Text & other"
   }
 }

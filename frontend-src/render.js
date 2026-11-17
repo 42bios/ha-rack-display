@@ -58,11 +58,11 @@ function renderRack(){
   const empties = [];
   for (let u = 1; u <= RACK.units; u++) if (!used.has(u)) empties.push(u);
   $("hits").innerHTML =
-    DEVICES.filter(d => !["bl", "cm", "blank"].includes(d.type)).map(d => `<button class="hit ${d.passive ? "" : d.state} ${isSel(d) ? "sel" : ""}" style="grid-row:${rowOf(d)}" data-id="${selOf(d)}" aria-label="${d.name}, HE ${d.u}${d.h > 1 ? "–" + (d.u + d.h - 1) : ""}"></button>`).join("") +
+    DEVICES.filter(d => !["bl", "cm", "blank"].includes(d.type)).map(d => `<button class="hit ${d.passive ? "" : d.state} ${isSel(d) ? "sel" : ""}" style="grid-row:${rowOf(d)}" data-id="${selOf(d)}" aria-label="${TR("n_u_n", d.name, `${d.u}${d.h > 1 ? "–" + (d.u + d.h - 1) : ""}`)}"></button>`).join("") +
     "" ;
   $("hits").innerHTML += S.side === "rear" ? "" : DEVICES.filter(f => f.kids).flatMap(f => f.kids.map(k => { const n = f.slots || 10, L = 4.5 + 91 * (0.035 + 0.93 * (0.01 + 0.98 * (k.mod.slot - 1) / n)), W = 91 * 0.93 * 0.98 * (k.mod.w || 1) / n; return `<button class="hit sub ${k.state} ${isSel(k) ? "sel" : ""}" style="grid-row:${rowOf(f)};margin:0 0 0 ${L.toFixed(2)}%;width:${W.toFixed(2)}%;justify-self:start" data-id="${k.id}" aria-label="${k.name}"></button>`; })).join("");
   $("pduHit").hidden = S.side !== "rear";
-  const pdu0 = ZERO_U[0]; $("pduHit").hidden = S.side !== "rear" || !pdu0; if (pdu0){ $("pduHit").dataset.id = pdu0.id; $("pduHit").setAttribute("aria-label", pdu0.name + ", Rückseite"); }
+  const pdu0 = ZERO_U[0]; $("pduHit").hidden = S.side !== "rear" || !pdu0; if (pdu0){ $("pduHit").dataset.id = pdu0.id; $("pduHit").setAttribute("aria-label", TR("n_rear", pdu0.name)); }
   $("pduHit").classList.toggle("sel", !!pdu0 && S.sel === pdu0.id);
   $("pduHit").style.backgroundImage = `url('${PDU_IMG}')`;
   $("hits").innerHTML +=
@@ -77,8 +77,8 @@ function chartSVG(c, seed, W = 600, H = 150){
   const col = css(c.color) || "#0a84ff", gid = "g" + seed;
   const dec = c.dec ?? 0, f = y => y.toLocaleString(rdLoc(), {maximumFractionDigits: dec, minimumFractionDigits: dec});
   const ticks = H < 120 ? [lo + (hi - lo) * .15, hi - (hi - lo) * .15] : [lo + (hi - lo) * .15, (lo + hi) / 2, hi - (hi - lo) * .15];
-  const hours = ["−24 h","−18 h","−12 h","−6 h","jetzt"];
-  return `<svg class="chart" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="height:${H}px" role="img" aria-label="${c.label}, letzte 24 Stunden">
+  const hours = ["−24 h","−18 h","−12 h","−6 h",TR("now")];
+  return `<svg class="chart" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="height:${H}px" role="img" aria-label="${c.label}, ${TR("last_24_hours")}">
     <defs><linearGradient id="${gid}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="${col}" stop-opacity=".45"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></linearGradient></defs>
     ${ticks.map(t => `<line class="gl" x1="${pl}" x2="${W - pr}" y1="${Y(t)}" y2="${Y(t)}"/><text x="${pl - 6}" y="${Y(t) + 4}" text-anchor="end">${f(t)}</text>`).join("")}
     ${c.warn ? `<line x1="${pl}" x2="${W - pr}" y1="${Y(c.warn)}" y2="${Y(c.warn)}" stroke="${css("--orange")}" stroke-dasharray="4 4" stroke-width="1.2"/>` : ""}
@@ -97,7 +97,7 @@ const ICONS = {
   chev:'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>',
 };
 
-const STATE_TXT = { ok:"In Ordnung", warn:"Hinweis", alert:"Störung", off:"Passiv" };
+const STATE_TXT = rdPerLang(() => ({ ok:TR("ok"), warn:TR("notice"), alert:TR("fault"), off:TR("passive") }));
 
 const worst = () => { const s = DEVICES.concat(ZERO_U).filter(d => !d.passive).map(d => d.state); const m = allDevices().filter(d => !d.passive && !d.group).flatMap(d => (d.msgs || []).map(x => x[0])); return s.includes("alert") || m.includes("alert") ? "alert" : s.includes("warn") || m.includes("warn") ? "warn" : "ok"; };
 
@@ -126,7 +126,7 @@ function chartMulti(sers, {lo, hi, fmt = v => nf.format(Math.round(v)), mirror =
   const Y = y => pt + (1 - (y - lo) / (hi - lo)) * (H - pt - pb);
   const path = v => v.map((y, i) => `${i ? "L" : "M"}${X(i, v.length).toFixed(1)},${Y(y).toFixed(1)}`).join("");
   const ticks = mirror ? (H < 120 ? [hi * .8, lo * .8] : [hi * .8, 0, lo * .8]) : (H < 120 ? [lo + (hi - lo) * .2, hi - (hi - lo) * .2] : [lo + (hi - lo) * .2, (lo + hi) / 2, hi - (hi - lo) * .2]);
-  const hours = ["−24 h","−18 h","−12 h","−6 h","jetzt"];
+  const hours = ["−24 h","−18 h","−12 h","−6 h",TR("now")];
   const gid = "m" + Math.random().toString(36).slice(2, 7);
   return `<svg class="chart" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="height:${H}px" role="img">
     <defs>${sers.map((s, k) => `<linearGradient id="${gid}${k}" x1="0" x2="0" y1="${s.neg ? 1 : 0}" y2="${s.neg ? 0 : 1}"><stop offset="0" stop-color="${s.color}" stop-opacity=".42"/><stop offset="1" stop-color="${s.color}" stop-opacity="0"/></linearGradient>`).join("")}</defs>
@@ -142,24 +142,24 @@ function chartMulti(sers, {lo, hi, fmt = v => nf.format(Math.round(v)), mirror =
 }
 
 function flowCard(d){
-  const f = d.flow, onBatt = f.source !== "Netz", bypass = !!f.bypass;
+  const f = d.flow, onBatt = f.source !== TR("mains"), bypass = !!f.bypass;
   const rackIco = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 2h14a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Zm1 2v3h12V4Zm0 5v3h12V9Zm0 5v3h12v-3Z"/></svg>';
   const w = on => `<div class="fw ${on ? "on" : ""}"></div>`;
-  return `<section class="card"><h2>Energiefluss <em>Online-USV · ${bypass ? "Bypass aktiv" : onBatt ? "Batteriebetrieb" : "Doppelwandlung"}</em></h2>
+  return `<section class="card"><h2>${TR("energy_flow")} <em>${TR("online_ups_n", bypass ? TR("bypass_active") : onBatt ? TR("battery_operation") : TR("double_conversion"))}</em></h2>
     <div class="flow2">
-      <div class="byp ${bypass ? "on" : ""}"><span>Bypass ${bypass ? "aktiv" : "inaktiv"}</span></div>
+      <div class="byp ${bypass ? "on" : ""}"><span>Bypass ${bypass ? TR("active_2") : "inaktiv"}</span></div>
       <div class="frow">
-        <div class="fn ${onBatt ? "" : "on"}"><div class="ic">${ICONS.plug}</div><b>${fmt(f.inV)} V</b><span>Netz</span></div>
+        <div class="fn ${onBatt ? "" : "on"}"><div class="ic">${ICONS.plug}</div><b>${fmt(f.inV)} V</b><span>${TR("mains")}</span></div>
         ${w(!onBatt && !bypass)}
-        <div class="fn conv"><div class="ic">AC<i>→</i>DC</div><b>&nbsp;</b><span>Gleichrichter</span></div>
+        <div class="fn conv"><div class="ic">AC<i>→</i>DC</div><b>&nbsp;</b><span>${TR("rectifier")}</span></div>
         ${w(!onBatt && !bypass)}
         <div class="fn bat ${bypass ? "" : "on"}"><div class="ic"><span class="bglyph"><b style="width:${f.batt}%"></b></span></div><b>${fmt(f.batt)} %</b><span>${fmt(f.runtime)} min</span></div>
         ${w(!bypass)}
-        <div class="fn conv"><div class="ic">DC<i>→</i>AC</div><b>&nbsp;</b><span>Wechselrichter</span></div>
+        <div class="fn conv"><div class="ic">DC<i>→</i>AC</div><b>&nbsp;</b><span>${TR("inverter")}</span></div>
         ${w(!bypass)}
         <div class="fn on"><div class="ic">${rackIco}</div><b>${fmt(f.load)} W</b><span>${fmt(f.outV)} V · ${fmt(f.loadPct)} %</span></div>
       </div>
-      <p class="fnote">${onBatt ? "Netz ausgefallen: Die Last läuft aus dem Akku." : "Der Strom läuft immer über Akku und Wechselrichter. Fällt das Netz aus, gibt es keine Umschaltzeit."}</p>
+      <p class="fnote">${onBatt ? TR("mains_failed_the_load_runs_on_battery") : TR("power_always_flows_through_battery_and_inverter")}</p>
     </div>
   </section>`;
 }
@@ -188,7 +188,7 @@ function renderPanel(){
   if (Date.now() < NAV.until && !NAV.now) { if (!NAV.pending) { NAV.pending = true; setTimeout(() => { NAV.pending = false; renderPanel(); }, NAV.until - Date.now() + 10); } return; }
   let body;
   if (S.sel && byId(S.sel)) body = showDetail(byId(S.sel));
-  else body = (S.mode === "edit" ? `<div class="edit-banner">Tippe auf eine freie Höheneinheit, um ein Gerät einzusetzen, oder auf ein Gerät, um es zu bearbeiten.</div>` : "") + overview();
+  else body = (S.mode === "edit" ? `<div class="edit-banner">${TR("tap_a_free_rack_unit_to_insert_a_device_or_a")}</div>` : "") + overview();
   $("panel").innerHTML = header() + body;
   $("panel").classList.toggle("fit", !S.slot && S.mode === "view");
   $("panel").classList.toggle("detail", !!(S.sel && byId(S.sel)));
