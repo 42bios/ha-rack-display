@@ -1,6 +1,9 @@
 {
   "domain": "rack_display",
   "name": "Rack Display",
+  "categories": [
+    "computers_network.monitoring"
+  ],
   "codeowners": [
     "@42bios"
   ],

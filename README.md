@@ -3,14 +3,12 @@
 [![CI](https://github.com/42bios/ha-rack-display/actions/workflows/ci.yml/badge.svg)](https://github.com/42bios/ha-rack-display/actions/workflows/ci.yml)
 [![HACS](https://github.com/42bios/ha-rack-display/actions/workflows/validate-hacs.yml/badge.svg)](https://github.com/42bios/ha-rack-display/actions/workflows/validate-hacs.yml)
 [![Hassfest](https://github.com/42bios/ha-rack-display/actions/workflows/hassfest.yml/badge.svg)](https://github.com/42bios/ha-rack-display/actions/workflows/hassfest.yml)
-[![HACS Custom](https://img.shields.io/badge/HACS-Custom-blue.svg)](https://hacs.xyz/)
-[![Version](https://img.shields.io/github/v/release/42bios/ha-rack-display?color=blue)](https://github.com/42bios/ha-rack-display/releases)
+[![Marketplace](https://img.shields.io/badge/Home%20Assistant-Marketplace-41BDF5)](https://my.home-assistant.io/redirect/hacs_repository/?owner=42bios&repository=ha-rack-display&category=integration)
+[![Release](https://img.shields.io/github/v/release/42bios/ha-rack-display?color=blue)](https://github.com/42bios/ha-rack-display/releases)
 
 Home Assistant custom integration that shows your server rack as an interactive view – in its own panel (`/rack`), on a touch display mounted right at the rack (e.g. a Raspberry Pi running TouchKio), or inside a dashboard.
 
 <img src="docs/brand/icon@2x.png" width="160" alt="Rack Display logo">
-
-[![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=42bios&repository=ha-rack-display&category=integration)
 
 > **Disclaimer:** This is an unofficial, community-maintained integration and is not affiliated with, endorsed by, or supported by Ubiquiti, APC/Schneider Electric or any other device manufacturer. All product names, logos, and brands are property of their respective owners and are used for identification purposes only.
 
@@ -22,52 +20,56 @@ Home Assistant custom integration that shows your server rack as an interactive 
 </p>
 <p align="center"><sub>Overview · switch with ports and live throughput · UPS with power flow · prototype mounted on the rack door</sub></p>
 
-## Features
+## Highlights
 
-- **Rack view** with door, front and rear side, rack units and device faces (ports, LEDs, fans)
-- **Overview**: power, temperatures, notices and key figures for the whole rack
-- **Detail view per device**, built from modules:
-  - Switches/gateway: ports in UniFi style (speed, PoE+/PoE++, uplink, aggregation), throughput history
-  - UPS: battery, operating mode, power path of an online (double-conversion) UPS including bypass, battery and maintenance values
-  - NVR: storage (RAID, used/free/protection), drives, recording
-  - Servers: utilisation, network interfaces, temperatures with a traceable history chart
-  - PDU: outlets with labels, power and current
-  - Generic modules: values, bars, status, history, note – with any entity
-- **Editor** (integration page → Configure): build the rack, link devices to Home Assistant devices, add and reorder modules, assign and rename entities, upload photos, choose the target display (Pi portrait/landscape, HD, tablet, custom size), undo/redo
-- No scrollbars, light/dark mode follows the HA theme, automatic return to the overview after inactivity
-- **Home Assistant entities** per rack: state (OK / warning / fault), number of faults and warnings, hottest device and a problem binary sensor – for automations and notifications (can be switched off per rack)
-- **Night mode** (dimmed, dark, no blinking) for a time window, **heat map** of device temperatures in the rack, **energy cost** per day and month when an electricity price is set
-- **Export / import** of a rack as a JSON file
-- **Several racks side by side**: dashboard card with `view: rack` (rack and status only; tapping a device opens it on the Rack page)
-- **Languages**: German and English, following the language of the Home Assistant user (other languages use English; translations live in `frontend-src/i18n/`)
+- **Rack view** with door, front and rear side, rack units and device faces (ports, LEDs, fans), plus an overview of power, temperatures and notices for the whole rack.
+- **Detail popup per device**, built from modules: switch ports with speed, PoE and throughput, UPS power path, NVR storage and drives, server load and temperatures, PDU outlets – or generic values, bars and charts for any entity.
+- **Visual editor:** build the rack, link devices to Home Assistant devices, arrange modules, upload photos and pick the target display (Pi portrait/landscape, HD, tablet, custom size).
+- **Entities per rack** for automations: state (OK / warning / fault), number of faults and warnings, hottest device and a problem binary sensor.
+- **Night mode, heat map and energy cost** per day and month.
+- **Several racks**, export/import as JSON, and a dashboard card.
+- **English and German**, following the language of the Home Assistant user; light/dark mode follows the theme.
 
+<!-- ha-marketplace:exclude-start -->
 ## Installation
 
-### HACS (recommended)
+Requires Home Assistant 2024.10 or newer.
 
-[![Open your Home Assistant instance and open this repository in HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=42bios&repository=ha-rack-display&category=integration)
+[![Open your Home Assistant instance and open this repository in the Marketplace.](https://my.home-assistant.io/badges/marketplace_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=42bios&repository=ha-rack-display&category=integration)
 
-1. Open HACS in Home Assistant and search for **Rack Display**.
-2. Install it and restart Home Assistant.
-3. Add the integration in `Settings → Devices & services → Add integration → Rack Display`.
+The button opens the Marketplace on Home Assistant 2026.11 or newer, and HACS on older versions. Use it if the search does not find Rack Display yet.
 
-If Rack Display does not show up in the search yet, add it as a custom repository first: HACS → menu (three dots) → `Custom repositories` → `https://github.com/42bios/ha-rack-display`, category `Integration`.
+### Marketplace (Home Assistant 2026.11 or newer)
+
+1. Open `Settings → Marketplace` and search for `Rack Display`.
+2. Install it.
+
+### HACS (older Home Assistant versions)
+
+1. Open HACS and search for `Rack Display`.
+2. Download it and restart Home Assistant.
 
 ### Manual
 
-Copy `custom_components/rack_display` into `config/custom_components` and restart Home Assistant.
+1. Copy `custom_components/rack_display` into the `custom_components` folder of your Home Assistant configuration.
+2. Restart Home Assistant.
+<!-- ha-marketplace:exclude-end -->
+
+## Setup
+
+[![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=rack_display)
+
+Add the integration under `Settings → Devices & services → Add integration → Rack Display`. The rack is then available at `/rack` and in the sidebar.
 
 ## Editor
 
-Build the rack and design every popup in the rack editor (Settings → Devices & services → Rack Display → Configure): settings on the left, the live preview with its grid in the middle, the module library on the right. Drag modules into the popup, resize them at the corner and pick entities with suggestions from the linked device.
+Build the rack and design every popup in the rack editor (`Settings → Devices & services → Rack Display → Configure`): settings on the left, the live preview with its grid in the middle, the module library on the right. Drag modules into the popup, resize them at the corner and pick entities with suggestions from the linked device.
 
 <p align="center"><img src="docs/screenshot-editor-en.png" alt="Rack editor: module settings, live preview with grid and module library" width="820"></p>
 
-## Supported data
+Entities from these integrations, among others, are mapped automatically: UniFi Network (including *UniFi Network Plus*), UniFi Protect, APC UPS (SNMP/NMC), APC Rack PDU, Glances, System Monitor. Anything else can be assigned manually.
 
-Entities from these integrations, among others, are mapped automatically: UniFi Network (including *UniFi Network Plus*), UniFi Protect, APC UPS (SNMP/NMC), APC Rack PDU, Glances, System Monitor. Anything else can be assigned manually in the editor.
-
-> The interface is available in English and German. It follows the language of the Home Assistant user and can be fixed per rack in the editor (Display → Language).
+The drive bays module places disks in order by default; under module → "Disk → bay" each disk can get its bay number, and bays can be numbered by row or by column.
 
 ## Dashboard card
 
@@ -92,29 +94,19 @@ chmod +x pi-kiosk.sh
 - `--mode browser` only runs Chromium in kiosk mode; `--screen-off 5` blanks the screen after 5 minutes without touch.
 - Log in once on the display (a dedicated non-admin user is recommended). The display language can be fixed per rack in the editor (Display → Language).
 
-## Drive bay assignment
-
-The drive bays module places disks in order by default; in the editor (module → "Disk → bay") each disk can get its bay number, and bays can be numbered by row or by column.
-
 ## Blueprints
 
-- **Notify on rack fault** – push notification with the affected devices when `binary_sensor.<rack>_problem` turns on (optional "resolved" message): [`rack_problem_notify.yaml`](blueprints/automation/rack_display/rack_problem_notify.yaml)
-- **Switch the TouchKio screen off when idle**: [`touchkio_screen_off.yaml`](blueprints/automation/rack_display/touchkio_screen_off.yaml)
+**Notify on rack fault** – push notification with the affected devices when `binary_sensor.<rack>_problem` turns on, with an optional "resolved" message.
 
-Import them in HA under Settings → Automations & scenes → Blueprints → Import blueprint (using the file's GitHub URL).
+[![Open your Home Assistant instance and show the blueprint import dialog with a specific blueprint pre-filled.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2F42bios%2Fha-rack-display%2Fblob%2Fmain%2Fblueprints%2Fautomation%2Frack_display%2Frack_problem_notify.yaml)
 
-## Modules
+**Switch the TouchKio screen off when idle**
 
-Device popups are built from modules (values, charts, ports, bays, …). Anyone can add a new module: a folder in [`modules/`](modules/README.md) with a description, a render function and optional CSS – open a pull request and a GitHub check validates it. See [CONTRIBUTING.md](CONTRIBUTING.md).
+[![Open your Home Assistant instance and show the blueprint import dialog with a specific blueprint pre-filled.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2F42bios%2Fha-rack-display%2Fblob%2Fmain%2Fblueprints%2Fautomation%2Frack_display%2Ftouchkio_screen_off.yaml)
 
-## Development
+## Contributing
 
-The frontend source lives in `frontend-src/` and is built into `custom_components/rack_display/frontend/` with `python3 frontend-src/build.py`. `frontend-src/deploy.sh` builds the integration and copies it to a Home Assistant host via SSH; the connection details are read from `frontend-src/deploy.env` (not part of the repository).
-
-## Releases
-
-- Create and push a semantic tag, for example `v0.2.0`.
-- The `Release` workflow publishes a GitHub release with notes grouped via `.github/release.yml`.
+Device popups are built from modules, and anyone can add one: a folder in [`modules/`](modules/README.md) with a description, a render function and optional CSS. See [CONTRIBUTING.md](CONTRIBUTING.md) for modules, translations, the build and releases.
 
 ## Support
 
