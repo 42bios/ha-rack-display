@@ -56,6 +56,7 @@
     "meldet ein Problem": "reports a problem",
     "Alle Sensoren sind nicht verfügbar": "All sensors are unavailable",
     "Noch kein Rack angelegt.": "No rack created yet.",
+    "Rack-Editor öffnen": "Open the rack editor",
     "Das Gerät läuft nicht dauerhaft.": "The device does not run permanently.",
     "Sobald es eingeschaltet wird, erscheinen die Werte hier automatisch.": "Values appear here automatically once it is switched on.",
     "Das Gerät läuft nicht dauerhaft. Sobald es eingeschaltet wird, erscheinen die Werte hier automatisch.": "The device does not run permanently. Values appear here automatically once it is switched on.",

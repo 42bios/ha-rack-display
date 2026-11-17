@@ -1,6 +1,6 @@
 /* Rack Display – Oberfläche für Panel, Karte und Kiosk.
    Dieser Teil ist neu geschrieben (Daten aus Home Assistant). Die Darstellungsfunktionen
-   (Rack, Fronten, Kacheln, Diagramme) werden beim Build aus dem Prototyp eingesetzt: /*@@PROTO@@*/
+   (Rack, Fronten, Kacheln, Diagramme) stehen in render.js und werden beim Build eingesetzt: /*@@PROTO@@*/
 */
 const RD_BASE = "/rack_display/frontend";
 const RD_VERSION = "@@VERSION@@";
@@ -1655,7 +1655,8 @@ class RackDisplayElement extends HTMLElement {
   constructor() { super(); this.attachShadow({ mode: "open" }); }
   // Vor der Definition gesetzte Werte (HA ist schneller als der asynchrone Lader) an die Setter weiterreichen
   connectedCallback() { for (const k of ["narrow", "route", "panel", "hass"]) if (Object.prototype.hasOwnProperty.call(this, k)) { const v = this[k]; delete this[k]; this[k] = v; } }
-  setConfig(config) { this._config = config || {}; }
+  // Ändert sich die Karten-Konfiguration (Formular im Dashboard), die Anzeige damit neu aufbauen
+  setConfig(config) { this._config = config || {}; if (this._started && this._app) { this.disconnectedCallback(); if (this._hass) this.hass = this._hass; } }
   _applyDark() { if (!this._wrap) return; const dk = !!this._hass?.themes?.darkMode || this._wrap.classList.contains("night"); this._wrap.classList.toggle("dark", dk); this._stage?.classList.toggle("dark", dk); }
   getCardSize() { return 12; }
   set narrow(v) {} set route(v) {} set panel(v) {}
@@ -1676,11 +1677,11 @@ class RackDisplayElement extends HTMLElement {
     if (/touchkio|electron/i.test(navigator.userAgent)) this._wrap.classList.add("lite");
     this._applyDark(); this._wrap.addEventListener("rd-night", () => this._applyDark());
     this.style.height = isCard ? (this._config?.height || 720) + "px" : "100dvh";
-    this._app = createApp(this.shadowRoot, this._wrap);
+    const app = this._app = createApp(this.shadowRoot, this._wrap);
     // Karte mit view: rack – nur Rack + Kopfzeile (mehrere Racks nebeneinander im Dashboard); Antippen öffnet das Gerät auf der Seite „Rack“
     if (isCard && this._config?.view === "rack") {
       this._wrap.classList.add("rack-only");
-      this.shadowRoot.addEventListener("click", e => { const h = e.target.closest?.(".hits [data-id], #pduHit"); if (!h) return; e.stopPropagation(); e.preventDefault();
+      if (!this._rackClick) this.shadowRoot.addEventListener("click", this._rackClick = e => { if (this._config?.view !== "rack") return; const h = e.target.closest?.(".hits [data-id], #pduHit"); if (!h) return; e.stopPropagation(); e.preventDefault();
         history.pushState(null, "", `/rack?rack=${encodeURIComponent(this._rackId || "")}&sel=${encodeURIComponent(h.dataset.id)}`); window.dispatchEvent(new CustomEvent("location-changed")); }, true);
     }
     // Seite „Rack“ / Kiosk: nach einem Update der Integration selbst neu laden (Karten in Dashboards nicht)
@@ -1690,7 +1691,7 @@ class RackDisplayElement extends HTMLElement {
     const unsub = await this._hass.connection.subscribeMessage(() => this._app && this._load(), { type: "rack_display/subscribe" });
     // Foto-Adressen sind signiert und laufen ab: einmal am Tag frisch laden (Kiosk läuft oft tagelang)
     clearInterval(this._rt); this._rt = setInterval(() => this._app && this._load(), 24 * 3600e3);
-    if (this._app) this._unsub = unsub; else unsub();  // während des Starts geschlossen
+    if (this._app === app) this._unsub = unsub; else unsub();  // während des Starts geschlossen oder neu aufgebaut
   }
   async _load() {
     const r = await this._hass.connection.sendMessagePromise({ type: "rack_display/racks" });
@@ -1700,7 +1701,7 @@ class RackDisplayElement extends HTMLElement {
     if (rack) { this._rackId = rack.id; rdFrame(this._stage, this._wrap, rack, (this._config?.layout === "fill" || this._config?.view === "rack")); this._app.setRack(rack);
       // /rack?sel=<Gerät> öffnet direkt das Popup (z. B. aus einer Rack-Karte im Dashboard)
       const sel = !this._selDone && new URLSearchParams(location.search).get("sel"); this._selDone = true; if (sel) setTimeout(() => this._app?.select(sel), 300); }
-    else this._wrap.innerHTML = `<p style="padding:24px">Noch kein Rack angelegt.</p>`;
+    else this._wrap.innerHTML = `<p style="padding:24px">Noch kein Rack angelegt.${this._hass.user?.is_admin ? ` <a href="/rack-editor" style="color:var(--primary-color)">Rack-Editor öffnen</a>` : ""}</p>`;
   }
   disconnectedCallback() {
     this._app?.destroy(); this._unsub?.(); this._stage?._ro?.disconnect(); clearInterval(this._vt); clearInterval(this._rt);
@@ -1708,7 +1709,25 @@ class RackDisplayElement extends HTMLElement {
   }
 }
 class RackDisplayPanel extends RackDisplayElement {}
-class RackDisplayCard extends RackDisplayElement {}
+class RackDisplayCard extends RackDisplayElement {
+  // Karten-Auswahl im Dashboard: Vorgabe und Formular statt reinem YAML
+  static getStubConfig() { return {}; }
+  static getConfigForm() {
+    // Sprache des HA-Benutzers (das Formular kann erscheinen, bevor eine Karte Daten bekommen hat)
+    const lang = document.querySelector("home-assistant")?.hass?.locale?.language || RD_USER;
+    const de = String(lang).toLowerCase().startsWith("de"), L = de
+      ? { rack_id: "Rack-ID (leer = erstes Rack)", view: "Ansicht", height: "Höhe in Pixel", full: "Rack mit Detailansicht", rack: "Nur Rack mit Status" }
+      : { rack_id: "Rack ID (empty = first rack)", view: "View", height: "Height in pixels", full: "Rack with detail view", rack: "Rack with status only" };
+    return {
+      schema: [
+        { name: "rack_id", selector: { text: {} } },
+        { name: "view", selector: { select: { mode: "dropdown", options: [{ value: "full", label: L.full }, { value: "rack", label: L.rack }] } } },
+        { name: "height", selector: { number: { min: 200, max: 2000, step: 10, mode: "box", unit_of_measurement: "px" } } },
+      ],
+      computeLabel: s => L[s.name],
+    };
+  }
+}
 if (!customElements.get("rack-display-panel")) customElements.define("rack-display-panel", RackDisplayPanel);
 if (!customElements.get("rack-display-card")) customElements.define("rack-display-card", RackDisplayCard);
 window.customCards = window.customCards || [];

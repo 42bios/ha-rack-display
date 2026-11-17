@@ -1,9 +1,8 @@
 """Baut rack-display.js und rack-display.css für die Integration.
 
 app.js        – Web-Komponenten, Datenmodell aus Home Assistant, Übersicht, Kopfzeile
-proto-ref.js  – Darstellung aus dem Prototyp (Rack, Fronten, Detailkarten, WLED); wird hier
-                übernommen und an Shadow DOM und echte Verläufe angepasst
-base.css      – Stile aus dem Prototyp, auf den Wrapper .rd umgestellt
+render.js     – Darstellung (Rack, Fronten, Diagramme, WLED); wird in app.js eingesetzt
+base.css      – Stile, beim Build auf den Wrapper .rd umgestellt
 rack.html     – Grundgerüst Rack + Panel
 """
 
@@ -16,105 +15,12 @@ HERE = Path(__file__).parent
 OUT = HERE.parent / "custom_components" / "rack_display" / "frontend"
 VERSION = sys.argv[1] if len(sys.argv) > 1 else "dev"
 
-# Aus dem Prototyp übernommene Bausteine (Reihenfolge bleibt erhalten)
-TAKE = [
-    "leds48", "face", "rowOf", "renderRack", "chartSVG", "ICONS", "STATE_TXT", "worst", "SEG_COLORS",
-    "CHARTS", "lazy", "fillCharts", "SPEED_TXT", "KIND_TXT", "chartMulti", "flowCard",
-    "rearFace", "headThumb", "renderPanel",
-    "hsl", "WLED", "wledLayout", "wledFrame", "cutDoor",
-]
-
-# Textersetzungen: (Baustein, alt, neu)
-PATCH = [
-    ("*", "document.querySelectorAll(", "ROOT.querySelectorAll("),
-    ("*", "document.querySelector(", "ROOT.querySelector("),
-    ("*", '"de-DE"', "rdLoc()"),
-    ("chartSVG", "const v = series(seed, c.base, c.amp),", "const v = HS(c.entity, c.base),"),
-    ("chartSVG", "const lo = Math.min(...v, c.warn ?? Infinity) * .95, hi = Math.max(...v, c.warn ?? -Infinity) * 1.04;",
-     "const lo = Math.min(...v, c.warn ?? Infinity) * .95, hi = Math.max(Math.max(...v, c.warn ?? -Infinity) * 1.04, lo + 1);"),
-    ("chartMulti", "const Y = y => pt + (1 - (y - lo) / (hi - lo))", "if (!(hi - lo > 1e-6)) hi = lo + 1;\n  const Y = y => pt + (1 - (y - lo) / (hi - lo))"),
-    ("flowCard", "${nf.format(f.load)} W", "${fmt(f.load)} W"),
-    ("flowCard", "${f.inV} V</b>", "${fmt(f.inV)} V</b>"),
-    ("flowCard", "${f.batt} %</b><span>${f.runtime} min", "${fmt(f.batt)} %</b><span>${fmt(f.runtime)} min"),
-    ("flowCard", "${f.outV} V · ${f.loadPct} %", "${fmt(f.outV)} V · ${fmt(f.loadPct)} %"),
-    ("face", "blank:'', pdu:", "blank:'', frame:frameInner(d), pdu:"),
-    ("face", "shelf:'<div class=\"plate\"></div><div class=\"box\"></div>',", "shelf:shelfInner(d),"),
-    ("rearFace", '["blank", "cm", "bl"]', '["blank", "cm", "bl", "frame"]'),
-    ("headThumb", "const ar = d.thumbAspect ||", "const ar = imgAr(d.image) || d.thumbAspect ||"),
-    ("headThumb", "const m = d.group ? [] : members(d.id);", "if (d.parent) return slotThumb(d);\n  const m = d.group ? [] : members(d.id);"),
-    # Modulrahmen: Module mit eigenem Gerät im Rack direkt antippbar
-    ("renderRack", '$("pduHit").hidden = S.side !== "rear";', '$("hits").innerHTML += S.side === "rear" ? "" : DEVICES.filter(f => f.kids).flatMap(f => f.kids.map(k => { const n = f.slots || 10, L = 4.5 + 91 * (0.035 + 0.93 * (0.01 + 0.98 * (k.mod.slot - 1) / n)), W = 91 * 0.93 * 0.98 * (k.mod.w || 1) / n; return `<button class="hit sub ${k.state} ${isSel(k) ? "sel" : ""}" style="grid-row:${rowOf(f)};margin:0 0 0 ${L.toFixed(2)}%;width:${W.toFixed(2)}%;justify-self:start" data-id="${k.id}" aria-label="${k.name}"></button>`; })).join("");\n  $("pduHit").hidden = S.side !== "rear";'),
-    ("leds48", "p = d.ports[n - 1]", "p = d.ports.find(x => x.n === n) || {}"),
-    ("leds48", "animation-duration:${(0.12 + (h % 9) * 0.07).toFixed(2)}s", "animation-duration:${ledDur(p, h)}s"),
-    ("leds48", '<i class="pl-led ${p.speed ? "link" : "off"}" style=', '<i class="pl-led ${p.speed ? "link" : "off"}" data-n="${n}" style='),
-    ("leds48", 'return `<div class="leds">', 'return `<div class="leds" data-dev="${d.id}">'),
-    # Blenden und Kabelführungen sind nicht antippbar
-    ("renderRack", 'DEVICES.map(d => `<button class="hit', 'DEVICES.filter(d => !["bl", "cm", "blank"].includes(d.type)).map(d => `<button class="hit'),
-    # Leeres Schild/Typenschild nicht als leere Fläche zeichnen
-    # Beschriftungen kommen maskiert aus der Konfiguration; textContent braucht den Klartext
-    ("renderRack", '$("badge").textContent = RACK.badge; $("cap").textContent = RACK.badge; $("plate").textContent = RACK.plate;', '$("badge").textContent = unescH(RACK.badge); $("cap").textContent = unescH(RACK.badge); $("plate").textContent = unescH(RACK.plate);'),
-    ("renderRack", '$("doorL1").textContent = RACK.label1;', '$("doorL1").textContent = unescH(RACK.label1);'),
-    ("renderRack", '$("doorL2").textContent = RACK.label2;', '$("doorL2").textContent = unescH(RACK.label2);'),
-    ("renderRack", '$("plate").hidden = !RACK.plate;', '$("plate").hidden = !RACK.plate; $("badge").hidden = !RACK.badge;'),
-    # Gesamtstatus: auch Meldungen zählen (z. B. „Keine Daten“ = Hinweis), damit Kopfzeile und Hinweise übereinstimmen
-    ("worst", 'return s.includes("alert") ? "alert" : s.includes("warn") ? "warn" : "ok";',
-     'const m = allDevices().filter(d => !d.passive && !d.group).flatMap(d => (d.msgs || []).map(x => x[0])); return s.includes("alert") || m.includes("alert") ? "alert" : s.includes("warn") || m.includes("warn") ? "warn" : "ok";'),
-    # Verlaufszeilen: Kurve exakt so hoch wie ihre Zeile (keine Mindesthöhe)
-    ("fillCharts", "Math.max(70, el.clientHeight)", "Math.max(el.closest(\".tr2,.mt\") ? 14 : 70, el.clientHeight)"),
-    ("fillCharts", "Math.max(160, el.clientWidth)", "el.closest(\".mt\") ? el.clientWidth : Math.max(160, el.clientWidth)"),
-    # Rack-Höhe folgt der HE-Zahl: Seitenverhältnis, Rahmenanteile und Höhe relativ zu einem 42-HE-Schrank
-    ("renderRack", 'rack.style.setProperty("--units", RACK.units);', 'rack.style.setProperty("--units", RACK.units); rackLook(rack); { const k = 45.75 / (RACK.units + 3.75); rack.style.setProperty("--ar", (0.34 * k).toFixed(4)); rack.style.setProperty("--wt", (3.6 * k).toFixed(2) + "%"); rack.style.setProperty("--wb", (4.6 * k).toFixed(2) + "%"); rack.style.setProperty("--hf", Math.min(1, 1 / k).toFixed(4)); rack.closest(".app")?.classList.toggle("short-rack", RACK.units <= 32); }'),
-    ("renderRack", 'rack.classList.toggle("open", !S.door || S.side === "rear");', 'rack.classList.toggle("open", !S.door || S.side === "rear" || RACK.door === "none");'),
-    ("SPEED_TXT", '{"1G"', '{"100M":"100 Mbit/s","2.5G":"2,5 Gbit/s","1G"'),
-    # Lüfterblende: Bilder je Gerät statt global
-    ("face", '<div class="face f-panel">',
-     '<div class="face f-panel" style="--panel-img:url(\'${d.image}\');--fan-img:url(\'${d.fanImage}\')">'),
-    # Rack: kein Einsetzen freier HE in der Anzeige, Stromleiste aus der Konfiguration
-    ("renderRack", '$("pduHit").classList.toggle("sel", S.sel === "pdu");',
-     'const pdu0 = ZERO_U[0]; $("pduHit").hidden = S.side !== "rear" || !pdu0; if (pdu0){ $("pduHit").dataset.id = pdu0.id; $("pduHit").setAttribute("aria-label", pdu0.name + ", Rückseite"); }\n  $("pduHit").classList.toggle("sel", !!pdu0 && S.sel === pdu0.id);'),
-    ("renderRack", 'empties.map(u => `<button class="hit empty" style="grid-row:${RACK.units - u + 1}" data-slot="${u}" aria-label="HE ${u} frei, Gerät einsetzen">+</button>`).join("");', '"";'),
-    ("renderPanel", "  let body;\n", "  if (Date.now() < NAV.until && !NAV.now) { if (!NAV.pending) { NAV.pending = true; setTimeout(() => { NAV.pending = false; renderPanel(); }, NAV.until - Date.now() + 10); } return; }\n  let body;\n"),
-    ("renderPanel", "if (S.slot) body = library(S.slot);\n  else if", "if"),
-    ("renderPanel", "body = detail(byId(S.sel));", "body = showDetail(byId(S.sel));"),
-    # Passt die Detailansicht nicht, fällt zuerst die History weg (kein Scrollen)
-    ("renderPanel", "fillCharts(); CHARTS.length = 0;", "fitDetail(); fillCharts(); CHARTS.length = 0;"),
-    # WLED-Schleife anhalten, solange das Licht aus ist (spart auf dem Pi Rechenzeit)
-    ("wledFrame", "requestAnimationFrame(wledFrame);\n  const c", "if (DEAD) return;\n  if (!WLED.on && WLED.level < 0.02) { WLED.level = 0; $(\"wledCanvas\").hidden = true; WLED.loop = false; return; }\n  requestAnimationFrame(wledFrame);\n  const c"),
-]
-
-OVERRIDES_IN_APP = {"header", "overview", "sysCard", "voltCard", "diskCard", "recCard", "wanCard", "poeCard", "tick", "render"}
-
-
 LOADER = """// Rack Display – Lader (ändert sich nie). Holt die aktuelle Fassung unter versionierter Adresse.
 const base = "/rack_display/frontend";
 let v = "";
 try { v = (await (await fetch(`${base}/version.txt`, { cache: "no-store" })).text()).trim(); } catch (e) { v = String(Date.now()); }
 await import(`${base}/@@FILE@@?v=${encodeURIComponent(v)}`);
 """
-
-
-def blocks(src: str) -> dict[str, str]:
-    lines = src.split("\n")
-    out = {}
-    starts = {}
-    for i, ln in enumerate(lines):
-        m = re.match(r"^(?:function\s+(\w+)\s*\(|const\s+(\w+)\s*=)", ln)
-        if m:
-            starts.setdefault(m.group(1) or m.group(2), i)
-    for name in TAKE:
-        i = starts[name]
-        depth, seen, buf = 0, False, []
-        for ln in lines[i:]:
-            buf.append(ln)
-            for ch in ln:
-                if ch in "{[(":
-                    depth += 1; seen = True
-                elif ch in "}])":
-                    depth -= 1
-            if depth == 0 and (seen or ln.rstrip().endswith(";")):
-                break
-        out[name] = "\n".join(buf)
-    return out
 
 
 # ---------- Community-Module (modules/<typ>/): module.json + render.js (+ style.css) ----------
@@ -183,21 +89,8 @@ def load_modules(catalog: dict) -> list[dict]:
 
 
 def main():
-    proto = (HERE / "proto-ref.js").read_text()
-    b = blocks(proto)
-    for name, old, new in PATCH:
-        targets = TAKE if name == "*" else [name]
-        hit = False
-        for t in targets:
-            if old in b[t]:
-                b[t] = b[t].replace(old, new); hit = True
-        if not hit and name != "*":
-            raise SystemExit(f"Patch nicht gefunden in {name}: {old[:60]}")
-    funcs = "\n\n".join(b[n] for n in TAKE)
-    for bad in ("document.", "window.", "series("):
-        for n in TAKE:
-            if bad in b[n] and not (bad == "window." and False):
-                raise SystemExit(f"{bad} noch in {n}")
+    # Darstellung (render.js) ohne den Kopfkommentar einsetzen
+    funcs = (HERE / "render.js").read_text().split("*/", 1)[1].strip("\n")
 
     app = (HERE / "app.js").read_text()
     html = (HERE / "rack.html").read_text().replace("`", "\\`").replace("${", "\\${")
