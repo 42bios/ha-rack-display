@@ -102,5 +102,5 @@ async def test_remove_stale_devices(hass: HomeAssistant, device_registry: dr.Dev
 
     remove_stale_devices(hass, entry, {"kept"})
 
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "kept")}) is not None
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "deleted")}) is None
+    left = {i for d in dr.async_entries_for_config_entry(device_registry, entry.entry_id) for i in d.identifiers}
+    assert left == {(DOMAIN, "kept")}

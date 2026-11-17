@@ -16,15 +16,15 @@ class Registry:
         self.entry = MockConfigEntry(domain="other")
         self.entry.add_to_hass(hass)
         self._n = 0
+        self._devices: dict[str, str] = {}
 
     def device(self, name: str, via: str | None = None) -> str:
         """Registers a device and returns its ID; `via` is the name of the device it is connected through."""
+        kwargs = {"via_device_id": self._devices[via]} if via else {}
         device = dr.async_get(self.hass).async_get_or_create(
-            config_entry_id=self.entry.entry_id,
-            identifiers={("other", name)},
-            name=name,
-            via_device=("other", via) if via else None,
+            config_entry_id=self.entry.entry_id, identifiers={("other", name)}, name=name, **kwargs
         )
+        self._devices[name] = device.id
         return device.id
 
     def entity(self, device_id: str, entity_id: str, state: str | None = "1", device_class: str | None = None) -> str:
