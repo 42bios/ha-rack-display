@@ -1692,7 +1692,9 @@ class RackDisplayElement extends HTMLElement {
     // Seite „Rack“ / Kiosk: nach einem Update der Integration selbst neu laden (Karten in Dashboards nicht)
     if (!isCard) this._vt = setInterval(() => rdNewVersion().then(v => v && location.reload()), 3 * 60e3);
     this._app.setHass(this._hass);
-    await this._load();
+    // erst zeigen, wenn das Rack da ist: dessen feste Sprache (Anzeige → Sprache) gilt sonst erst nach dem Laden
+    this._wrap.style.visibility = "hidden";
+    try { await this._load(); } finally { if (this._wrap) this._wrap.style.visibility = ""; }
     const unsub = await this._hass.connection.subscribeMessage(() => this._app && this._load(), { type: "rack_display/subscribe" });
     // Foto-Adressen sind signiert und laufen ab: einmal am Tag frisch laden (Kiosk läuft oft tagelang)
     clearInterval(this._rt); this._rt = setInterval(() => this._app && this._load(), 24 * 3600e3);
