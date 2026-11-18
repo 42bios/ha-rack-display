@@ -52,8 +52,10 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    store = RackStore(hass)
-    await store.async_load()
+    # beim Neuladen des Eintrags bleibt der Speicher (offene Seiten bekommen dazwischen weiter Antworten)
+    if (store := hass.data.get(DOMAIN, {}).get("store")) is None:
+        store = RackStore(hass)
+        await store.async_load()
     live = LiveBuffer(hass, store)
     screen = ScreenTimeout(hass, store)
     hass.data[DOMAIN] = {"store": store, "live": live, "screen": screen}
@@ -119,6 +121,9 @@ def _build_version() -> str:
 
 
 async def _register_panel(hass: HomeAssistant) -> None:
+    # beim Neuladen des Eintrags bleiben die Seiten angemeldet (sonst springt eine offene Seite auf die Startseite)
+    if f"{DOMAIN}_module" in hass.data:
+        return
     build = await hass.async_add_executor_job(_build_version)
     hass.data[f"{DOMAIN}_module"] = module = f"{URL_FRONTEND}/{FRONTEND_FILE}?v={build}"
     # Karte in allen Dashboards verfügbar machen
@@ -146,17 +151,33 @@ async def _register_panel(hass: HomeAssistant) -> None:
     )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if store := hass.data.get(DOMAIN, {}).get("store"):
-        await store.async_flush()
+@callback
+def _remove_panel(hass: HomeAssistant) -> None:
+    if (module := hass.data.pop(f"{DOMAIN}_module", None)) is None:
+        return
     frontend.async_remove_panel(hass, PANEL_URL)
     frontend.async_remove_panel(hass, EDITOR_URL)
-    if module := hass.data.pop(f"{DOMAIN}_module", None):
-        frontend.remove_extra_js_url(hass, module)
+    frontend.remove_extra_js_url(hass, module)
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        return False
+    if store := hass.data.get(DOMAIN, {}).get("store"):
+        await store.async_flush()
     if live := hass.data.get(DOMAIN, {}).get("live"):
         live.stop()
     if screen := hass.data.get(DOMAIN, {}).get("screen"):
         screen.stop()
-    hass.data.pop(DOMAIN, None)  # "rack_display_registered" bleibt bis zum Neustart gesetzt
+    # Seiten und Speicher nur beim Deaktivieren abbauen; beim Neuladen bleiben sie, beim Entfernen folgt async_remove_entry
+    if entry.disabled_by:
+        _remove_panel(hass)
+        hass.data.pop(DOMAIN, None)  # "rack_display_registered" bleibt bis zum Neustart gesetzt
+    else:
+        hass.data[DOMAIN] = {"store": store} if store else {}
     return True
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    _remove_panel(hass)
+    hass.data.pop(DOMAIN, None)
